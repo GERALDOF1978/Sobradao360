@@ -75,11 +75,9 @@ export default function Home() {
               <p className="text-sm text-gray-500 mt-2">Festas, reuniões e eventos que acontecem no Sobradão e arredores.</p>
             </Link>
 
-
           </div>
         </section>
       </main>
-      
 
       {/* RODAPÉ */}
       <footer className="bg-gray-900 text-gray-400 py-8 text-center text-sm">
