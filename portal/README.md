@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌐 Sobradão 360
 
-## Getting Started
+> O seu bairro, em todas as direções. Um portal comunitário moderno para conectar vizinhos, divulgar o comércio local e centralizar notícias da região do Sobradão e arredores.
 
-First, run the development server:
+## 🚀 Sobre o Projeto
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+O **Sobradão 360** nasce com o objetivo de unificar a comunicação de múltiplos bairros ao redor do ponto de referência Sobradão Eventos. A plataforma foi desenvolvida para ser rápida, responsiva (ótima para celulares) e totalmente voltada para a comunidade.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 📌 Principais Funcionalidades (Planejadas/Em Desenvolvimento)
+*   📰 **Mural & Avisos:** Notícias, alertas de segurança e melhorias da região.
+*   🛒 **Guia Comercial:** Diretório para valorizar e encontrar prestadores de serviço e comércios locais.
+*   🤝 **Classificados:** Espaço para vizinhos comprarem, venderem ou trocarem produtos.
+*   🎉 **Eventos:** Calendário de festas, reuniões e acontecimentos no entorno.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Tecnologias Utilizadas
 
-## Learn More
+Este projeto utiliza a stack moderna de desenvolvimento web (JAMstack / Serverless):
+*   **Frontend:** [Next.js](https://nextjs.org/) (React Framework) com App Router.
+*   **Estilização:** [Tailwind CSS](https://tailwindcss.com/) para um design limpo e responsivo.
+*   **Banco de Dados & Auth:** [Firebase](https://firebase.google.com/) (Firestore).
+*   **Hospedagem & Deploy:** [Vercel](https://vercel.com/).
+*   **Versionamento:** [GitHub](https://github.com/).
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 💻 Como Rodar o Projeto Localmente
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Se você é desenvolvedor e quer testar o projeto no seu computador, siga os passos abaixo:
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Clone o repositório:**
+   ```bash
+   git clone [https://github.com/SEU_USUARIO/sobradao360.git](https://github.com/SEU_USUARIO/sobradao360.git)
+   cd sobradao360/portal
