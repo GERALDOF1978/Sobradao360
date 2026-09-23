@@ -14,7 +14,6 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-F44M3M1D7D"
 };
 
-// Inicializa o Firebase sem tipagem estrita para evitar conflitos de namespace
 let app;
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
