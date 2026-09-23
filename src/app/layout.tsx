@@ -1,9 +1,8 @@
-import './globals.css';
-import type { Metadata } from 'next';
+import "./globals.css";
 
-export const metadata: Metadata = {
-  title: 'Sobradão 360',
-  description: 'Portal Comunitário com foco em mobile e modo escuro',
+export const metadata = {
+  title: "Sobradão 360",
+  description: "Portal Comunitário",
 };
 
 export default function RootLayout({
@@ -12,8 +11,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-PT">
-      <body className="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased">
+    <html lang="pt-BR">
+      <body className="bg-gray-50 text-gray-900 antialiased">
         {children}
       </body>
     </html>
