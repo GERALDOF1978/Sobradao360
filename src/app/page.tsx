@@ -8,12 +8,54 @@ export default function Home() {
   const [nome, setNome] = useState("");
   const [cadastrado, setCadastrado] = useState(false);
   
-  // Estados para Busca e Clima
+
   const [termoBusca, setTermoBusca] = useState("");
-  const [clima, setClima] = useState({ temp: "26°C", condicao: "Parcialmente Nublado", icone: "⛅" });
+  const [clima] = useState({ temp: "26°C", condicao: "Parcialmente Nublado", icone: "⛅" });
   const [alertaAtual, setAlertaAtual] = useState(0);
 
-  // Alertas urgentes do bairro (Ticker)
+  // --- BLOCO A ADICIONAR AQUI ---
+  const [uploading, setUploading] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    setUploading(true);
+    setUploadedImageUrl("");
+
+    // Criar o FormData para enviar para a API
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      // Chamar a nossa API Route interna que criamos
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('URL da imagem otimizada:', result.url);
+        setUploadedImageUrl(result.url);
+        // DICA: Para o admin do portal, um alerta visual é bom,
+        // mas você também pode copiar o URL automaticamente para a área de transferência se quiser.
+        alert(`Sucesso! Imagem compactada para ${result.sizeKb} KB e enviada para o ImgBB.`);
+      } else {
+        alert(`Erro no upload: ${result.error}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Ocorreu um erro ao conectar com a API de upload. Verifique o console.');
+    } finally {
+      setUploading(false);
+    }
+  };
+  // --- FIM DO BLOCO A ADICIONAR ---
+
   const alertas = [
     "⚠️ Manutenção na rede de água no Residencial Gracioli nesta quinta-feira das 8h às 14h.",
     "📢 Feira noturna e encontro de food trucks neste sábado na praça principal!",
@@ -46,8 +88,6 @@ export default function Home() {
     }
   };
 
-  // Configuração ImgBB API Key solicitada: 00f5e74d2657312c5173d6aa4018c614
-  // Dica: Imagens otimizadas em WebP para máxima velocidade de carregamento
   const bannerImgWebp = "https://i.ibb.co/bRqYV9df/file-00000000ff0482068cac048de4c99341.png";
 
   const bairrosGrupo1 = [
@@ -66,21 +106,22 @@ export default function Home() {
     "Residencial Quirino"
   ];
 
+  // Serviços com categorias amplas e não engessadas
   const servicosRapidos = [
-    { titulo: "Anuncie seus serviços", icone: "📢", cor: "bg-emerald-600", link: "/guia" },
-    { titulo: "Compre e venda", icone: "🛍️", cor: "bg-orange-500", link: "/classificados" },
-    { titulo: "Aluguel de chácara", icone: "🏡", cor: "bg-purple-700", link: "/classificados" },
-    { titulo: "Pedreiro e serviços", icone: "🛠️", cor: "bg-blue-600", link: "/guia" },
-    { titulo: "Bolos e salgados", icone: "🎂", cor: "bg-pink-600", link: "/guia" },
-    { titulo: "Carros e motos", icone: "🚗", cor: "bg-cyan-600", link: "/classificados" },
-    { titulo: "Denuncie problemas", icone: "⚠️", cor: "bg-red-600", link: "/noticias" },
-    { titulo: "Telefones úteis", icone: "📞", cor: "bg-slate-700", link: "/guia" },
+    { titulo: "Anuncie Aqui", icone: "📢", cor: "bg-emerald-600", link: "/guia" },
+    { titulo: "Compre & Venda", icone: "🛍️", cor: "bg-orange-500", link: "/classificados" },
+    { titulo: "Chácaras & Lazer", icone: "🏡", cor: "bg-purple-700", link: "/classificados" },
+    { titulo: "Reformas & Obras", icone: "🛠️", cor: "bg-blue-600", link: "/guia" },
+    { titulo: "Alimentação & Festas", icone: "🎂", cor: "bg-pink-600", link: "/guia" },
+    { titulo: "Automotivo", icone: "🚗", cor: "bg-cyan-600", link: "/classificados" },
+    { titulo: "Zeladoria & Avisos", icone: "⚠️", cor: "bg-red-600", link: "/noticias" },
+    { titulo: "Plantão & Úteis", icone: "📞", cor: "bg-slate-700", link: "/guia" },
   ];
 
   return (
     <div className="min-h-screen bg-slate-900 text-gray-100 pb-16 font-sans">
       
-      {/* 1. TOPO COM CLIMA E HEADER */}
+      {/* TOPO COM CLIMA E HEADER */}
       <header className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-950 border-b border-blue-800/80 sticky top-0 z-40 shadow-xl">
         <div className="max-w-md mx-auto px-4 py-2.5 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -88,7 +129,6 @@ export default function Home() {
             <h1 className="font-black text-sm tracking-tight text-white">Sobradão 360</h1>
           </div>
           
-          {/* Widget de Clima Rápido */}
           <div className="flex items-center gap-1.5 bg-blue-900/60 border border-blue-700/50 px-2.5 py-1 rounded-xl text-[11px] font-semibold text-blue-200">
             <span>{clima.icone}</span>
             <span>{clima.temp}</span>
@@ -103,7 +143,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* 2. TICKER DE ALERTAS URGENTES */}
+      {/* TICKER DE ALERTAS URGENTES */}
       <div className="bg-amber-500/10 border-b border-amber-500/20 py-1.5 px-4 overflow-hidden">
         <div className="max-w-md mx-auto flex items-center gap-2">
           <span className="text-[10px] bg-amber-500 text-blue-950 font-black px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
@@ -117,10 +157,9 @@ export default function Home() {
 
       <main className="max-w-md mx-auto px-4 py-4 space-y-4">
         
-        {/* 3. BANNER PRINCIPAL COM INTEGRAÇÃO IMGBB (WEBP) */}
+        {/* BANNER PRINCIPAL COM IMGBB (WEBP) */}
         <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white rounded-3xl shadow-2xl overflow-hidden border border-blue-700/50 relative">
           
-          {/* Preview Opcional da Imagem do Banner via ImgBB */}
           <div className="w-full h-36 bg-blue-950 relative overflow-hidden border-b border-blue-700/40">
             <img 
               src={bannerImgWebp} 
@@ -149,11 +188,11 @@ export default function Home() {
               </div>
             </div>
 
-            {/* 4. BARRA DE BUSCA INTELIGENTE */}
+            {/* BARRA DE BUSCA INTELIGENTE */}
             <form onSubmit={handleBusca} className="relative">
               <input 
                 type="text"
-                placeholder="O que você procura hoje? (Ex: Gás, Pedreiro, Chácara...)"
+                placeholder="O que você procura hoje? (Ex: Eletricista, Marmitex, Chácara...)"
                 value={termoBusca}
                 onChange={(e) => setTermoBusca(e.target.value)}
                 className="w-full bg-blue-950/80 border border-blue-700/60 rounded-xl py-2 pl-3 pr-9 text-xs text-white placeholder-blue-300/60 focus:outline-none focus:ring-2 focus:ring-amber-400"
@@ -163,7 +202,7 @@ export default function Home() {
               </button>
             </form>
 
-            {/* 5. CONTADOR DE PROVA SOCIAL */}
+            {/* CONTADOR DE PROVA SOCIAL */}
             <div className="flex items-center justify-between bg-blue-950/50 px-3 py-2 rounded-xl border border-blue-800/60 text-[11px] text-blue-200">
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
@@ -172,7 +211,7 @@ export default function Home() {
               <span className="text-amber-300 font-semibold">85+ comércios</span>
             </div>
 
-            {/* Bairros Atendidos */}
+            {/* BAIRROS ATENDIDOS */}
             <div className="bg-blue-950/60 p-3 rounded-2xl border border-blue-800/40 space-y-1.5">
               <div className="flex items-center gap-1 text-amber-400 font-bold text-[11px] uppercase tracking-wide">
                 <span>📍</span> Nossos Bairros Também Aqui!
@@ -195,7 +234,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Botões de Ação Principal & WhatsApp */}
+            {/* BOTÕES DE AÇÃO */}
             <div className="grid grid-cols-2 gap-2 pt-1">
               <button 
                 onClick={() => setIsModalOpen(true)}
@@ -217,13 +256,13 @@ export default function Home() {
           </div>
         </section>
 
-        {/* GRADE DE SERVIÇOS RÁPIDOS */}
+        {/* GRADE DE CATEGORIAS AMPLIADAS */}
         <section className="space-y-2.5 pt-1">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-              Acesso Rápido a Serviços
+              Categorias & Serviços
             </h3>
-            <span className="text-[10px] text-amber-400 font-semibold">Toque para acessar</span>
+            <span className="text-[10px] text-amber-400 font-semibold">Toque para explorar</span>
           </div>
 
           <div className="grid grid-cols-4 gap-2">
