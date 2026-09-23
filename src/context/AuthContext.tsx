@@ -3,11 +3,10 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-import type { User } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 
 interface AuthContextType {
-  user: User | null;
+  user: any | null;
   loading: boolean;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
@@ -21,11 +20,11 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser: any) => {
       setUser(currentUser);
       setLoading(false);
     });
