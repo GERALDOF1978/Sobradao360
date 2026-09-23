@@ -184,7 +184,7 @@ export default function Home() {
         
         {/* BANNER PRINCIPAL */}
         <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white rounded-3xl shadow-2xl overflow-hidden border border-blue-700/50 relative">
-          <div className="w-full h-40 bg-blue-950 relative overflow-hidden border-b border-blue-700/40">
+          <div className="w-full h-full bg-blue-950 relative overflow-hidden border-b border-blue-700/40">
             <img src={"https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp"} alt="Banner" className="w-full h-full object-cover opacity-90" />
             <div className="absolute inset-0 bg-gradient-to-t from-blue-950 via-transparent to-transparent"></div>
             <div className="absolute bottom-2 left-3">
