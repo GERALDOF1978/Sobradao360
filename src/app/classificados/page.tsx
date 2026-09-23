@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
-import { collection, addifiable, getDocs, addDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
 
 interface Anuncio {
@@ -11,6 +11,7 @@ interface Anuncio {
   titulo: string;
   descricao: string;
   categoria: string;
+  imagemUrl?: string;
   autorNome: string;
   autorFoto: string;
   createdAt: any;
@@ -21,14 +22,27 @@ export default function ClassificadosPage() {
   const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados do formulário de novo anúncio
+  // Estados do formulário
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
-  const [categoria, setCategoria] = useState("Comércio");
+  const [categoria, setCategoria] = useState("Anuncie");
+  const [imagemUrl, setImagemUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
-  // Buscar anúncios do Firestore
-  // Buscar anúncios do Firestore
+  // As 8 categorias do Sobradão 360
+  const categorias = [
+    { nome: "Anuncie", icone: "📢" },
+    { nome: "Compre & Venda", icone: "🛍️" },
+    { nome: "Lazer", icone: "🏡" },
+    { nome: "Reformas", icone: "🛠️" },
+    { nome: "Alimentação", icone: "🎂" },
+    { nome: "Automotivo", icone: "🚗" },
+    { nome: "Zeladoria", icone: "⚠️" },
+    { nome: "Utilidades", icone: "📞" },
+  ];
+
+  // Buscar anúncios no Firestore
   const buscarAnuncios = async () => {
     try {
       const q = query(collection(db, "anuncios"), orderBy("createdAt", "desc"));
@@ -49,6 +63,38 @@ export default function ClassificadosPage() {
     buscarAnuncios();
   }, []);
 
+  // Handler de upload de imagem para o anúncio
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/api/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        setImagemUrl(result.url);
+        alert("Imagem enviada com sucesso! 📷");
+      } else {
+        alert(`Erro no upload da imagem: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      alert("Erro ao conectar com a API de upload.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handlePublicar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -56,7 +102,7 @@ export default function ClassificadosPage() {
       return;
     }
     if (!titulo.trim() || !descricao.trim()) {
-      alert("Preencha todos os campos.");
+      alert("Preencha o título e a descrição.");
       return;
     }
 
@@ -66,6 +112,7 @@ export default function ClassificadosPage() {
         titulo,
         descricao,
         categoria,
+        imagemUrl: imagemUrl || null,
         autorUid: user.uid,
         autorNome: user.displayName || "Morador",
         autorFoto: user.photoURL || "https://api.dicebear.com/7.x/thumbs/svg?seed=padrao",
@@ -74,8 +121,9 @@ export default function ClassificadosPage() {
 
       setTitulo("");
       setDescricao("");
-      alert("Publicado com sucesso no mural do bairro! 🎉");
-      buscarAnuncios(); // Atualiza a lista
+      setImagemUrl("");
+      alert("Anúncio publicado com sucesso no mural! 🎉");
+      buscarAnuncios();
     } catch (error) {
       console.error("Erro ao publicar:", error);
       alert("Erro ao salvar no Firestore.");
@@ -92,52 +140,82 @@ export default function ClassificadosPage() {
         <Link href="/" className="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-1.5 rounded-xl transition">
           ← Voltar ao Início
         </Link>
-        <h1 className="text-sm font-black text-white">🛍️ Classificados & Mural</h1>
+        <h1 className="text-sm font-black text-white">🛍️ Classificados & Guia</h1>
       </div>
 
-      {/* FORMULÁRIO DE NOVO ANÚNCIO (Apenas para logados) */}
+      {/* FORMULÁRIO DE NOVO ANÚNCIO */}
       {user ? (
         <form onSubmit={handlePublicar} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3 shadow-lg">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-amber-400">Novo Anúncio ou Aviso</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-amber-400">Publicar Novo Anúncio</h2>
           
           <input 
             type="text" 
-            placeholder="Título (Ex: Vendo bicicleta / Procura-se prestador...)" 
+            placeholder="Título do produto, serviço ou aviso" 
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
           />
 
-          <select 
-            value={categoria}
-            onChange={(e) => setCategoria(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
-          >
-            <option value="Comércio">Comércio / Produtos</option>
-            <option value="Serviços">Serviços (Reformas, Aulas, etc.)</option>
-            <option value="Achados e Perdidos">Achados e Perdidos / Pets</option>
-            <option value="Avisos do Bairro">Avisos do Bairro</option>
-          </select>
+          {/* Seleção entre as 8 Categorias */}
+          <div>
+            <label className="text-[10px] text-gray-400 block mb-1">Selecione a Categoria:</label>
+            <select 
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+            >
+              {categorias.map((cat) => (
+                <option key={cat.nome} value={cat.nome}>
+                  {cat.icone} {cat.nome}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <textarea 
-            placeholder="Descreva os detalhes..." 
+            placeholder="Descreva os detalhes, telefone de contato, preços, etc..." 
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
             rows={3}
             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400 resize-none"
           />
 
+          {/* Campo de Upload de Foto */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] text-gray-400 block">Adicionar Imagem do Produto/Serviço:</label>
+            <input 
+              type="file" 
+              accept="image/jpeg, image/png, image/webp"
+              onChange={handleImageUpload}
+              disabled={uploading}
+              className="w-full text-xs text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-amber-400 hover:file:bg-slate-700 cursor-pointer"
+            />
+            {uploading && <p className="text-[10px] text-amber-400 animate-pulse">Carregando imagem...</p>}
+            {imagemUrl && (
+              <div className="relative mt-2">
+                <img src={imagemUrl} alt="Preview" className="w-full h-32 object-cover rounded-xl border border-slate-700" />
+                <button 
+                  type="button" 
+                  onClick={() => setImagemUrl("")} 
+                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+          </div>
+
           <button 
             type="submit" 
-            disabled={salvando}
-            className="w-full bg-amber-500 hover:bg-amber-600 text-blue-950 font-black py-2.5 rounded-xl text-xs transition shadow-md disabled:opacity-50"
+            disabled={salvando || uploading}
+            className="w-full bg-amber-500 hover:bg-amber-600 text-blue-950 font-black py-2.5 rounded-xl text-xs transition shadow-md disabled:opacity-50 mt-2"
           >
             {salvando ? "Publicando..." : "Publicar no Mural"}
           </button>
         </form>
       ) : (
         <div className="bg-blue-950/40 border border-blue-800/50 p-4 rounded-2xl text-center space-y-2">
-          <p className="text-xs text-blue-200">Faça login na página inicial para postar anúncios e avisos no mural comunitário.</p>
+          <p className="text-xs text-blue-200">Faça login para anunciar seus produtos, negócios e serviços no portal.</p>
         </div>
       )}
 
@@ -153,12 +231,19 @@ export default function ClassificadosPage() {
           anuncios.map((item) => (
             <div key={item.id} className="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl space-y-2.5 shadow">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold bg-blue-900/60 text-blue-300 px-2 py-0.5 rounded-lg border border-blue-700/40">{item.categoria}</span>
+                <span className="text-[10px] font-bold bg-blue-900/60 text-blue-300 px-2 py-0.5 rounded-lg border border-blue-700/40">
+                  {item.categoria}
+                </span>
                 <div className="flex items-center gap-1.5">
                   <img src={item.autorFoto} alt={item.autorNome} className="w-5 h-5 rounded-full border border-amber-400" />
                   <span className="text-[10px] text-gray-400">{item.autorNome}</span>
                 </div>
               </div>
+
+              {/* Exibição da Imagem (se existir) */}
+              {item.imagemUrl && (
+                <img src={item.imagemUrl} alt={item.titulo} className="w-full h-44 object-cover rounded-xl border border-slate-800" />
+              )}
 
               <div>
                 <h3 className="font-bold text-sm text-white">{item.titulo}</h3>
