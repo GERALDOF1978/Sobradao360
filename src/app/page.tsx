@@ -6,22 +6,7 @@ import { useAuth } from "@/context/AuthContext"; // Importamos o hook de autenti
 import { db } from "@/lib/firebase"; // Importamos o Firestore
 import { doc, setDoc, getDoc } from "firebase/firestore"; // Funções do Firestore
 
-import PainelComunitario from "@/components/PainelComunitario";
 
-export default function Home() {
-  return (
-    <main className="min-h-screen bg-slate-950 text-gray-100 p-4 max-w-md mx-auto space-y-4">
-      <header className="flex justify-between items-center border-b border-blue-900/40 pb-3">
-        <h1 className="text-base font-black text-amber-400">Sobradão 360 🏙️</h1>
-      </header>
-
-      {/* Painel com Clima em Tempo Real e Dados Demográficos Reais */}
-      <PainelComunitario />
-
-      {/* Restante dos módulos da página inicial (Classificados, Avisos, etc.) */}
-    </main>
-  );
-}
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
