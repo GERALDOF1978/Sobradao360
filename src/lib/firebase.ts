@@ -1,6 +1,6 @@
 // src/lib/firebase.ts
-import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
-import { getAnalytics, type Analytics } from "firebase/analytics";
+import { initializeApp, getApps } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
@@ -14,20 +14,19 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-F44M3M1D7D"
 };
 
-// Inicializa o Firebase
-let app: FirebaseApp;
+// Inicializa o Firebase sem tipagem estrita para evitar conflitos de namespace
+let app;
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
 } else {
   app = getApps()[0];
 }
 
-// Exportando os módulos do Firebase de forma limpa
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 export const db = getFirestore(app);
 
-export let analytics: Analytics | null = null;
+export let analytics: any = null;
 if (typeof window !== "undefined") {
   analytics = getAnalytics(app);
 }
