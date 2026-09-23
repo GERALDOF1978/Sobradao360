@@ -1,8 +1,8 @@
 // src/lib/firebase.ts
-import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getAnalytics, Analytics } from "firebase/analytics";
-import { getAuth, Auth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore, Firestore } from "firebase/firestore";
+import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import { getAnalytics, type Analytics } from "firebase/analytics";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyA6Bitwcz1u3gfJbaBTDM8zknt5DO5RPD0",
@@ -14,7 +14,7 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-F44M3M1D7D"
 };
 
-// Inicializa o Firebase de forma segura (evita múltiplas instâncias no Next.js)
+// Inicializa o Firebase
 let app: FirebaseApp;
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
@@ -22,12 +22,11 @@ if (!getApps().length) {
   app = getApps()[0];
 }
 
-// Exportando os módulos que o Sobradão 360 vai usar
-export const auth: Auth = getAuth(app);
+// Exportando os módulos do Firebase de forma limpa
+export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
-export const db: Firestore = getFirestore(app);
+export const db = getFirestore(app);
 
-// Analytics roda apenas no lado do cliente (browser)
 export let analytics: Analytics | null = null;
 if (typeof window !== "undefined") {
   analytics = getAnalytics(app);
