@@ -1,74 +1,103 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { db } from "@/lib/firebase";
+import { collection, getDocs } from "firebase/firestore";
 import Link from "next/link";
 
-export default function NoticiasPage() {
-  const avisos = [
-    {
-      id: 1,
-      titulo: "Manutenção na rede de água na próxima terça-feira",
-      categoria: "Aviso Geral",
-      data: "23 de Set, 2026",
-      autor: "Associação de Moradores",
-      descricao: "A Sabesp informou que haverá interrupção temporária no abastecimento das ruas principais entre 8h e 14h."
-    },
-    {
-      id: 2,
-      titulo: "Feira de Adoção de Pets na Praça Central",
-      categoria: "Evento",
-      data: "25 de Set, 2026",
-      autor: "Comissão de Bem-Estar",
-      descricao: "Venha adotar um novo amigo e apoiar os protetores de animais locais neste fim de semana, a partir das 9h."
-    },
-    {
-      id: 3,
-      titulo: "Atenção: Achados e Perdidos",
-      categoria: "Comunidade",
-      data: "22 de Set, 2026",
-      autor: "Morador (Bloco B)",
-      descricao: "Encontrada chave com chaveiro azul próximo à padaria. Retirar na portaria ou falar com Carlos."
+interface ClimaData {
+  temp: number;
+  condicao: string;
+}
+
+export default function Home() {
+  const { user, loginWithGoogle, logout } = useAuth();
+  const [clima, setClima] = useState<ClimaData | null>(null);
+  const [moradoresReais, setMoradoresReais] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Busca dados reais do clima em Rio Claro - SP
+    async function carregarClimaReal() {
+      try {
+        const res = await fetch(
+          "https://api.open-meteo.com/v1/forecast?latitude=-22.4111&longitude=-47.5614&current=temperature_2m,weather_code"
+        );
+        const data = await res.json();
+        if (data?.current) {
+          setClima({
+            temp: Math.round(data.current.temperature_2m),
+            condicao: data.current.weather_code <= 3 ? "☀️ Ensolarado/Parcial" : "🌧️ Chuvoso",
+          });
+        }
+      } catch (err) {
+        console.error("Erro ao carregar clima:", err);
+      }
     }
-  ];
+
+    // Busca contagem real de usuários gravados no Firestore
+    async function carregarVisitantesReais() {
+      try {
+        const snapshot = await getDocs(collection(db, "usuarios"));
+        setMoradoresReais(snapshot.size);
+      } catch (err) {
+        console.error("Erro ao consultar Firestore:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    carregarClimaReal();
+    carregarVisitantesReais();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100 font-sans pb-12">
-      <header className="bg-white/90 dark:bg-gray-900/95 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-          <Link href="/" className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-            &larr; Voltar ao Início
-          </Link>
-          <h1 className="text-base font-bold text-gray-800 dark:text-gray-200">Mural & Avisos</h1>
-          <div className="w-16"></div>
+    <div className="min-h-screen bg-slate-950 text-gray-100 p-4 font-sans max-w-md mx-auto space-y-4">
+      {/* HEADER DE STATUS REAIS */}
+      <div className="flex items-center justify-between bg-slate-900 border border-slate-800 p-3 rounded-2xl">
+        <div>
+          <h1 className="text-sm font-black text-white">SOBRADÃO 360</h1>
+          <p className="text-[10px] text-amber-400">Rio Claro - SP</p>
         </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-4 py-6 space-y-4">
-        <div className="bg-blue-900 text-white p-6 rounded-2xl shadow-md space-y-2">
-          <h2 className="text-xl font-extrabold">Fique por dentro do Sobradão</h2>
-          <p className="text-sm text-blue-100">
-            Aqui você encontra os avisos oficiais da comunidade e recados importantes postados pelos vizinhos.
+        <div className="text-right">
+          <span className="text-xs font-bold text-blue-300">
+            {clima ? `${clima.temp}°C ${clima.condicao}` : "Carregando clima..."}
+          </span>
+          <p className="text-[10px] text-emerald-400 font-medium">
+            ● {loading ? "..." : `${moradoresReais} moradores cadastrados`}
           </p>
         </div>
+      </div>
 
-        <div className="space-y-4">
-          {avisos.map((aviso) => (
-            <article key={aviso.id} className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-xs font-bold px-2.5 py-1 rounded-full">
-                  {aviso.categoria}
-                </span>
-                <span className="text-xs text-gray-400">{aviso.data}</span>
-              </div>
-              
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{aviso.titulo}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">{aviso.descricao}</p>
-              
-              <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center text-xs text-gray-400">
-                <span>Por: {aviso.autor}</span>
-                <span className="text-blue-600 dark:text-blue-400 font-medium cursor-pointer hover:underline">Ver detalhes</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </main>
+      {/* AÇÕES DE AUTENTICAÇÃO E NAVEGAÇÃO */}
+      <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+        {user ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <img src={user.photoURL || ""} alt="User" className="w-8 h-8 rounded-full border border-amber-400" />
+              <span className="text-xs font-bold text-white">{user.displayName}</span>
+            </div>
+            <button onClick={logout} className="text-xs bg-red-950 text-red-300 px-3 py-1 rounded-xl font-bold">
+              Sair
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={loginWithGoogle}
+            className="w-full bg-amber-500 hover:bg-amber-600 text-blue-950 font-black py-2.5 rounded-xl text-xs transition"
+          >
+            🔑 Entrar com Google
+          </button>
+        )}
+
+        <Link
+          href="/classificados"
+          className="block text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs transition"
+        >
+          🛍️ Acessar Classificados & Anúncios
+        </Link>
+      </div>
     </div>
   );
 }

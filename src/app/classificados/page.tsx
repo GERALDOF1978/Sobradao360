@@ -64,36 +64,43 @@ export default function ClassificadosPage() {
   }, []);
 
   // Handler de upload de imagem para o anúncio
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
+  // Substitua o handleImageUpload em src/app/classificados/page.tsx por este:
+import { compressImage } from "@/lib/imageCompressor";
 
-    const file = files[0];
-    setUploading(true);
+const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
 
+  setUploading(true);
+
+  try {
+    // 1. Compacta a imagem no cliente antes de enviar
+    const rawFile = files[0];
+    const compressedFile = await compressImage(rawFile, 1000, 0.75);
+
+    // 2. Prepara o envio para a API de Upload
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", compressedFile);
 
-    try {
-      const response = await fetch("/api/upload-image", {
-        method: "POST",
-        body: formData,
-      });
-      const result = await response.json();
+    const response = await fetch("/api/upload-image", {
+      method: "POST",
+      body: formData,
+    });
+    const result = await response.json();
 
-      if (result.success) {
-        setImagemUrl(result.url);
-        alert("Imagem enviada com sucesso! 📷");
-      } else {
-        alert(`Erro no upload da imagem: ${result.error}`);
-      }
-    } catch (error) {
-      console.error("Erro no upload:", error);
-      alert("Erro ao conectar com a API de upload.");
-    } finally {
-      setUploading(false);
+    if (result.success) {
+      setImagemUrl(result.url); // Salva a URL da imagem compactada
+      alert("Imagem compactada e enviada com sucesso! 📷");
+    } else {
+      alert(`Erro no upload: ${result.error}`);
     }
-  };
+  } catch (error) {
+    console.error("Erro no processo de upload:", error);
+    alert("Erro ao compactar ou enviar a imagem.");
+  } finally {
+    setUploading(false);
+  }
+};
 
   const handlePublicar = async (e: React.FormEvent) => {
     e.preventDefault();
