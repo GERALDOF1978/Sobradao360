@@ -6,6 +6,51 @@ import { db } from "@/lib/firebase";
 import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
 
+// Função de compressão de imagens via Canvas (executada no navegador)
+function compressImage(file: File, maxWidth = 1000, quality = 0.75): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject("Erro ao obter contexto do canvas");
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return reject("Erro ao compactar imagem");
+            const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+              type: "image/webp",
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          },
+          "image/webp",
+          quality
+        );
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+}
+
 interface Anuncio {
   id: string;
   titulo: string;
@@ -63,44 +108,38 @@ export default function ClassificadosPage() {
     buscarAnuncios();
   }, []);
 
-  // Handler de upload de imagem para o anúncio
-  // Substitua o handleImageUpload em src/app/classificados/page.tsx por este:
-import { compressImage } from "@/lib/imageCompressor";
+  // Upload com compressão automática antes de subir
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  const files = event.target.files;
-  if (!files || files.length === 0) return;
+    setUploading(true);
 
-  setUploading(true);
+    try {
+      const rawFile = files[0];
+      const compressedFile = await compressImage(rawFile, 1000, 0.75);
 
-  try {
-    // 1. Compacta a imagem no cliente antes de enviar
-    const rawFile = files[0];
-    const compressedFile = await compressImage(rawFile, 1000, 0.75);
+      const formData = new FormData();
+      formData.append("file", compressedFile);
 
-    // 2. Prepara o envio para a API de Upload
-    const formData = new FormData();
-    formData.append("file", compressedFile);
+      const response = await fetch("/api/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+      const result = await response.json();
 
-    const response = await fetch("/api/upload-image", {
-      method: "POST",
-      body: formData,
-    });
-    const result = await response.json();
-
-    if (result.success) {
-      setImagemUrl(result.url); // Salva a URL da imagem compactada
-      alert("Imagem compactada e enviada com sucesso! 📷");
-    } else {
-      alert(`Erro no upload: ${result.error}`);
+      if (result.success) {
+        setImagemUrl(result.url);
+      } else {
+        alert(`Erro no upload: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Erro ao processar imagem:", error);
+      alert("Erro ao compactar ou enviar a imagem.");
+    } finally {
+      setUploading(false);
     }
-  } catch (error) {
-    console.error("Erro no processo de upload:", error);
-    alert("Erro ao compactar ou enviar a imagem.");
-  } finally {
-    setUploading(false);
-  }
-};
+  };
 
   const handlePublicar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,9 +226,9 @@ const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => 
             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400 resize-none"
           />
 
-          {/* Campo de Upload de Foto */}
+          {/* Campo de Upload de Foto com Compressão */}
           <div className="space-y-1.5">
-            <label className="text-[10px] text-gray-400 block">Adicionar Imagem do Produto/Serviço:</label>
+            <label className="text-[10px] text-gray-400 block">Adicionar Imagem (Compactada automaticamente):</label>
             <input 
               type="file" 
               accept="image/jpeg, image/png, image/webp"
@@ -197,7 +236,7 @@ const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => 
               disabled={uploading}
               className="w-full text-xs text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-amber-400 hover:file:bg-slate-700 cursor-pointer"
             />
-            {uploading && <p className="text-[10px] text-amber-400 animate-pulse">Carregando imagem...</p>}
+            {uploading && <p className="text-[10px] text-amber-400 animate-pulse">Compactando e enviando imagem...</p>}
             {imagemUrl && (
               <div className="relative mt-2">
                 <img src={imagemUrl} alt="Preview" className="w-full h-32 object-cover rounded-xl border border-slate-700" />
@@ -247,7 +286,6 @@ const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => 
                 </div>
               </div>
 
-              {/* Exibição da Imagem (se existir) */}
               {item.imagemUrl && (
                 <img src={item.imagemUrl} alt={item.titulo} className="w-full h-44 object-cover rounded-xl border border-slate-800" />
               )}
