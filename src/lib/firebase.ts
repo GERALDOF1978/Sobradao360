@@ -5,15 +5,16 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyA6Bitwcz1u3gfJbaBTDM8zknt5DO5RPD0",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "sobradao360-33f45.firebaseapp.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "sobradao360-33f45",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "sobradao360-33f45.firebasestorage.app",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "376694229495",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:376694229495:web:a427f5a8828898ad3fc6f2",
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-F44M3M1D7D"
+  apiKey: "AIzaSyAZaS-k3UaFplZrVY4_C7icF-0hgi-AaFg",
+  authDomain: "sobradao360.firebaseapp.com",
+  projectId: "sobradao360",
+  storageBucket: "sobradao360.firebasestorage.app",
+  messagingSenderId: "347059664490",
+  appId: "1:347059664490:web:141a8034bab79f902a3c13",
+  measurementId: "G-D5J6EDH39Q"
 };
 
+// Inicializa o Firebase
 let app;
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
