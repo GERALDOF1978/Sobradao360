@@ -28,12 +28,13 @@ export default function ClassificadosPage() {
   const [salvando, setSalvando] = useState(false);
 
   // Buscar anúncios do Firestore
+  // Buscar anúncios do Firestore
   const buscarAnuncios = async () => {
     try {
       const q = query(collection(db, "anuncios"), orderBy("createdAt", "desc"));
       const querySnapshot = await getDocs(q);
       const lista: Anuncio[] = [];
-      querySnapshot.forEach((doc) => {
+      querySnapshot.forEach((doc: any) => {
         lista.push({ id: doc.id, ...doc.data() } as Anuncio);
       });
       setAnuncios(lista);
