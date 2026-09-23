@@ -1,99 +1,171 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 
 export default function Home() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [nome, setNome] = useState("");
+  const [cadastrado, setCadastrado] = useState(false);
+
+  const handleCadastro = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (nome.trim()) {
+      setCadastrado(true);
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setCadastrado(false);
+        setNome("");
+      }, 2500);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100 font-sans transition-colors duration-200">
-      
-      {/* CABEÇALHO (Navbar otimizada para toque) */}
-      <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 pb-12 font-sans">
+      {/* Header */}
+      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm sticky top-0 z-40 border-b border-gray-100 dark:border-gray-800">
+        <div className="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-base shadow-md shadow-blue-500/20">
-              360
-            </div>
-            <h1 className="text-xl font-extrabold text-blue-900 dark:text-blue-400 tracking-tight">
-              Sobradão <span className="text-orange-500">360</span>
-            </h1>
+            <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-lg">360</span>
+            <h1 className="font-bold text-lg tracking-tight text-gray-900 dark:text-white">Sobradão 360</h1>
           </div>
-          <button className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-semibold py-2 px-3 rounded-lg transition active:scale-95">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="text-xs font-semibold bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-1.5 rounded-xl transition"
+          >
             Entrar
           </button>
         </div>
       </header>
 
-      {/* SEÇÃO PRINCIPAL (Hero focada em mobile) */}
-      <main>
-        <section className="bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950 text-white py-12 px-4 text-center border-b border-blue-800/50 dark:border-gray-800">
-          <div className="max-w-3xl mx-auto space-y-4">
-            <span className="inline-block bg-orange-500/20 text-orange-400 dark:text-orange-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-orange-500/30">
-              Portal Comunitário
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-extrabold leading-tight tracking-tight">
-              O seu bairro, <br className="hidden sm:block" /> em todas as direções.
+      {/* Hero Section */}
+      <main className="max-w-md mx-auto px-4 py-6 space-y-6">
+        <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white p-6 rounded-3xl shadow-lg space-y-4 relative overflow-hidden">
+          <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-blue-600/30 rounded-full blur-xl pointer-events-none"></div>
+          <span className="bg-amber-500/90 text-amber-950 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
+            Portal Comunitário
+          </span>
+          <div className="space-y-1">
+            <h2 className="text-2xl font-black tracking-tight leading-tight">
+              O seu bairro, em todas as direções.
             </h2>
-            <p className="text-base sm:text-lg text-blue-100/90 dark:text-gray-300 max-w-xl mx-auto">
+            <p className="text-xs text-blue-100 leading-relaxed">
               Tudo sobre a nossa região: notícias, guia comercial e conexão direta entre vizinhos.
             </p>
-            <div className="pt-2">
-              <button className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 px-8 rounded-xl shadow-lg shadow-orange-500/30 transition transform active:scale-95">
-                Participar da Comunidade
-              </button>
-            </div>
           </div>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="w-full bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-bold py-3 px-4 rounded-2xl text-sm shadow-md transition flex items-center justify-center gap-2"
+          >
+            Participar da Comunidade
+          </button>
         </section>
 
-        {/* MENU DE SERVIÇOS (Cards otimizados para toque no celular) */}
-        <section className="max-w-6xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            
-            <Link href="/noticias" className="group bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm hover:shadow-md dark:shadow-none transition border border-gray-100 dark:border-gray-800 flex items-center sm:flex-col sm:text-center gap-4 sm:gap-0 active:scale-[0.98]">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl sm:rounded-full flex items-center justify-center shrink-0 sm:mb-4 group-hover:scale-105 transition">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Mural & Avisos</h3>
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-2">Segurança, melhorias e avisos da região.</p>
+        {/* Modules Navigation */}
+        <section className="space-y-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-1">
+            Módulos Principais
+          </h3>
+
+          <div className="space-y-2.5">
+            <Link href="/noticias" className="block bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-500 transition group">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-lg group-hover:scale-110 transition">
+                  📰
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">Mural & Avisos</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Segurança, melhorias e avisos da região.</p>
+                </div>
               </div>
             </Link>
 
-            <Link href="/guia" className="group bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm hover:shadow-md dark:shadow-none transition border border-gray-100 dark:border-gray-800 flex items-center sm:flex-col sm:text-center gap-4 sm:gap-0 active:scale-[0.98]">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-orange-50 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400 rounded-xl sm:rounded-full flex items-center justify-center shrink-0 sm:mb-4 group-hover:scale-105 transition">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Guia Comercial</h3>
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-2">Comércios e serviços locais pertinho de você.</p>
-              </div>
-            </Link>
-
-            <Link href="/classificados" className="group bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm hover:shadow-md dark:shadow-none transition border border-gray-100 dark:border-gray-800 flex items-center sm:flex-col sm:text-center gap-4 sm:gap-0 active:scale-[0.98]">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-50 dark:bg-green-950/50 text-green-600 dark:text-green-400 rounded-xl sm:rounded-full flex items-center justify-center shrink-0 sm:mb-4 group-hover:scale-105 transition">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Classificados</h3>
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-2">Compre, venda e troque com vizinhos.</p>
+            <Link href="/guia" className="block bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 transition group">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/50 flex items-center justify-center text-orange-600 dark:text-orange-400 text-lg group-hover:scale-110 transition">
+                  🛍️
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">Guia Comercial</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Comércios e serviços locais pertinho de você.</p>
+                </div>
               </div>
             </Link>
 
-            <Link href="/eventos" className="group bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm hover:shadow-md dark:shadow-none transition border border-gray-100 dark:border-gray-800 flex items-center sm:flex-col sm:text-center gap-4 sm:gap-0 active:scale-[0.98]">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 rounded-xl sm:rounded-full flex items-center justify-center shrink-0 sm:mb-4 group-hover:scale-105 transition">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Eventos</h3>
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-2">Festas e reuniões no Sobradão.</p>
+            <Link href="/classificados" className="block bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:border-emerald-500 dark:hover:border-emerald-500 transition group">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-lg group-hover:scale-110 transition">
+                  🛒
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">Classificados</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Compre, venda e troque com vizinhos.</p>
+                </div>
               </div>
             </Link>
 
+            <Link href="/eventos" className="block bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:border-purple-500 dark:hover:border-purple-500 transition group">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/50 flex items-center justify-center text-purple-600 dark:text-purple-400 text-lg group-hover:scale-110 transition">
+                  📅
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">Eventos</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Agenda comunitária e encontros do bairro.</p>
+                </div>
+              </div>
+            </Link>
           </div>
         </section>
       </main>
 
-      {/* RODAPÉ */}
-      <footer className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 py-6 text-center text-xs">
-        <p>&copy; {new Date().getFullYear()} Sobradão 360. Conectando vizinhos.</p>
-      </footer>
+      {/* Modal Interativo de Participação */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-4 border border-gray-100 dark:border-gray-800">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-base text-gray-900 dark:text-white">Junte-se ao Sobradão 360</h3>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 flex items-center justify-center text-xs font-bold hover:bg-gray-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            {cadastrado ? (
+              <div className="py-8 text-center space-y-2">
+                <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">✓</div>
+                <h4 className="font-bold text-gray-800 dark:text-gray-200">Bem-vindo(a), {nome}!</h4>
+                <p className="text-xs text-gray-500">Seu cadastro na comunidade foi simulado com sucesso.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleCadastro} className="space-y-3">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Insira o seu nome para participar dos avisos e interagir com os vizinhos.
+                </p>
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1">Seu Nome / Apelido</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="Ex: Maria do Bairro" 
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-3 rounded-xl text-xs transition shadow-md"
+                >
+                  Concluir Cadastro
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
