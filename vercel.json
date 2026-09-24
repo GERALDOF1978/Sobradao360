@@ -1,8 +1,9 @@
+
 {
   "crons": [
     {
       "path": "/api/sync-noticias",
-      "schedule": "0 */4 * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
