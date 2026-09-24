@@ -4,11 +4,22 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
-import { doc, setDoc, getDoc, collection, getDocs } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, getDocs, query, orderBy } from "firebase/firestore";
 
 interface ClimaData {
   temp: number;
   condicao: string;
+}
+
+interface Anuncio {
+  id: string;
+  titulo: string;
+  descricao?: string;
+  categoria?: string;
+  imagemUrl?: string;
+  autorNome?: string;
+  autorFoto?: string;
+  criadoEm?: any;
 }
 
 export default function Home() {
@@ -32,6 +43,7 @@ export default function Home() {
 
   const [clima, setClima] = useState<ClimaData | null>(null);
   const [moradoresReais, setMoradoresReais] = useState<number>(0);
+  const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
   const [loadingDados, setLoadingDados] = useState(true);
 
   const [uploading, setUploading] = useState(false);
@@ -46,6 +58,7 @@ export default function Home() {
     "🐾 Alerta de pet perdido: Cachorrinho Poodle branco visto perto do Recanto dos Pássaros."
   ];
 
+  // 1. Carrega dados do perfil
   useEffect(() => {
     async function carregarPerfil() {
       if (user) {
@@ -63,6 +76,7 @@ export default function Home() {
     carregarPerfil();
   }, [user]);
 
+  // 2. Carrega Clima, Moradores e Feed de Anúncios do Firestore
   useEffect(() => {
     async function carregarClimaReal() {
       try {
@@ -81,21 +95,32 @@ export default function Home() {
       }
     }
 
-    async function carregarMoradoresReais() {
+    async function carregarMoradoresEMultimidia() {
       try {
-        const snapshot = await getDocs(collection(db, "usuarios"));
-        setMoradoresReais(snapshot.size);
+        // Quantidade de moradores
+        const snapUsuarios = await getDocs(collection(db, "usuarios"));
+        setMoradoresReais(snapUsuarios.size);
+
+        // Anúncios/Publicações do Feed
+        const qAnuncios = query(collection(db, "anuncios"));
+        const snapAnuncios = await getDocs(qAnuncios);
+        const listaAnuncios: Anuncio[] = snapAnuncios.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
+        setAnuncios(listaAnuncios);
       } catch (err) {
-        console.error("Erro ao consultar usuários no Firestore:", err);
+        console.error("Erro ao consultar Firestore:", err);
       } finally {
         setLoadingDados(false);
       }
     }
 
     carregarClimaReal();
-    carregarMoradoresReais();
+    carregarMoradoresEMultimidia();
   }, []);
 
+  // 3. Timer do ticker de alertas
   useEffect(() => {
     const timer = setInterval(() => {
       setAlertaAtual((prev) => (prev + 1) % alertas.length);
@@ -232,8 +257,8 @@ export default function Home() {
         </div>
       </div>
 
-      <main className="max-w-md mx-auto px-4 py-4 space-y-4">
-        {/* BANNER PRINCIPAL CORRIGIDO (SEMARTE / SEM CORTAR) */}
+      <main className="max-w-md mx-auto px-4 py-4 space-y-5">
+        {/* BANNER PRINCIPAL */}
         <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white rounded-3xl shadow-2xl overflow-hidden border border-blue-700/50 flex flex-col">
           <div className="w-full bg-slate-950 p-2 relative flex flex-col items-center">
             <img
@@ -242,7 +267,6 @@ export default function Home() {
               className="w-full h-auto object-contain rounded-2xl"
             />
 
-            {/* Badges do Banner em fluxo normal para evitar sobreposição */}
             <div className="w-full mt-2 px-2 flex items-center justify-between gap-2">
               <span className="bg-amber-400 text-blue-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow shrink-0">
                 Portal Oficial
@@ -267,8 +291,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* SERVIÇOS RÁPIDOS (Garantia de não cortar texto ou caixa) */}
-        <section className="space-y-2.5 pt-1">
+        {/* SERVIÇOS RÁPIDOS */}
+        <section className="space-y-2.5">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Categorias & Serviços</h3>
           </div>
@@ -277,7 +301,7 @@ export default function Home() {
               <Link 
                 key={index} 
                 href={s.link} 
-                className="bg-slate-800/90 hover:bg-slate-800 border border-slate-700/60 p-2 rounded-2xl flex flex-col items-center justify-center text-center gap-1.5 shadow-sm hover:border-amber-400 transition group min-h-[85px]"
+                className="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-2 rounded-2xl flex flex-col items-center justify-center text-center gap-1.5 shadow-sm hover:border-amber-400 transition group min-h-[85px]"
               >
                 <div className={`w-9 h-9 rounded-xl ${s.cor} flex items-center justify-center text-white text-base shadow-md group-hover:scale-110 transition shrink-0`}>
                   {s.icone}
@@ -289,9 +313,67 @@ export default function Home() {
             ))}
           </div>
         </section>
+
+        {/* FEED DE ANÚNCIOS / PUBLICAÇÕES (AQUI ESTÁ O LOCAL CORRETO DOS CARDS) */}
+        <section className="space-y-4 pt-2">
+          <div className="flex justify-between items-center px-1">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Publicações Recentes</h3>
+          </div>
+
+          {loadingDados ? (
+            <p className="text-center text-xs text-gray-500 py-6">A carregar publicações...</p>
+          ) : anuncios.length === 0 ? (
+            <p className="text-center text-xs text-gray-500 py-6">Nenhuma publicação encontrada.</p>
+          ) : (
+            <div className="space-y-4">
+              {anuncios.map((anuncio) => (
+                <div
+                  key={anuncio.id}
+                  className="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-3 shadow-xl"
+                >
+                  {/* Cabeçalho do Card */}
+                  <div className="flex items-center justify-between">
+                    <span className="bg-blue-900/60 text-blue-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-700/50">
+                      {anuncio.categoria || "Anúncio"}
+                    </span>
+                    {anuncio.autorNome && (
+                      <div className="flex items-center gap-1.5">
+                        <img
+                          src={anuncio.autorFoto || "https://api.dicebear.com/7.x/thumbs/svg?seed=user"}
+                          alt={anuncio.autorNome}
+                          className="w-5 h-5 rounded-full object-cover"
+                        />
+                        <span className="text-[11px] font-medium text-gray-400">{anuncio.autorNome}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* AQUISIÇÃO E EXIBIÇÃO DA IMAGEM SEM CORTAR */}
+                  {anuncio.imagemUrl && (
+                    <div className="w-full bg-slate-950 rounded-2xl overflow-hidden p-1 flex items-center justify-center">
+                      <img
+                        src={anuncio.imagemUrl}
+                        alt={anuncio.titulo || "Imagem da publicação"}
+                        className="w-full h-auto max-h-80 object-contain mx-auto rounded-xl"
+                      />
+                    </div>
+                  )}
+
+                  {/* Título e Descrição */}
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-sm text-white">{anuncio.titulo}</h4>
+                    {anuncio.descricao && (
+                      <p className="text-xs text-gray-400 leading-relaxed">{anuncio.descricao}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
 
-      {/* MODAL DE LOGIN / PERFIL COM ROLAGEM VERTICAL CORRIGIDA */}
+      {/* MODAL DE LOGIN / PERFIL */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-5 text-white max-h-[90vh] overflow-y-auto">
@@ -350,7 +432,6 @@ export default function Home() {
 
                 {uploading && <p className="text-xs text-amber-500 text-center animate-pulse">⚙️ Alterando foto e salvando no perfil...</p>}
 
-                {/* Campo de Celular Formatado */}
                 <div className="space-y-1 text-left">
                   <label htmlFor="celularInput" className="text-xs font-semibold text-gray-300 flex items-center gap-1">
                     Celular / WhatsApp <span className="text-amber-400">*</span>
