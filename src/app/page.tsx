@@ -4,7 +4,15 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
-import { doc, setDoc, getDoc, collection, getDocs, query, orderBy } from "firebase/firestore";
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  collection, 
+  getDocs, 
+  query, 
+  QueryDocumentSnapshot 
+} from "firebase/firestore";
 
 interface ClimaData {
   temp: number;
@@ -25,7 +33,6 @@ interface Anuncio {
 export default function Home() {
   const [celular, setCelular] = useState<string>("");
 
-  // Máscara (19) 99999-9999
   const formatarCelular = (valor: string) => {
     const apenasNumeros = valor.replace(/\D/g, "");
     return apenasNumeros
@@ -58,7 +65,6 @@ export default function Home() {
     "🐾 Alerta de pet perdido: Cachorrinho Poodle branco visto perto do Recanto dos Pássaros."
   ];
 
-  // 1. Carrega dados do perfil
   useEffect(() => {
     async function carregarPerfil() {
       if (user) {
@@ -76,7 +82,6 @@ export default function Home() {
     carregarPerfil();
   }, [user]);
 
-  // 2. Carrega Clima, Moradores e Feed de Anúncios do Firestore
   useEffect(() => {
     async function carregarClimaReal() {
       try {
@@ -97,17 +102,18 @@ export default function Home() {
 
     async function carregarMoradoresEMultimidia() {
       try {
-        // Quantidade de moradores
         const snapUsuarios = await getDocs(collection(db, "usuarios"));
         setMoradoresReais(snapUsuarios.size);
 
-        // Anúncios/Publicações do Feed
         const qAnuncios = query(collection(db, "anuncios"));
         const snapAnuncios = await getDocs(qAnuncios);
-        const listaAnuncios: Anuncio[] = snapAnuncios.docs.map((docSnap) => ({
+        
+        // Tipagem explícita adicionada aqui (docSnap: QueryDocumentSnapshot)
+        const listaAnuncios: Anuncio[] = snapAnuncios.docs.map((docSnap: QueryDocumentSnapshot) => ({
           id: docSnap.id,
           ...docSnap.data(),
         }));
+        
         setAnuncios(listaAnuncios);
       } catch (err) {
         console.error("Erro ao consultar Firestore:", err);
@@ -120,7 +126,6 @@ export default function Home() {
     carregarMoradoresEMultimidia();
   }, []);
 
-  // 3. Timer do ticker de alertas
   useEffect(() => {
     const timer = setInterval(() => {
       setAlertaAtual((prev) => (prev + 1) % alertas.length);
@@ -217,7 +222,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-gray-100 pb-16 font-sans">
-      {/* HEADER */}
       <header className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-950 border-b border-blue-800/80 sticky top-0 z-40 shadow-xl">
         <div className="max-w-md mx-auto px-4 py-2.5 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -249,7 +253,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* TICKER DE ALERTAS */}
       <div className="bg-amber-500/10 border-b border-amber-500/20 py-1.5 px-4 overflow-hidden">
         <div className="max-w-md mx-auto flex items-center gap-2">
           <span className="text-[10px] bg-amber-500 text-blue-950 font-black px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">Plantão</span>
@@ -258,7 +261,6 @@ export default function Home() {
       </div>
 
       <main className="max-w-md mx-auto px-4 py-4 space-y-5">
-        {/* BANNER PRINCIPAL */}
         <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white rounded-3xl shadow-2xl overflow-hidden border border-blue-700/50 flex flex-col">
           <div className="w-full bg-slate-950 p-2 relative flex flex-col items-center">
             <img
@@ -291,7 +293,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* SERVIÇOS RÁPIDOS */}
         <section className="space-y-2.5">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Categorias & Serviços</h3>
@@ -314,7 +315,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* FEED DE ANÚNCIOS / PUBLICAÇÕES (AQUI ESTÁ O LOCAL CORRETO DOS CARDS) */}
         <section className="space-y-4 pt-2">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Publicações Recentes</h3>
@@ -331,7 +331,6 @@ export default function Home() {
                   key={anuncio.id}
                   className="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-3 shadow-xl"
                 >
-                  {/* Cabeçalho do Card */}
                   <div className="flex items-center justify-between">
                     <span className="bg-blue-900/60 text-blue-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-700/50">
                       {anuncio.categoria || "Anúncio"}
@@ -348,7 +347,6 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* AQUISIÇÃO E EXIBIÇÃO DA IMAGEM SEM CORTAR */}
                   {anuncio.imagemUrl && (
                     <div className="w-full bg-slate-950 rounded-2xl overflow-hidden p-1 flex items-center justify-center">
                       <img
@@ -359,7 +357,6 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Título e Descrição */}
                   <div className="space-y-1">
                     <h4 className="font-bold text-sm text-white">{anuncio.titulo}</h4>
                     {anuncio.descricao && (
@@ -373,7 +370,6 @@ export default function Home() {
         </section>
       </main>
 
-      {/* MODAL DE LOGIN / PERFIL */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-5 text-white max-h-[90vh] overflow-y-auto">
