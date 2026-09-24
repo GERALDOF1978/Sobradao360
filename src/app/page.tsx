@@ -12,10 +12,9 @@ interface ClimaData {
 }
 
 export default function Home() {
-  // Estado para o número de celular
   const [celular, setCelular] = useState<string>("");
 
-  // Função para aplicar a máscara (19) 99999-9999 automaticamente
+  // Máscara (19) 99999-9999
   const formatarCelular = (valor: string) => {
     const apenasNumeros = valor.replace(/\D/g, "");
     return apenasNumeros
@@ -31,18 +30,15 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user, loginWithGoogle, logout } = useAuth();
 
-  // Estados de dados dinâmicos reais (Clima e Moradores)
   const [clima, setClima] = useState<ClimaData | null>(null);
   const [moradoresReais, setMoradoresReais] = useState<number>(0);
   const [loadingDados, setLoadingDados] = useState(true);
 
-  // Estados de Upload e Perfil
   const [uploading, setUploading] = useState(false);
   const [profileImageUrl, setProfileImageUrl] = useState<string>("");
   const [salvando, setSalvando] = useState(false);
   const [perfilSalvo, setPerfilSalvo] = useState(false);
 
-  // Ticker de alertas do plantão
   const [alertaAtual, setAlertaAtual] = useState(0);
   const alertas = [
     "⚠️ Manutenção na rede de água no Residencial Gracioli nesta quinta-feira.",
@@ -50,7 +46,6 @@ export default function Home() {
     "🐾 Alerta de pet perdido: Cachorrinho Poodle branco visto perto do Recanto dos Pássaros."
   ];
 
-  // 1. Carrega dados do perfil (foto e celular) quando o usuário está logado
   useEffect(() => {
     async function carregarPerfil() {
       if (user) {
@@ -68,7 +63,6 @@ export default function Home() {
     carregarPerfil();
   }, [user]);
 
-  // 2. Busca clima real de Rio Claro/SP + Total de moradores reais do Firestore
   useEffect(() => {
     async function carregarClimaReal() {
       try {
@@ -102,7 +96,6 @@ export default function Home() {
     carregarMoradoresReais();
   }, []);
 
-  // 3. Timer do ticker de alertas
   useEffect(() => {
     const timer = setInterval(() => {
       setAlertaAtual((prev) => (prev + 1) % alertas.length);
@@ -110,7 +103,6 @@ export default function Home() {
     return () => clearInterval(timer);
   }, [alertas.length]);
 
-  // Handler de upload de foto de avatar
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0 || !user) return;
@@ -145,11 +137,9 @@ export default function Home() {
     }
   };
 
-  // Handler para salvar/confirmar perfil
   const handleCompletarCadastro = async () => {
     if (!user) return;
 
-    // Validação: verifica se tem 11 dígitos numéricos
     const numerosApenas = celular.replace(/\D/g, "");
     if (!numerosApenas || numerosApenas.length < 11) {
       alert("Por favor, preencha um número de celular válido com DDD.");
@@ -202,7 +192,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-gray-100 pb-16 font-sans">
-      {/* TOPO COM CLIMA EM TEMPO REAL E HEADER */}
+      {/* HEADER */}
       <header className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-950 border-b border-blue-800/80 sticky top-0 z-40 shadow-xl">
         <div className="max-w-md mx-auto px-4 py-2.5 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -215,7 +205,6 @@ export default function Home() {
             <span>{clima ? `${clima.temp}°C` : "26°C"}</span>
           </div>
 
-          {/* Botão Entrar/Sair Dinâmico */}
           {user ? (
             <div className="flex items-center gap-2">
               <img
@@ -244,27 +233,28 @@ export default function Home() {
       </div>
 
       <main className="max-w-md mx-auto px-4 py-4 space-y-4">
-        {/* BANNER PRINCIPAL FLUIDO E ADAPTÁVEL */}
-        <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white rounded-3xl shadow-2xl overflow-hidden border border-blue-700/50 relative">
-          <div className="w-full bg-slate-950 p-2 flex items-center justify-center relative">
+        {/* BANNER PRINCIPAL CORRIGIDO (SEMARTE / SEM CORTAR) */}
+        <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white rounded-3xl shadow-2xl overflow-hidden border border-blue-700/50 flex flex-col">
+          <div className="w-full bg-slate-950 p-2 relative flex flex-col items-center">
             <img
               src="https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp"
               alt="Banner Sobradão 360"
-              className="w-full h-auto max-h-[480px] object-contain rounded-2xl"
+              className="w-full h-auto object-contain rounded-2xl"
             />
 
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
-              <span className="bg-amber-400 text-blue-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow">
+            {/* Badges do Banner em fluxo normal para evitar sobreposição */}
+            <div className="w-full mt-2 px-2 flex items-center justify-between gap-2">
+              <span className="bg-amber-400 text-blue-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow shrink-0">
                 Portal Oficial
               </span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-slate-950/80 px-2.5 py-1 rounded-full border border-emerald-500/30 backdrop-blur-sm shadow">
+              <span className="text-[10px] font-bold text-emerald-400 bg-slate-900 px-2.5 py-1 rounded-full border border-emerald-500/30 shadow shrink-0">
                 ● {loadingDados ? "..." : `${moradoresReais} moradores ativos`}
               </span>
             </div>
           </div>
 
           <div className="p-4 space-y-3">
-            <p className="text-xs text-blue-200 text-center font-medium">
+            <p className="text-xs text-blue-200 text-center font-medium leading-relaxed">
               Conectando comércios, avisos e moradores do nosso bairro.
             </p>
 
@@ -277,35 +267,48 @@ export default function Home() {
           </div>
         </section>
 
-        {/* SERVIÇOS RÁPIDOS */}
+        {/* SERVIÇOS RÁPIDOS (Garantia de não cortar texto ou caixa) */}
         <section className="space-y-2.5 pt-1">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Categorias & Serviços</h3>
           </div>
           <div className="grid grid-cols-4 gap-2">
             {servicosRapidos.map((s, index) => (
-              <Link key={index} href={s.link} className="bg-slate-800/90 hover:bg-slate-800 border border-slate-700/60 p-2 rounded-2xl flex flex-col items-center text-center gap-1.5 shadow-sm hover:border-amber-400 transition group">
-                <div className={`w-9 h-9 rounded-xl ${s.cor} flex items-center justify-center text-white text-base shadow-md group-hover:scale-110 transition`}>{s.icone}</div>
-                <span className="text-[10px] font-semibold text-gray-200 leading-tight">{s.titulo}</span>
+              <Link 
+                key={index} 
+                href={s.link} 
+                className="bg-slate-800/90 hover:bg-slate-800 border border-slate-700/60 p-2 rounded-2xl flex flex-col items-center justify-center text-center gap-1.5 shadow-sm hover:border-amber-400 transition group min-h-[85px]"
+              >
+                <div className={`w-9 h-9 rounded-xl ${s.cor} flex items-center justify-center text-white text-base shadow-md group-hover:scale-110 transition shrink-0`}>
+                  {s.icone}
+                </div>
+                <span className="text-[9px] font-semibold text-gray-200 leading-tight text-center break-words w-full">
+                  {s.titulo}
+                </span>
               </Link>
             ))}
           </div>
         </section>
       </main>
 
-      {/* MODAL DE LOGIN / PERFIL */}
+      {/* MODAL DE LOGIN / PERFIL COM ROLAGEM VERTICAL CORRIGIDA */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-5 text-white">
-            <div className="flex justify-between items-center">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-5 text-white max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center sticky top-0 bg-slate-900 py-1 z-10 border-b border-slate-800">
               <h3 className="font-bold text-base text-amber-400">
                 {user ? `Olá, ${user.displayName}` : "Junte-se ao Sobradão 360"}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 rounded-full bg-slate-800 text-gray-400 flex items-center justify-center text-xs font-bold hover:bg-slate-700">✕</button>
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                className="w-8 h-8 rounded-full bg-slate-800 text-gray-400 flex items-center justify-center text-xs font-bold hover:bg-slate-700"
+              >
+                ✕
+              </button>
             </div>
 
             {!user ? (
-              <div className="py-8 text-center space-y-4">
+              <div className="py-6 text-center space-y-4">
                 <p className="text-sm text-gray-400">Para participar dos avisos, interagir no portal e cadastrar seu negócio, faça login com sua conta Google.</p>
                 <button
                   onClick={loginWithGoogle}
@@ -316,7 +319,7 @@ export default function Home() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 pt-2">
                 <div className="flex flex-col items-center gap-3 text-center">
                   <div className="relative group">
                     <img
@@ -326,7 +329,7 @@ export default function Home() {
                     />
                     <label
                       htmlFor="uploadAvatar"
-                      className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer text-[10px] font-bold text-white transition"
+                      className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer text-[10px] font-bold text-white transition"
                     >
                       {uploading ? "..." : "Alterar"}
                     </label>
@@ -347,7 +350,7 @@ export default function Home() {
 
                 {uploading && <p className="text-xs text-amber-500 text-center animate-pulse">⚙️ Alterando foto e salvando no perfil...</p>}
 
-                {/* Campo de Celular Formatado e Obrigatório */}
+                {/* Campo de Celular Formatado */}
                 <div className="space-y-1 text-left">
                   <label htmlFor="celularInput" className="text-xs font-semibold text-gray-300 flex items-center gap-1">
                     Celular / WhatsApp <span className="text-amber-400">*</span>
@@ -364,9 +367,9 @@ export default function Home() {
                   />
                 </div>
 
-                <div className="bg-slate-800 p-4 rounded-2xl space-y-2">
+                <div className="bg-slate-800/80 p-3.5 rounded-2xl space-y-1 border border-slate-700/50">
                   <p className="text-xs text-gray-300 font-semibold">Sobre sua participação:</p>
-                  <p className="text-[11px] text-gray-500">Você agora faz parte da comunidade Sobradão 360. Seu perfil está ativo no Firestore.</p>
+                  <p className="text-[11px] text-gray-400">Você agora faz parte da comunidade Sobradão 360. Seu perfil está ativo no Firestore.</p>
                 </div>
 
                 <button
