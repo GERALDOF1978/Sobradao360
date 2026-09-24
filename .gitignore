@@ -1,1 +1,12 @@
-node_modules
+# Dependências e Builds
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Ficheiros de ambiente e segredos
+.env
+.env.local
+.env*.local
+env.local
