@@ -160,18 +160,18 @@ export default function Home() {
   };
 
   const servicosRapidos = [
-    { titulo: "Anuncie", icone: "📢", cor: "bg-emerald-600", link: "/classificados" },
-    { titulo: "Empregos", icone: "💼", cor: "bg-indigo-600", link: "/classificados" },
-    { titulo: "Compre & Venda", icone: "🛍️", cor: "bg-orange-500", link: "/classificados" },
-    { titulo: "Alimentação", icone: "🎂", cor: "bg-pink-600", link: "/classificados" },
-    { titulo: "Reformas", icone: "🛠️", cor: "bg-blue-600", link: "/classificados" },
-    { titulo: "Lazer", icone: "🏡", cor: "bg-purple-700", link: "/classificados" },
-    { titulo: "Automotivo", icone: "🚗", cor: "bg-cyan-600", link: "/classificados" },
-    { titulo: "Zeladoria", icone: "⚠️", cor: "bg-red-600", link: "/classificados" },
-    { titulo: "Notícias", icone: "📰", cor: "bg-teal-600", link: "/classificados" },
-    { titulo: "Pet & Saúde", icone: "🐾", cor: "bg-amber-600", link: "/classificados" },
-    { titulo: "Eventos", icone: "🎉", cor: "bg-fuchsia-600", link: "/classificados" },
-    { titulo: "Utilidades", icone: "📞", cor: "bg-slate-700", link: "/classificados" },
+    { titulo: "Anuncie", icone: "📢", cor: "bg-emerald-600", link: "/classificados?categoria=Anuncie" },
+    { titulo: "Empregos", icone: "💼", cor: "bg-indigo-600", link: "/classificados?categoria=Empregos" },
+    { titulo: "Compre & Venda", icone: "🛍️", cor: "bg-orange-500", link: "/classificados?categoria=Compre%20%26%20Venda" },
+    { titulo: "Alimentação", icone: "🎂", cor: "bg-pink-600", link: "/classificados?categoria=Alimenta%C3%A7%C3%A3o" },
+    { titulo: "Reformas", icone: "🛠️", cor: "bg-blue-600", link: "/classificados?categoria=Reformas" },
+    { titulo: "Lazer", icone: "🏡", cor: "bg-purple-700", link: "/classificados?categoria=Lazer" },
+    { titulo: "Automotivo", icone: "🚗", cor: "bg-cyan-600", link: "/classificados?categoria=Automotivo" },
+    { titulo: "Zeladoria", icone: "⚠️", cor: "bg-red-600", link: "/classificados?categoria=Zeladoria" },
+    { titulo: "Notícias", icone: "📰", cor: "bg-teal-600", link: "/classificados?categoria=Not%C3%ADcias" },
+    { titulo: "Pet & Saúde", icone: "🐾", cor: "bg-amber-600", link: "/classificados?categoria=Pet%20%26%20Sa%C3%BAde" },
+    { titulo: "Eventos", icone: "🎉", cor: "bg-fuchsia-600", link: "/classificados?categoria=Eventos" },
+    { titulo: "Utilidades", icone: "📞", cor: "bg-slate-700", link: "/classificados?categoria=Utilidades" },
   ];
 
   return (

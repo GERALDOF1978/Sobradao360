@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "firebase/firestore";
@@ -62,34 +63,52 @@ interface Anuncio {
   createdAt: any;
 }
 
-export default function ClassificadosPage() {
+function ClassificadosConteudo() {
+  const searchParams = useSearchParams();
+  const categoriaURL = searchParams.get("categoria") || "Todos";
+
   const { user } = useAuth();
   const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Categoria atual para filtro e publicação
+  const [categoria, setCategoria] = useState(categoriaURL);
+
   // Estados do formulário
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
-  const [categoria, setCategoria] = useState("Anuncie");
   const [imagemUrl, setImagemUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
-  // As 8 categorias do Sobradão 360
+  // As 12 categorias atualizadas do Sobradão 360
   const categorias = [
+    { nome: "Todos", icone: "🌐" },
     { nome: "Anuncie", icone: "📢" },
     { nome: "Empregos", icone: "💼" },
     { nome: "Compre & Venda", icone: "🛍️" },
-    { nome: "Lazer", icone: "🏡" },
-    { nome: "Reformas", icone: "🛠️" },
     { nome: "Alimentação", icone: "🎂" },
+    { nome: "Reformas", icone: "🛠️" },
+    { nome: "Lazer", icone: "🏡" },
     { nome: "Automotivo", icone: "🚗" },
     { nome: "Zeladoria", icone: "⚠️" },
+    { nome: "Notícias", icone: "📰" },
+    { nome: "Pet & Saúde", icone: "🐾" },
+    { nome: "Eventos", icone: "🎉" },
     { nome: "Utilidades", icone: "📞" },
   ];
 
+  // Sincroniza a categoria quando mudar na URL
+  useEffect(() => {
+    const cat = searchParams.get("categoria");
+    if (cat) {
+      setCategoria(cat);
+    }
+  }, [searchParams]);
+
   // Buscar anúncios no Firestore
   const buscarAnuncios = async () => {
+    setLoading(true);
     try {
       const q = query(collection(db, "anuncios"), orderBy("createdAt", "desc"));
       const querySnapshot = await getDocs(q);
@@ -153,12 +172,14 @@ export default function ClassificadosPage() {
       return;
     }
 
+    const categoriaPublicacao = categoria === "Todos" ? "Anuncie" : categoria;
+
     setSalvando(true);
     try {
       await addDoc(collection(db, "anuncios"), {
         titulo,
         descricao,
-        categoria,
+        categoria: categoriaPublicacao,
         imagemUrl: imagemUrl || null,
         autorUid: user.uid,
         autorNome: user.displayName || "Morador",
@@ -179,6 +200,11 @@ export default function ClassificadosPage() {
     }
   };
 
+  // Filtra os anúncios conforme a categoria selecionada
+  const anunciosFiltrados = categoria === "Todos" 
+    ? anuncios 
+    : anuncios.filter((a) => a.categoria?.toLowerCase() === categoria.toLowerCase());
+
   return (
     <div className="min-h-screen bg-slate-950 text-gray-100 p-4 font-sans max-w-md mx-auto space-y-6 pb-20">
       
@@ -190,6 +216,24 @@ export default function ClassificadosPage() {
         <h1 className="text-sm font-black text-white">🛍️ Classificados & Guia</h1>
       </div>
 
+      {/* FILTROS DE CATEGORIA (CARROSEL DE BADGES) */}
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+        {categorias.map((cat) => (
+          <button
+            key={cat.nome}
+            onClick={() => setCategoria(cat.nome)}
+            className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              categoria === cat.nome
+                ? "bg-amber-400 text-blue-950 shadow"
+                : "bg-slate-900 border border-slate-800 text-gray-400 hover:text-white"
+            }`}
+          >
+            <span>{cat.icone}</span>
+            <span>{cat.nome}</span>
+          </button>
+        ))}
+      </div>
+
       {/* FORMULÁRIO DE NOVO ANÚNCIO */}
       {user ? (
         <form onSubmit={handlePublicar} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3 shadow-lg">
@@ -197,37 +241,29 @@ export default function ClassificadosPage() {
           
           <input 
             type="text" 
-            placeholder="Título do produto, serviço ou aviso" 
+            placeholder="Título do produto, serviço ou vaga" 
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
           />
 
-          {/* Seleção entre as 8 Categorias */}
-          <div>
-            <label className="text-[10px] text-gray-400 block mb-1">Selecione a Categoria:</label>
-            <select 
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
-            >
-              {categorias.map((cat) => (
-                <option key={cat.nome} value={cat.nome}>
-                  {cat.icone} {cat.nome}
-                </option>
-              ))}
-            </select>
+          {/* Indicador visual de Categoria Automática */}
+          <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
+            <span className="text-[11px] text-gray-400">Categoria da publicação:</span>
+            <span className="text-xs font-black bg-amber-400 text-blue-950 px-2.5 py-0.5 rounded-lg shadow">
+              {categoria === "Todos" ? "Anuncie" : categoria}
+            </span>
           </div>
 
           <textarea 
-            placeholder="Descreva os detalhes, telefone de contato, preços, etc..." 
+            placeholder="Descreva os detalhes, telefone de contato, requisitos ou valores..." 
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
             rows={3}
             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400 resize-none"
           />
 
-          {/* Campo de Upload de Foto com Compressão */}
+          {/* Campo de Upload de Foto */}
           <div className="space-y-1.5">
             <label className="text-[10px] text-gray-400 block">Adicionar Imagem (Compactada automaticamente):</label>
             <input 
@@ -262,20 +298,25 @@ export default function ClassificadosPage() {
         </form>
       ) : (
         <div className="bg-blue-950/40 border border-blue-800/50 p-4 rounded-2xl text-center space-y-2">
-          <p className="text-xs text-blue-200">Faça login para anunciar seus produtos, negócios e serviços no portal.</p>
+          <p className="text-xs text-blue-200">Faça login para anunciar seus produtos, serviços e vagas no portal.</p>
         </div>
       )}
 
       {/* LISTA DE ANÚNCIOS */}
       <div className="space-y-3">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">Mural Recente</h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">
+            {categoria === "Todos" ? "Mural Completo" : `Mural: ${categoria}`}
+          </h2>
+          <span className="text-[10px] text-gray-500">{anunciosFiltrados.length} anúncio(s)</span>
+        </div>
         
         {loading ? (
           <p className="text-center text-xs text-gray-500 py-6">Carregando avisos do Firestore...</p>
-        ) : anuncios.length === 0 ? (
-          <p className="text-center text-xs text-gray-500 py-6">Nenhum anúncio cadastrado ainda. Seja o primeiro!</p>
+        ) : anunciosFiltrados.length === 0 ? (
+          <p className="text-center text-xs text-gray-500 py-6">Nenhum anúncio nesta categoria ainda. Seja o primeiro!</p>
         ) : (
-          anuncios.map((item) => (
+          anunciosFiltrados.map((item) => (
             <div key={item.id} className="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl space-y-2.5 shadow">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold bg-blue-900/60 text-blue-300 px-2 py-0.5 rounded-lg border border-blue-700/40">
@@ -301,5 +342,13 @@ export default function ClassificadosPage() {
       </div>
 
     </div>
+  );
+}
+
+export default function ClassificadosPage() {
+  return (
+    <Suspense fallback={<div className="text-center py-10 text-xs text-amber-400">Carregando Classificados...</div>}>
+      <ClassificadosConteudo />
+    </Suspense>
   );
 }
