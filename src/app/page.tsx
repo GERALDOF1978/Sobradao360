@@ -12,6 +12,24 @@ interface ClimaData {
 }
 
 export default function Home() {
+
+
+// Estado para o número de telemóvel
+const [celular, setCelular] = useState<string>("");
+
+// Função para aplicar a máscara (19) 99999-9999 automaticamente
+const formatarCelular = (valor: string) => {
+  const apenasNumeros = valor.replace(/\D/g, "");
+  return apenasNumeros
+    .replace(/^(\d{2})(\d)/g, "($1) $2")
+    .replace(/(\d{5})(\d)/, "$1-$2")
+    .replace(/(-\d{4})\d+?$/, "$1");
+};
+
+const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  setCelular(formatarCelular(e.target.value));
+};
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user, loginWithGoogle, logout } = useAuth();
 
@@ -33,6 +51,24 @@ export default function Home() {
     "📢 Feira noturna e encontro de food trucks neste sábado!",
     "🐾 Alerta de pet perdido: Cachorrinho Poodle branco visto perto do Recanto dos Pássaros."
   ];
+
+
+  useEffect(() => {
+  async function carregarPerfil() {
+    if (user) {
+      const userRef = doc(db, "usuarios", user.uid);
+      const docSnap = await getDoc(userRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setProfileImageUrl(data.fotoUrl || user.photoURL || "");
+        setCelular(data.celular || ""); // <--- Carrega o celular guardado
+      } else {
+        setProfileImageUrl(user.photoURL || "");
+      }
+    }
+  }
+  carregarPerfil();
+}, [user]);
 
   // 1. Busca clima real de Rio Claro/SP + Total de moradores reais do Firestore
   useEffect(() => {
@@ -130,34 +166,43 @@ export default function Home() {
 
   // Handler para salvar/confirmar perfil
   const handleCompletarCadastro = async () => {
-    if (!user) return;
-    setSalvando(true);
-    try {
-      const userRef = doc(db, "usuarios", user.uid);
-      await setDoc(
-        userRef,
-        {
-          uid: user.uid,
-          nome: user.displayName,
-          email: user.email,
-          fotoUrl: profileImageUrl || user.photoURL,
-          dataCadastro: new Date().toISOString(),
-        },
-        { merge: true }
-      );
+  if (!user) return;
 
-      setPerfilSalvo(true);
-      setTimeout(() => {
-        setIsModalOpen(false);
-        setPerfilSalvo(false);
-      }, 2000);
-    } catch (error) {
-      console.error("Erro ao salvar no Firestore:", error);
-      alert("Ocorreu um erro ao salvar seus dados.");
-    } finally {
-      setSalvando(false);
-    }
-  };
+  // Validação: verifica se tem 11 dígitos numéricos
+  const numerosApenas = celular.replace(/\D/g, "");
+  if (!numerosApenas || numerosApenas.length < 11) {
+    alert("Por favor, preencha um número de celular válido com DDD.");
+    return;
+  }
+
+  setSalvando(true);
+  try {
+    const userRef = doc(db, "usuarios", user.uid);
+    await setDoc(
+      userRef,
+      {
+        uid: user.uid,
+        nome: user.displayName,
+        email: user.email,
+        fotoUrl: profileImageUrl || user.photoURL,
+        celular: celular, // <--- Salva o celular formatado
+        dataCadastro: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+
+    setPerfilSalvo(true);
+    setTimeout(() => {
+      setIsModalOpen(false);
+      setPerfilSalvo(false);
+    }, 2000);
+  } catch (error) {
+    console.error("Erro ao salvar no Firestore:", error);
+    alert("Ocorreu um erro ao salvar seus dados.");
+  } finally {
+    setSalvando(false);
+  }
+};
 
   const servicosRapidos = [
     { titulo: "Anuncie", icone: "📢", cor: "bg-emerald-600", link: "/classificados?categoria=Anuncie" },
@@ -308,15 +353,23 @@ export default function Home() {
                     >
                       {uploading ? "..." : "Alterar"}
                     </label>
-                    <input
-                      type="file"
-                      id="uploadAvatar"
-                      accept="image/jpeg, image/png, image/webp"
-                      onChange={handleFileChange}
-                      disabled={uploading}
-                      className="hidden"
-                    />
-                  </div>
+                    
+                    {/* Campo de Telemóvel Formatado e Obrigatório */}
+<div className="space-y-1 text-left">
+  <label htmlFor="celularInput" className="text-xs font-semibold text-gray-300 flex items-center gap-1">
+    Celular / WhatsApp <span className="text-amber-400">*</span>
+  </label>
+  <input
+    id="celularInput"
+    type="tel"
+    required
+    placeholder="(19) 99999-9999"
+    maxLength={15}
+    value={celular}
+    onChange={handleCelularChange}
+    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition"
+  />
+</div>
                   <div>
                     <p className="font-bold text-lg">{user.displayName}</p>
                     <p className="text-xs text-gray-400">{user.email}</p>
