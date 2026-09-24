@@ -46,6 +46,7 @@ export async function GET() {
     await guardarItems(feedJC.items.slice(0, 5), "Jornal Cidade");
     await guardarItems(feedPrefeitura.items.slice(0, 5), "Prefeitura de Rio Claro");
 
+    
     return NextResponse.json({
       success: true,
       mensagem: `Sincronização concluída com sucesso! Items processados.`,
