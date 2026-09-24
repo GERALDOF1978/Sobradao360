@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
-import { doc, setDoc, getDoc, collection, getDocs, query, QueryDocumentSnapshot } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, getDocs, query } from "firebase/firestore";
 
 interface ClimaData {
   temp: number;
@@ -93,26 +93,25 @@ export default function Home() {
     }
 
     async function carregarMoradoresEMultimidia() {
-  try {
-    const snapUsuarios = await getDocs(collection(db, "usuarios"));
-    setMoradoresReais(snapUsuarios.size);
+      try {
+        const snapUsuarios = await getDocs(collection(db, "usuarios"));
+        setMoradoresReais(snapUsuarios.size);
 
-    const qAnuncios = query(collection(db, "anuncios"));
-    const snapAnuncios = await getDocs(qAnuncios);
+        const qAnuncios = query(collection(db, "anuncios"));
+        const snapAnuncios = await getDocs(qAnuncios);
 
-    // Adicionado ": QueryDocumentSnapshot" no parâmetro docSnap
-    const listaAnuncios: Anuncio[] = snapAnuncios.docs.map((docSnap: QueryDocumentSnapshot) => ({
-      id: docSnap.id,
-      ...docSnap.data(),
-    } as Anuncio));
+        const listaAnuncios: Anuncio[] = snapAnuncios.docs.map((docSnap: any) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
 
-    setAnuncios(listaAnuncios);
-  } catch (err) {
-    console.error("Erro ao consultar Firestore:", err);
-  } finally {
-    setLoadingDados(false);
-  }
-}
+        setAnuncios(listaAnuncios);
+      } catch (err) {
+        console.error("Erro ao consultar Firestore:", err);
+      } finally {
+        setLoadingDados(false);
+      }
+    }
 
     carregarClimaReal();
     carregarMoradoresEMultimidia();
