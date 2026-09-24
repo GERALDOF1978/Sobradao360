@@ -78,6 +78,7 @@ export default function ClassificadosPage() {
   // As 8 categorias do Sobradão 360
   const categorias = [
     { nome: "Anuncie", icone: "📢" },
+    { nome: "Empregos", icone: "💼" },
     { nome: "Compre & Venda", icone: "🛍️" },
     { nome: "Lazer", icone: "🏡" },
     { nome: "Reformas", icone: "🛠️" },
