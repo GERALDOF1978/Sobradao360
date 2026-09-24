@@ -12,23 +12,21 @@ interface ClimaData {
 }
 
 export default function Home() {
+  // Estado para o número de celular
+  const [celular, setCelular] = useState<string>("");
 
+  // Função para aplicar a máscara (19) 99999-9999 automaticamente
+  const formatarCelular = (valor: string) => {
+    const apenasNumeros = valor.replace(/\D/g, "");
+    return apenasNumeros
+      .replace(/^(\d{2})(\d)/g, "($1) $2")
+      .replace(/(\d{5})(\d)/, "$1-$2")
+      .replace(/(-\d{4})\d+?$/, "$1");
+  };
 
-// Estado para o número de telemóvel
-const [celular, setCelular] = useState<string>("");
-
-// Função para aplicar a máscara (19) 99999-9999 automaticamente
-const formatarCelular = (valor: string) => {
-  const apenasNumeros = valor.replace(/\D/g, "");
-  return apenasNumeros
-    .replace(/^(\d{2})(\d)/g, "($1) $2")
-    .replace(/(\d{5})(\d)/, "$1-$2")
-    .replace(/(-\d{4})\d+?$/, "$1");
-};
-
-const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  setCelular(formatarCelular(e.target.value));
-};
+  const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCelular(formatarCelular(e.target.value));
+  };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user, loginWithGoogle, logout } = useAuth();
@@ -52,25 +50,25 @@ const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     "🐾 Alerta de pet perdido: Cachorrinho Poodle branco visto perto do Recanto dos Pássaros."
   ];
 
-
+  // 1. Carrega dados do perfil (foto e celular) quando o usuário está logado
   useEffect(() => {
-  async function carregarPerfil() {
-    if (user) {
-      const userRef = doc(db, "usuarios", user.uid);
-      const docSnap = await getDoc(userRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setProfileImageUrl(data.fotoUrl || user.photoURL || "");
-        setCelular(data.celular || ""); // <--- Carrega o celular guardado
-      } else {
-        setProfileImageUrl(user.photoURL || "");
+    async function carregarPerfil() {
+      if (user) {
+        const userRef = doc(db, "usuarios", user.uid);
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setProfileImageUrl(data.fotoUrl || user.photoURL || "");
+          setCelular(data.celular || "");
+        } else {
+          setProfileImageUrl(user.photoURL || "");
+        }
       }
     }
-  }
-  carregarPerfil();
-}, [user]);
+    carregarPerfil();
+  }, [user]);
 
-  // 1. Busca clima real de Rio Claro/SP + Total de moradores reais do Firestore
+  // 2. Busca clima real de Rio Claro/SP + Total de moradores reais do Firestore
   useEffect(() => {
     async function carregarClimaReal() {
       try {
@@ -103,23 +101,6 @@ const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     carregarClimaReal();
     carregarMoradoresReais();
   }, []);
-
-  // 2. Carrega foto e dados do perfil do usuário logado
-  useEffect(() => {
-    async function carregarPerfil() {
-      if (user) {
-        const userRef = doc(db, "usuarios", user.uid);
-        const docSnap = await getDoc(userRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setProfileImageUrl(data.fotoUrl || user.photoURL || "");
-        } else {
-          setProfileImageUrl(user.photoURL || "");
-        }
-      }
-    }
-    carregarPerfil();
-  }, [user]);
 
   // 3. Timer do ticker de alertas
   useEffect(() => {
@@ -166,43 +147,43 @@ const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
   // Handler para salvar/confirmar perfil
   const handleCompletarCadastro = async () => {
-  if (!user) return;
+    if (!user) return;
 
-  // Validação: verifica se tem 11 dígitos numéricos
-  const numerosApenas = celular.replace(/\D/g, "");
-  if (!numerosApenas || numerosApenas.length < 11) {
-    alert("Por favor, preencha um número de celular válido com DDD.");
-    return;
-  }
+    // Validação: verifica se tem 11 dígitos numéricos
+    const numerosApenas = celular.replace(/\D/g, "");
+    if (!numerosApenas || numerosApenas.length < 11) {
+      alert("Por favor, preencha um número de celular válido com DDD.");
+      return;
+    }
 
-  setSalvando(true);
-  try {
-    const userRef = doc(db, "usuarios", user.uid);
-    await setDoc(
-      userRef,
-      {
-        uid: user.uid,
-        nome: user.displayName,
-        email: user.email,
-        fotoUrl: profileImageUrl || user.photoURL,
-        celular: celular, // <--- Salva o celular formatado
-        dataCadastro: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+    setSalvando(true);
+    try {
+      const userRef = doc(db, "usuarios", user.uid);
+      await setDoc(
+        userRef,
+        {
+          uid: user.uid,
+          nome: user.displayName,
+          email: user.email,
+          fotoUrl: profileImageUrl || user.photoURL,
+          celular: celular,
+          dataCadastro: new Date().toISOString(),
+        },
+        { merge: true }
+      );
 
-    setPerfilSalvo(true);
-    setTimeout(() => {
-      setIsModalOpen(false);
-      setPerfilSalvo(false);
-    }, 2000);
-  } catch (error) {
-    console.error("Erro ao salvar no Firestore:", error);
-    alert("Ocorreu um erro ao salvar seus dados.");
-  } finally {
-    setSalvando(false);
-  }
-};
+      setPerfilSalvo(true);
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setPerfilSalvo(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Erro ao salvar no Firestore:", error);
+      alert("Ocorreu um erro ao salvar seus dados.");
+    } finally {
+      setSalvando(false);
+    }
+  };
 
   const servicosRapidos = [
     { titulo: "Anuncie", icone: "📢", cor: "bg-emerald-600", link: "/classificados?categoria=Anuncie" },
@@ -263,18 +244,15 @@ const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       </div>
 
       <main className="max-w-md mx-auto px-4 py-4 space-y-4">
-        {/* BANNER PRINCIPAL ADAPTÁVEL A QUALQUER DIMENSÃO */}
         {/* BANNER PRINCIPAL FLUIDO E ADAPTÁVEL */}
         <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white rounded-3xl shadow-2xl overflow-hidden border border-blue-700/50 relative">
           <div className="w-full bg-slate-950 p-2 flex items-center justify-center relative">
-            {/* Imagem natural sem distorção, sem altura fixa e com limite máximo de altura */}
             <img
               src="https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp"
               alt="Banner Sobradão 360"
               className="w-full h-auto max-h-[480px] object-contain rounded-2xl"
             />
 
-            {/* Tags informativas sobrepostas na parte inferior */}
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
               <span className="bg-amber-400 text-blue-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow">
                 Portal Oficial
@@ -290,7 +268,6 @@ const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               Conectando comércios, avisos e moradores do nosso bairro.
             </p>
 
-            {/* Botão de Ação Principal Integrado */}
             <button
               onClick={user ? () => setIsModalOpen(true) : loginWithGoogle}
               className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-blue-950 font-black py-3 px-4 rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2"
@@ -339,7 +316,7 @@ const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 </button>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="flex flex-col items-center gap-3 text-center">
                   <div className="relative group">
                     <img
@@ -353,23 +330,15 @@ const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                     >
                       {uploading ? "..." : "Alterar"}
                     </label>
-                    
-                    {/* Campo de Telemóvel Formatado e Obrigatório */}
-<div className="space-y-1 text-left">
-  <label htmlFor="celularInput" className="text-xs font-semibold text-gray-300 flex items-center gap-1">
-    Celular / WhatsApp <span className="text-amber-400">*</span>
-  </label>
-  <input
-    id="celularInput"
-    type="tel"
-    required
-    placeholder="(19) 99999-9999"
-    maxLength={15}
-    value={celular}
-    onChange={handleCelularChange}
-    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition"
-  />
-</div>
+                    <input
+                      id="uploadAvatar"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </div>
+
                   <div>
                     <p className="font-bold text-lg">{user.displayName}</p>
                     <p className="text-xs text-gray-400">{user.email}</p>
@@ -377,6 +346,23 @@ const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 </div>
 
                 {uploading && <p className="text-xs text-amber-500 text-center animate-pulse">⚙️ Alterando foto e salvando no perfil...</p>}
+
+                {/* Campo de Celular Formatado e Obrigatório */}
+                <div className="space-y-1 text-left">
+                  <label htmlFor="celularInput" className="text-xs font-semibold text-gray-300 flex items-center gap-1">
+                    Celular / WhatsApp <span className="text-amber-400">*</span>
+                  </label>
+                  <input
+                    id="celularInput"
+                    type="tel"
+                    required
+                    placeholder="(19) 99999-9999"
+                    maxLength={15}
+                    value={celular}
+                    onChange={handleCelularChange}
+                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition"
+                  />
+                </div>
 
                 <div className="bg-slate-800 p-4 rounded-2xl space-y-2">
                   <p className="text-xs text-gray-300 font-semibold">Sobre sua participação:</p>
