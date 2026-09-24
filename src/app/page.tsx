@@ -182,45 +182,36 @@ export default function Home() {
 
       <main className="max-w-md mx-auto px-4 py-4 space-y-4">
         
-        {/* BANNER PRINCIPAL */}
+  
+        {/* BANNER PRINCIPAL COM BOTÃO INTEGRADO */}
         <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white rounded-3xl shadow-2xl overflow-hidden border border-blue-700/50 relative">
-          <div className="w-full h-full bg-blue-950 relative overflow-hidden border-b border-blue-700/40">
-            <img src={"https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp"} alt="Banner" className="w-full h-full object-cover opacity-90" />
-            <div className="absolute inset-0 bg-gradient-to-t from-blue-950 via-transparent to-transparent"></div>
-            <div className="absolute bottom-2 left-3">
-              <span className="bg-amber-400 text-blue-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow">Portal Oficial</span>
+          <div className="w-full h-44 bg-blue-950 relative overflow-hidden">
+            <img 
+              src="https://i.ibb.co/bRqYV9df/file-00000000ff0482068cac048de4c99341.png" 
+              alt="Banner Sobradão 360" 
+              className="w-full h-full object-cover opacity-95" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-blue-950/90 via-transparent to-transparent"></div>
+            
+            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+              <span className="bg-amber-400 text-blue-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow">
+                Portal Oficial
+              </span>
+              <span className="text-[10px] font-bold text-blue-200">
+                +1.250 moradores
+              </span>
             </div>
           </div>
 
-          <div className="p-4 space-y-3.5">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-xl font-black tracking-tight leading-none text-white">SOBRADÃO <span className="text-amber-400">360</span></h2>
-                <span className="text-[10px] font-semibold text-blue-200">O portal do nosso bairro</span>
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] font-bold text-amber-300 italic block">Aqui o seu bairro</span>
-                <span className="text-[11px] font-black bg-blue-700/80 px-2 py-0.5 rounded-lg text-white inline-block mt-0.5 shadow">é notícia!</span>
-              </div>
-            </div>
+          <div className="p-4 space-y-3">
+            <p className="text-xs text-blue-200 text-center font-medium">
+              Conectando comércios, avisos e moradores do nosso bairro.
+            </p>
 
-            <div className="flex items-center justify-between bg-blue-950/50 px-3 py-2 rounded-xl border border-blue-800/60 text-[11px] text-blue-200">
-              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span><strong className="text-white">+1.250</strong> moradores ativos</span>
-              <span className="text-amber-300 font-semibold">85+ comércios</span>
-            </div>
-
-            <div className="bg-blue-950/60 p-3 rounded-2xl border border-blue-800/40 space-y-1.5">
-              <div className="flex items-center gap-1 text-amber-400 font-bold text-[11px] uppercase tracking-wide">📍 Nossos Bairros</div>
-              <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] text-blue-100">
-                <ul>{bairrosGrupo1.map(b => <li key={b} className="truncate">📍 {b}</li>)}</ul>
-                <ul>{bairrosGrupo2.map(b => <li key={b} className="truncate">📍 {b}</li>)}</ul>
-              </div>
-            </div>
-
-            {/* Botão de Ação Principal - Se Logado, abre o modal de perfil */}
+            {/* Botão de Ação Principal Integrado */}
             <button 
               onClick={user ? () => setIsModalOpen(true) : loginWithGoogle}
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-blue-950 font-black py-3 px-4 rounded-xl text-sm shadow-lg transition flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-blue-950 font-black py-3 px-4 rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2"
             >
               {user ? "🚀 Meu Perfil & Avisos" : "🚀 Participe da Comunidade!"}
             </button>
