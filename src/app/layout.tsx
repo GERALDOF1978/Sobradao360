@@ -2,6 +2,7 @@
 import { AuthProvider } from "@/context/AuthContext";
 import './globals.css';
 
+
 export const metadata = {
   title: 'Sobradão 360',
   description: 'Portal Comunitário',
