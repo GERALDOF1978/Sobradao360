@@ -2,25 +2,31 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext"; // Importamos o hook de autenticação
-import { db } from "@/lib/firebase"; // Importamos o Firestore
-import { doc, setDoc, getDoc } from "firebase/firestore"; // Funções do Firestore
+import { useAuth } from "@/context/AuthContext";
+import { db } from "@/lib/firebase";
+import { doc, setDoc, getDoc, collection, getDocs } from "firebase/firestore";
 
-
+interface ClimaData {
+  temp: number;
+  condicao: string;
+}
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Usamos o contexto de autenticação
-  const { user, loginWithGoogle, logout } = useAuth(); 
-  
-  // Estados de Upload e Perfil (agora associados ao user logado)
+  const { user, loginWithGoogle, logout } = useAuth();
+
+  // Estados de dados dinâmicos reais (Clima e Moradores)
+  const [clima, setClima] = useState<ClimaData | null>(null);
+  const [moradoresReais, setMoradoresReais] = useState<number>(0);
+  const [loadingDados, setLoadingDados] = useState(true);
+
+  // Estados de Upload e Perfil
   const [uploading, setUploading] = useState(false);
   const [profileImageUrl, setProfileImageUrl] = useState<string>("");
   const [salvando, setSalvando] = useState(false);
   const [perfilSalvo, setPerfilSalvo] = useState(false);
 
-  // Ticker de alertas
+  // Ticker de alertas do plantão
   const [alertaAtual, setAlertaAtual] = useState(0);
   const alertas = [
     "⚠️ Manutenção na rede de água no Residencial Gracioli nesta quinta-feira.",
@@ -28,7 +34,41 @@ export default function Home() {
     "🐾 Alerta de pet perdido: Cachorrinho Poodle branco visto perto do Recanto dos Pássaros."
   ];
 
-  // Efeito para carregar a foto do perfil do Firestore ao logar
+  // 1. Busca clima real de Rio Claro/SP + Total de moradores reais do Firestore
+  useEffect(() => {
+    async function carregarClimaReal() {
+      try {
+        const res = await fetch(
+          "https://api.open-meteo.com/v1/forecast?latitude=-22.4111&longitude=-47.5614&current=temperature_2m,weather_code"
+        );
+        const data = await res.json();
+        if (data?.current) {
+          setClima({
+            temp: Math.round(data.current.temperature_2m),
+            condicao: data.current.weather_code <= 3 ? "⛅" : "🌧️",
+          });
+        }
+      } catch (err) {
+        console.error("Erro ao carregar clima:", err);
+      }
+    }
+
+    async function carregarMoradoresReais() {
+      try {
+        const snapshot = await getDocs(collection(db, "usuarios"));
+        setMoradoresReais(snapshot.size);
+      } catch (err) {
+        console.error("Erro ao consultar usuários no Firestore:", err);
+      } finally {
+        setLoadingDados(false);
+      }
+    }
+
+    carregarClimaReal();
+    carregarMoradoresReais();
+  }, []);
+
+  // 2. Carrega foto e dados do perfil do usuário logado
   useEffect(() => {
     async function carregarPerfil() {
       if (user) {
@@ -38,7 +78,6 @@ export default function Home() {
           const data = docSnap.data();
           setProfileImageUrl(data.fotoUrl || user.photoURL || "");
         } else {
-          // Se for o primeiro login, usa a foto do Google como padrão
           setProfileImageUrl(user.photoURL || "");
         }
       }
@@ -46,6 +85,7 @@ export default function Home() {
     carregarPerfil();
   }, [user]);
 
+  // 3. Timer do ticker de alertas
   useEffect(() => {
     const timer = setInterval(() => {
       setAlertaAtual((prev) => (prev + 1) % alertas.length);
@@ -53,6 +93,7 @@ export default function Home() {
     return () => clearInterval(timer);
   }, [alertas.length]);
 
+  // Handler de upload de foto de avatar
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0 || !user) return;
@@ -61,57 +102,55 @@ export default function Home() {
     setUploading(true);
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     try {
-      // Chama a nossa API Route interna que criamos
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
+      const response = await fetch("/api/upload-image", {
+        method: "POST",
         body: formData,
       });
 
       const result = await response.json();
 
       if (result.success) {
-        // Atualiza o estado da imagem no componente
-        setProfileImageUrl(result.url); 
-        
-        // Atualiza a foto no Firestore (para persistir)
+        setProfileImageUrl(result.url);
         const userRef = doc(db, "usuarios", user.uid);
         await setDoc(userRef, { fotoUrl: result.url }, { merge: true });
-        
         alert(`Avatar atualizado e salvo com sucesso!`);
       } else {
         alert(`Erro no upload: ${result.error}`);
       }
     } catch (error) {
       console.error(error);
-      alert('Ocorreu um erro ao conectar com a API de upload.');
+      alert("Ocorreu um erro ao conectar com a API de upload.");
     } finally {
       setUploading(false);
     }
   };
 
+  // Handler para salvar/confirmar perfil
   const handleCompletarCadastro = async () => {
     if (!user) return;
     setSalvando(true);
     try {
-      // Salva os dados do usuário no Firestore
       const userRef = doc(db, "usuarios", user.uid);
-      await setDoc(userRef, {
-        uid: user.uid,
-        nome: user.displayName,
-        email: user.email,
-        fotoUrl: profileImageUrl || user.photoURL, // Usa a foto otimizada ou a do Google
-        dataCadastro: new Date().toISOString(),
-      }, { merge: true }); // Merge para não sobrescrever dados existentes
+      await setDoc(
+        userRef,
+        {
+          uid: user.uid,
+          nome: user.displayName,
+          email: user.email,
+          fotoUrl: profileImageUrl || user.photoURL,
+          dataCadastro: new Date().toISOString(),
+        },
+        { merge: true }
+      );
 
       setPerfilSalvo(true);
       setTimeout(() => {
         setIsModalOpen(false);
         setPerfilSalvo(false);
       }, 2000);
-
     } catch (error) {
       console.error("Erro ao salvar no Firestore:", error);
       alert("Ocorreu um erro ao salvar seus dados.");
@@ -120,45 +159,39 @@ export default function Home() {
     }
   };
 
-
-  // Configuração Mock (Clima, Bairros, Serviços)
-  const clima = { temp: "26°C", icone: "⛅" };
-  const bairrosGrupo1 = ["Jardim Dona Regina Picelli", "Residencial Gracioli", "Jardim São Caetano II"];
-  const bairrosGrupo2 = ["Residencial Recanto dos Pássaros", "Clube Villas", "Cond. Villa dos Lírios"];
   const servicosRapidos = [
-    { titulo: "Anuncie", icone: "📢", cor: "bg-emerald-600", link: "/guia" },
+    { titulo: "Anuncie", icone: "📢", cor: "bg-emerald-600", link: "/classificados" },
     { titulo: "Compre & Venda", icone: "🛍️", cor: "bg-orange-500", link: "/classificados" },
     { titulo: "Lazer", icone: "🏡", cor: "bg-purple-700", link: "/classificados" },
-    { titulo: "Reformas", icone: "🛠️", cor: "bg-blue-600", link: "/guia" },
-    { titulo: "Alimentação", icone: "🎂", cor: "bg-pink-600", link: "/guia" },
+    { titulo: "Reformas", icone: "🛠️", cor: "bg-blue-600", link: "/classificados" },
+    { titulo: "Alimentação", icone: "🎂", cor: "bg-pink-600", link: "/classificados" },
     { titulo: "Automotivo", icone: "🚗", cor: "bg-cyan-600", link: "/classificados" },
-    { titulo: "Zeladoria", icone: "⚠️", cor: "bg-red-600", link: "/noticias" },
-    { titulo: "Utilidades", icone: "📞", cor: "bg-slate-700", link: "/guia" },
+    { titulo: "Zeladoria", icone: "⚠️", cor: "bg-red-600", link: "/classificados" },
+    { titulo: "Utilidades", icone: "📞", cor: "bg-slate-700", link: "/classificados" },
   ];
 
   return (
     <div className="min-h-screen bg-slate-950 text-gray-100 pb-16 font-sans">
-      
-      {/* TOPO COM CLIMA E HEADER */}
+      {/* TOPO COM CLIMA EM TEMPO REAL E HEADER */}
       <header className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-950 border-b border-blue-800/80 sticky top-0 z-40 shadow-xl">
         <div className="max-w-md mx-auto px-4 py-2.5 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <span className="bg-amber-400 text-blue-950 text-xs font-black px-2 py-0.5 rounded-lg shadow">360</span>
             <h1 className="font-black text-sm tracking-tight text-white">Sobradão 360</h1>
           </div>
-          
+
           <div className="flex items-center gap-1.5 bg-blue-900/60 border border-blue-700/50 px-2.5 py-1 rounded-xl text-[11px] font-semibold text-blue-200">
-            <span>{clima.icone}</span>
-            <span>{clima.temp}</span>
+            <span>{clima ? clima.condicao : "⛅"}</span>
+            <span>{clima ? `${clima.temp}°C` : "26°C"}</span>
           </div>
 
           {/* Botão Entrar/Sair Dinâmico */}
           {user ? (
             <div className="flex items-center gap-2">
-              <img 
-                src={profileImageUrl || user.photoURL || "https://api.dicebear.com/7.x/thumbs/svg?seed=padrao"} 
-                alt="Avatar" 
-                className="w-7 h-7 rounded-full border border-amber-400" 
+              <img
+                src={profileImageUrl || user.photoURL || "https://api.dicebear.com/7.x/thumbs/svg?seed=padrao"}
+                alt="Avatar"
+                className="w-7 h-7 rounded-full border border-amber-400 object-cover"
               />
               <button onClick={logout} className="text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-gray-300 px-3 py-1 rounded-xl shadow transition">
                 Sair
@@ -181,24 +214,22 @@ export default function Home() {
       </div>
 
       <main className="max-w-md mx-auto px-4 py-4 space-y-4">
-        
-  
-        {/* BANNER PRINCIPAL COM BOTÃO INTEGRADO */}
+        {/* BANNER PRINCIPAL OTIMIZADO WEBP COM BOTÃO INTEGRADO */}
         <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white rounded-3xl shadow-2xl overflow-hidden border border-blue-700/50 relative">
           <div className="w-full h-44 bg-blue-950 relative overflow-hidden">
-            <img 
-              src="https://i.ibb.co/bRqYV9df/file-00000000ff0482068cac048de4c99341.png" 
-              alt="Banner Sobradão 360" 
-              className="w-full h-full object-cover opacity-95" 
+            <img
+              src="https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp"
+              alt="Banner Sobradão 360"
+              className="w-full h-full object-cover opacity-95"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-blue-950/90 via-transparent to-transparent"></div>
-            
+
             <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
               <span className="bg-amber-400 text-blue-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow">
                 Portal Oficial
               </span>
-              <span className="text-[10px] font-bold text-blue-200">
-                +1.250 moradores
+              <span className="text-[10px] font-bold text-emerald-400">
+                ● {loadingDados ? "..." : `${moradoresReais} moradores ativos`}
               </span>
             </div>
           </div>
@@ -209,7 +240,7 @@ export default function Home() {
             </p>
 
             {/* Botão de Ação Principal Integrado */}
-            <button 
+            <button
               onClick={user ? () => setIsModalOpen(true) : loginWithGoogle}
               className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-blue-950 font-black py-3 px-4 rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2"
             >
@@ -234,7 +265,7 @@ export default function Home() {
         </section>
       </main>
 
-      {/* MODAL DE LOGIN / PERFIL (ATUALIZADO) */}
+      {/* MODAL DE LOGIN / PERFIL */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl space-y-5 text-white">
@@ -246,10 +277,9 @@ export default function Home() {
             </div>
 
             {!user ? (
-              // FLUXO DE LOGIN
               <div className="py-8 text-center space-y-4">
                 <p className="text-sm text-gray-400">Para participar dos avisos, interagir no portal e cadastrar seu negócio, faça login com sua conta Google.</p>
-                <button 
+                <button
                   onClick={loginWithGoogle}
                   className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 font-bold py-3 px-4 rounded-xl text-sm shadow-md hover:bg-gray-100 transition"
                 >
@@ -258,25 +288,23 @@ export default function Home() {
                 </button>
               </div>
             ) : (
-              // FLUXO DE PERFIL (Pós-Login)
               <div className="space-y-6">
                 <div className="flex flex-col items-center gap-3 text-center">
-                  {/* UPLOAD DE AVATAR */}
                   <div className="relative group">
-                    <img 
-                      src={profileImageUrl || "https://api.dicebear.com/7.x/thumbs/svg?seed=padrao"} 
-                      alt="Avatar" 
-                      className="w-20 h-20 rounded-full border-4 border-slate-700 shadow-lg object-cover" 
+                    <img
+                      src={profileImageUrl || "https://api.dicebear.com/7.x/thumbs/svg?seed=padrao"}
+                      alt="Avatar"
+                      className="w-20 h-20 rounded-full border-4 border-slate-700 shadow-lg object-cover"
                     />
-                    <label 
-                      htmlFor="uploadAvatar" 
+                    <label
+                      htmlFor="uploadAvatar"
                       className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer text-[10px] font-bold text-white transition"
                     >
                       {uploading ? "..." : "Alterar"}
                     </label>
-                    <input 
-                      type="file" 
-                      id="uploadAvatar" 
+                    <input
+                      type="file"
+                      id="uploadAvatar"
                       accept="image/jpeg, image/png, image/webp"
                       onChange={handleFileChange}
                       disabled={uploading}
@@ -288,7 +316,7 @@ export default function Home() {
                     <p className="text-xs text-gray-400">{user.email}</p>
                   </div>
                 </div>
-                
+
                 {uploading && <p className="text-xs text-amber-500 text-center animate-pulse">⚙️ Alterando foto e salvando no perfil...</p>}
 
                 <div className="bg-slate-800 p-4 rounded-2xl space-y-2">
@@ -296,8 +324,8 @@ export default function Home() {
                   <p className="text-[11px] text-gray-500">Você agora faz parte da comunidade Sobradão 360. Seu perfil está ativo no Firestore.</p>
                 </div>
 
-                <button 
-                  onClick={handleCompletarCadastro} // Garante o salvamento final dos dados
+                <button
+                  onClick={handleCompletarCadastro}
                   disabled={salvando}
                   className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-blue-950 font-black py-3.5 px-4 rounded-2xl text-sm shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
                 >
