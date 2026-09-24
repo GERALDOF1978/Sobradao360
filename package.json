@@ -1,27 +1,23 @@
 {
-  "dependencies": {
-    "axios": "^1.20.0",
-    "firebase": "^12.19.0",
-    "form-data": "^4.0.6",
-    "next": "^16.3.6",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "rss-parser": "^3.13.0",
-    "sharp": "^0.35.4"
-  },
-  "devDependencies": {
-    "@types/node": "^26.6.2",
-    "@types/react": "^19.3.0",
-    "autoprefixer": "^10.6.1",
-    "postcss": "^8.5.28",
-    "tailwindcss": "^3.4.19",
-    "typescript": "^7.0.2"
-  }
-}
-
-"scripts": {
+  "name": "sobradao360",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
+  "dependencies": {
+    "firebase": "^10.0.0",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "rss-parser": "^3.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}
