@@ -4,7 +4,9 @@ import FormData from 'form-data';
 import axios from 'axios';
 
 // Sua chave de API do ImgBB fornecida anteriormente
-const IMGBB_API_KEY = process.env.IMGBB_API_KEY || '00f5e74d2657312c5173d6aa4018c614';
+const IMGBB_API_KEY = process.env.IMGBB_API_KEY || "b075cff58dac0d5af8a815baf611a83b";
+
+
 
 export async function POST(request: Request) {
   try {
