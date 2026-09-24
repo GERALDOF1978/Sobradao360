@@ -219,30 +219,22 @@ export default function Home() {
 
       <main className="max-w-md mx-auto px-4 py-4 space-y-4">
         {/* BANNER PRINCIPAL ADAPTÁVEL A QUALQUER DIMENSÃO */}
+        {/* BANNER PRINCIPAL FLUIDO E ADAPTÁVEL */}
         <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white rounded-3xl shadow-2xl overflow-hidden border border-blue-700/50 relative">
-          <div className="w-full h-52 sm:h-64 bg-slate-950 relative overflow-hidden flex items-center justify-center">
-            {/* 1. Imagem de Fundo Desfocada (Efeito Glassmorphism de preenchimento) */}
-            <img
-              src="https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp"
-              alt="Fundo Desfocado"
-              className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none"
-            />
-
-            {/* 2. Imagem Principal Inteira (Sem cortes ou distorções) */}
+          <div className="w-full bg-slate-950 p-2 flex items-center justify-center relative">
+            {/* Imagem natural sem distorção, sem altura fixa e com limite máximo de altura */}
             <img
               src="https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp"
               alt="Banner Sobradão 360"
-              className="relative max-w-full max-h-full w-auto h-auto object-contain z-10 p-1"
+              className="w-full h-auto max-h-[480px] object-contain rounded-2xl"
             />
 
-            {/* Degradê suave de leitura no fundo */}
-            <div className="absolute inset-0 bg-gradient-to-t from-blue-950/90 via-transparent to-transparent z-10 pointer-events-none"></div>
-
-            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-20">
+            {/* Tags informativas sobrepostas na parte inferior */}
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
               <span className="bg-amber-400 text-blue-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow">
                 Portal Oficial
               </span>
-              <span className="text-[10px] font-bold text-emerald-400">
+              <span className="text-[10px] font-bold text-emerald-400 bg-slate-950/80 px-2.5 py-1 rounded-full border border-emerald-500/30 backdrop-blur-sm shadow">
                 ● {loadingDados ? "..." : `${moradoresReais} moradores ativos`}
               </span>
             </div>
