@@ -54,4 +54,5 @@ export async function GET() {
     console.error("Erro na sincronização:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
+  
 }
