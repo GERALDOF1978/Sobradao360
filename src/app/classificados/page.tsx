@@ -91,9 +91,9 @@ function ClassificadosConteudo() {
   
   const [anunciosFirestore, setAnunciosFirestore] = useState<Anuncio[]>([]);
   const [vagasPat, setVagasPat] = useState<Anuncio[]>([]);
+  const [telefonesUteis, setTelefonesUteis] = useState<Anuncio[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Paginação e Filtros
   const [limiteVisivel, setLimiteVisivel] = useState(15);
   const [filtroMeusAnuncios, setFiltroMeusAnuncios] = useState(false);
 
@@ -107,7 +107,6 @@ function ClassificadosConteudo() {
   const [salvando, setSalvando] = useState(false);
   const [mostrarForm, setMostrarForm] = useState(false);
 
-  // Estado para Edição
   const [anuncioEmEdicao, setAnuncioEmEdicao] = useState<Anuncio | null>(null);
 
   const categorias = [
@@ -150,7 +149,6 @@ function ClassificadosConteudo() {
           if (dados.isAdmin || user.email?.includes("admin")) setIsAdmin(true);
           if (dados.bloqueado) setIsBloqueado(true);
         } else {
-          // Se o documento não existir no Firestore, cria um padrão
           await setDoc(userRef, {
             nome: user.displayName || "Morador",
             email: user.email,
@@ -166,7 +164,7 @@ function ClassificadosConteudo() {
     verificarPermissoesUser();
   }, [user]);
 
-  const buscarAnuncios = async () => {
+  const buscarDados = async () => {
     setLoading(true);
     try {
       const q = query(collection(db, "anuncios"), orderBy("createdAt", "desc"));
@@ -177,23 +175,30 @@ function ClassificadosConteudo() {
       });
       setAnunciosFirestore(lista);
 
+      // Buscar Vagas do PAT
       const resPat = await fetch("/api/pat");
       if (resPat.ok) {
         const dadosPat = await resPat.json();
         if (dadosPat.success) setVagasPat(dadosPat.vagas);
       }
+
+      // Buscar Telefones Úteis
+      const resTel = await fetch("/api/telefones");
+      if (resTel.ok) {
+        const dadosTel = await resTel.json();
+        if (dadosTel.success) setTelefonesUteis(dadosTel.telefones);
+      }
     } catch (error) {
-      console.error("Erro ao buscar anúncios:", error);
+      console.error("Erro ao buscar dados:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    buscarAnuncios();
+    buscarDados();
   }, []);
 
-  // FUNÇÃO DE ADMIN PARA BLOQUEAR OU DESBLOQUEAR MORADOR
   const alternarBloqueioMorador = async (autorUid: string, autorNome: string, statusAtualBloqueio: boolean) => {
     if (!isAdmin) return;
     const acao = statusAtualBloqueio ? "desbloquear" : "bloquear";
@@ -203,7 +208,7 @@ function ClassificadosConteudo() {
       const userRef = doc(db, "usuarios", autorUid);
       await setDoc(userRef, { bloqueado: !statusAtualBloqueio }, { merge: true });
       alert(`Morador ${autorNome} foi ${statusAtualBloqueio ? "desbloqueado" : "bloqueado"} com sucesso.`);
-      buscarAnuncios();
+      buscarDados();
     } catch (error) {
       alert("Erro ao alterar o status de bloqueio do morador.");
     }
@@ -280,7 +285,7 @@ function ClassificadosConteudo() {
       setImagemUrl("");
       setMostrarForm(false);
       alert("Anúncio publicado com sucesso!");
-      buscarAnuncios();
+      buscarDados();
     } catch (error) {
       alert("Erro ao salvar no Firestore.");
     } finally {
@@ -304,7 +309,7 @@ function ClassificadosConteudo() {
 
       setAnuncioEmEdicao(null);
       alert("Anúncio atualizado com sucesso!");
-      buscarAnuncios();
+      buscarDados();
     } catch (error) {
       alert("Erro ao atualizar anúncio.");
     }
@@ -315,13 +320,14 @@ function ClassificadosConteudo() {
     try {
       await deleteDoc(doc(db, "anuncios", id));
       alert("Anúncio removido com sucesso.");
-      buscarAnuncios();
+      buscarDados();
     } catch (error) {
       alert("Erro ao excluir anúncio.");
     }
   };
 
-  let todosOsAnuncios = [...vagasPat, ...anunciosFirestore];
+  // Junta todas as fontes de dados (Vagas PAT + Telefones Úteis + Anúncios do Firestore)
+  let todosOsAnuncios = [...vagasPat, ...telefonesUteis, ...anunciosFirestore];
 
   if (filtroMeusAnuncios && user) {
     todosOsAnuncios = todosOsAnuncios.filter((a) => a.autorUid === user.uid);
@@ -407,7 +413,7 @@ function ClassificadosConteudo() {
                   placeholder="Preço (Ex: R$ 150,00)" 
                   value={preco}
                   onChange={(e) => setPreco(e.target.value)}
-                  className="w-full bg-slate-50 border rounded-xl px-3 py-2 text-xs"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs"
                 />
               )}
 
@@ -417,7 +423,7 @@ function ClassificadosConteudo() {
                   placeholder="Salário / Benefícios" 
                   value={salario}
                   onChange={(e) => setSalario(e.target.value)}
-                  className="w-full bg-slate-50 border rounded-xl px-3 py-2 text-xs"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs"
                 />
               )}
 
@@ -426,7 +432,7 @@ function ClassificadosConteudo() {
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 rows={3}
-                className="w-full bg-slate-50 border rounded-xl px-3 py-2 text-xs resize-none"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs resize-none"
               />
 
               <input 
@@ -485,7 +491,6 @@ function ClassificadosConteudo() {
                       <span className="text-[10px] font-semibold text-slate-600">{item.autorNome}</span>
                     </div>
 
-                    {/* BOTÕES DE EDITAR, EXCLUIR E MODERAÇÃO DO ADMIN (BLOQUEAR MORADOR) */}
                     {!item.oficial && (
                       <div className="flex items-center gap-1">
                         {isMeuAnuncio && (
@@ -530,7 +535,15 @@ function ClassificadosConteudo() {
 
                 <div className="space-y-1">
                   <h3 className="font-bold text-sm text-slate-900">{item.titulo}</h3>
-                  {item.preco && <p className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg inline-block border">💰 Preço: {item.preco}</p>}
+                  {item.preco && (
+                    categoria === "Utilidades" ? (
+                      <a href={`tel:${item.preco.replace(/\D/g, '')}`} className="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-xl inline-flex items-center gap-1.5 shadow transition">
+                        📞 Ligar Agora: {item.preco}
+                      </a>
+                    ) : (
+                      <p className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg inline-block border">💰 Preço: {item.preco}</p>
+                    )
+                  )}
                   {item.salario && <p className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg inline-block border">💼 Salário: {item.salario}</p>}
                   <p className="text-xs text-slate-600 mt-1 whitespace-pre-line">{item.descricao}</p>
                 </div>
@@ -567,7 +580,7 @@ function ClassificadosConteudo() {
 
             {anuncioEmEdicao.preco !== undefined && anuncioEmEdicao.preco !== null && (
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-slate-600">Preço (R$):</label>
+                <label className="text-[10px] font-semibold text-slate-600">Preço / Telefone:</label>
                 <input 
                   type="text" 
                   value={anuncioEmEdicao.preco || ""}
