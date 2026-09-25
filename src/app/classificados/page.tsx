@@ -461,7 +461,7 @@ function ClassificadosConteudo() {
       )}
 
       {/* LISTA DE ANÚNCIOS */}
-      {/* LISTA DE ANÚNCIOS OU UTILIDADES */}
+     
 <div className="space-y-3">
   
   {/* Se a categoria selecionada for "Utilidades", mostramos a lista moderna de telefones */}
@@ -476,21 +476,44 @@ function ClassificadosConteudo() {
         <span className="text-[10px] text-slate-500">{anunciosFiltrados.length} item(ns)</span>
       </div>
 
-      {/* CARD OFICIAL DA PREFEITURA / PAT (Exibido na aba Empregos) */}
+      {/* CARD BONITO E OFICIAL DO PAT / PREFEITURA PARA ACESSAR O SITE */}
       {(categoria === "Empregos" || categoria === "Emprego") && !filtroMeusAnuncios && (
-        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 p-4 rounded-2xl shadow-sm flex items-center justify-between gap-3">
-          <div className="space-y-1">
-            <span className="text-[9px] font-black bg-indigo-600 text-white px-2 py-0.5 rounded-md uppercase tracking-wider">🏛️ Prefeitura de Rio Claro</span>
-            <h3 className="font-bold text-xs text-slate-900">Posto de Atendimento ao Trabalhador (PAT)</h3>
-            <p className="text-[11px] text-slate-600">Consulte vagas de emprego abertas e serviços oficiais de intermediação de mão de obra.</p>
+        <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900 text-white p-5 rounded-3xl shadow-xl relative overflow-hidden space-y-3 border border-indigo-700/50">
+          {/* Efeito decorativo de fundo */}
+          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div className="flex items-start justify-between gap-3 relative z-10">
+            <div className="space-y-1.5">
+              <span className="inline-flex items-center gap-1 text-[10px] font-black bg-amber-400 text-slate-950 px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-sm">
+                <span>🏛️</span> Prefeitura de Rio Claro
+              </span>
+              <h3 className="font-extrabold text-base text-white leading-snug">
+                Posto de Atendimento ao Trabalhador (PAT)
+              </h3>
+              <p className="text-xs text-indigo-100/90 leading-relaxed">
+                Consulte vagas de emprego abertas, encaminhamento para o seguro-desemprego e serviços oficiais de intermediação de mão de obra.
+              </p>
+            </div>
           </div>
-          <a
-            href="tel:1935331238"
-            className="flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs px-3.5 py-2.5 rounded-xl shadow transition flex items-center gap-1.5"
-          >
-            <span>📞</span>
-            <span>Ligar PAT</span>
-          </a>
+
+          <div className="flex flex-wrap items-center gap-2 pt-1 relative z-10">
+            <a
+              href="https://www.rioclaro.sp.gov.br" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-center"
+            >
+              <span>🌐</span>
+              <span>Acessar Site Oficial</span>
+            </a>
+            <a
+              href="tel:1935331238"
+              className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs py-3 px-4 rounded-xl backdrop-blur-md transition flex items-center gap-1.5 border border-white/20"
+            >
+              <span>📞</span>
+              <span>Ligar</span>
+            </a>
+          </div>
         </div>
       )}
       
@@ -587,7 +610,6 @@ function ClassificadosConteudo() {
   )}
 
 </div>
-
       {/* MODAL DE EDIÇÃO */}
       {anuncioEmEdicao && (
         <div className="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
