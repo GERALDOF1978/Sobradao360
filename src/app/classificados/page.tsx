@@ -7,7 +7,7 @@ import { db } from "@/lib/firebase";
 import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
 
-// Função de compressão de imagens via Canvas (executada no navegador)
+// Função de compressão de imagens via Canvas
 function compressImage(file: File, maxWidth = 1000, quality = 0.75): Promise<File> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -71,17 +71,14 @@ function ClassificadosConteudo() {
   const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Categoria atual para filtro e publicação
   const [categoria, setCategoria] = useState(categoriaURL);
 
-  // Estados do formulário
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [imagemUrl, setImagemUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
-  // As 12 categorias atualizadas do Sobradão 360
   const categorias = [
     { nome: "Todos", icone: "🌐" },
     { nome: "Anuncie", icone: "📢" },
@@ -98,7 +95,6 @@ function ClassificadosConteudo() {
     { nome: "Utilidades", icone: "📞" },
   ];
 
-  // Sincroniza a categoria quando mudar na URL
   useEffect(() => {
     const cat = searchParams.get("categoria");
     if (cat) {
@@ -106,7 +102,6 @@ function ClassificadosConteudo() {
     }
   }, [searchParams]);
 
-  // Buscar anúncios no Firestore
   const buscarAnuncios = async () => {
     setLoading(true);
     try {
@@ -128,7 +123,6 @@ function ClassificadosConteudo() {
     buscarAnuncios();
   }, []);
 
-  // Upload com compressão automática antes de subir
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -200,7 +194,6 @@ function ClassificadosConteudo() {
     }
   };
 
-  // Filtra os anúncios conforme a categoria selecionada
   const anunciosFiltrados = categoria === "Todos" 
     ? anuncios 
     : anuncios.filter((a) => a.categoria?.toLowerCase() === categoria.toLowerCase());
@@ -216,7 +209,7 @@ function ClassificadosConteudo() {
         <h1 className="text-sm font-black text-white">🛍️ Classificados & Guia</h1>
       </div>
 
-      {/* FILTROS DE CATEGORIA (CARROSEL DE BADGES) */}
+      {/* FILTROS DE CATEGORIA */}
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
         {categorias.map((cat) => (
           <button
@@ -247,7 +240,6 @@ function ClassificadosConteudo() {
             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
           />
 
-          {/* Indicador visual de Categoria Automática */}
           <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
             <span className="text-[11px] text-gray-400">Categoria da publicação:</span>
             <span className="text-xs font-black bg-amber-400 text-blue-950 px-2.5 py-0.5 rounded-lg shadow">
@@ -263,7 +255,6 @@ function ClassificadosConteudo() {
             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400 resize-none"
           />
 
-          {/* Campo de Upload de Foto */}
           <div className="space-y-1.5">
             <label className="text-[10px] text-gray-400 block">Adicionar Imagem (Compactada automaticamente):</label>
             <input 
@@ -275,12 +266,12 @@ function ClassificadosConteudo() {
             />
             {uploading && <p className="text-[10px] text-amber-400 animate-pulse">Compactando e enviando imagem...</p>}
             {imagemUrl && (
-              <div className="relative mt-2">
-                <img src={imagemUrl} alt="Preview" className="w-full h-32 object-cover rounded-xl border border-slate-700" />
+              <div className="relative mt-2 bg-slate-950 border border-slate-700 p-1 rounded-xl flex items-center justify-center">
+                <img src={imagemUrl} alt="Preview" className="w-full h-auto max-h-48 object-contain rounded-lg" />
                 <button 
                   type="button" 
                   onClick={() => setImagemUrl("")} 
-                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold"
+                  className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold shadow"
                 >
                   ✕
                 </button>
@@ -302,7 +293,7 @@ function ClassificadosConteudo() {
         </div>
       )}
 
-      {/* LISTA DE ANÚNCIOS */}
+      {/* LISTA DE ANÚNCIOS COM IMAGEM SEM CORTES */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">
@@ -323,13 +314,16 @@ function ClassificadosConteudo() {
                   {item.categoria}
                 </span>
                 <div className="flex items-center gap-1.5">
-                  <img src={item.autorFoto} alt={item.autorNome} className="w-5 h-5 rounded-full border border-amber-400" />
+                  <img src={item.autorFoto} alt={item.autorNome} className="w-5 h-5 rounded-full border border-amber-400 object-cover" />
                   <span className="text-[10px] text-gray-400">{item.autorNome}</span>
                 </div>
               </div>
 
+              {/* CONTEINER DE IMAGEM COM OBJECT-CONTAIN */}
               {item.imagemUrl && (
-                <img src={item.imagemUrl} alt={item.titulo} className="w-full h-44 object-cover rounded-xl border border-slate-800" />
+                <div className="w-full bg-slate-950 rounded-xl border border-slate-800 p-1 flex items-center justify-center overflow-hidden">
+                  <img src={item.imagemUrl} alt={item.titulo} className="w-full h-auto max-h-80 object-contain mx-auto rounded-lg" />
+                </div>
               )}
 
               <div>
