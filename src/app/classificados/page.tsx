@@ -200,14 +200,14 @@ function ClassificadosConteudo() {
     : anuncios.filter((a) => a.categoria?.toLowerCase() === categoria.toLowerCase());
 
   return (
-    <div className="min-h-screen bg-slate-950 text-gray-100 p-4 font-sans max-w-md mx-auto space-y-6 pb-20">
+    <div className="min-h-screen bg-slate-100 text-slate-900 p-4 font-sans max-w-md mx-auto space-y-6 pb-20">
       
-      {/* HEADER DA PÁGINA */}
-      <div className="flex items-center justify-between border-b border-blue-900/60 pb-3">
-        <Link href="/" className="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-1.5 rounded-xl transition">
+      {/* HEADER DA PÁGINA CLARO */}
+      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+        <Link href="/" className="text-xs bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-3 py-1.5 rounded-xl transition">
           ← Voltar ao Início
         </Link>
-        <h1 className="text-sm font-black text-white">🛍️ Classificados & Guia</h1>
+        <h1 className="text-sm font-black text-slate-900">🛍️ Classificados & Guia</h1>
       </div>
 
       {/* FILTROS DE CATEGORIA */}
@@ -218,8 +218,8 @@ function ClassificadosConteudo() {
             onClick={() => setCategoria(cat.nome)}
             className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
               categoria === cat.nome
-                ? "bg-amber-400 text-blue-950 shadow"
-                : "bg-slate-900 border border-slate-800 text-gray-400 hover:text-white"
+                ? "bg-amber-400 text-slate-950 shadow"
+                : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50"
             }`}
           >
             <span>{cat.icone}</span>
@@ -234,26 +234,26 @@ function ClassificadosConteudo() {
           <button
             type="button"
             onClick={() => setMostrarForm(!mostrarForm)}
-            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-blue-950 font-black py-3 px-4 rounded-2xl text-xs shadow-lg transition flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 active:scale-95 text-slate-950 font-black py-3 px-4 rounded-2xl text-xs shadow-md transition flex items-center justify-center gap-2"
           >
             {mostrarForm ? "✕ Fechar Formulário" : `➕ Publicar Anúncio em ${categoria === "Todos" ? "Anuncie" : categoria}`}
           </button>
 
           {mostrarForm && (
-            <form onSubmit={handlePublicar} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3 shadow-lg">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-amber-400">Publicar Novo Anúncio</h2>
+            <form onSubmit={handlePublicar} className="bg-white border border-slate-200 p-4 rounded-2xl space-y-3 shadow-sm">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-amber-600">Publicar Novo Anúncio</h2>
               
               <input 
                 type="text" 
                 placeholder="Título do produto, serviço ou vaga" 
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600"
               />
 
-              <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
-                <span className="text-[11px] text-gray-400">Categoria da publicação:</span>
-                <span className="text-xs font-black bg-amber-400 text-blue-950 px-2.5 py-0.5 rounded-lg shadow">
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-2.5 rounded-xl">
+                <span className="text-[11px] text-slate-500">Categoria da publicação:</span>
+                <span className="text-xs font-black bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-lg shadow-sm">
                   {categoria === "Todos" ? "Anuncie" : categoria}
                 </span>
               </div>
@@ -263,21 +263,21 @@ function ClassificadosConteudo() {
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 rows={3}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400 resize-none"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600 resize-none"
               />
 
               <div className="space-y-1.5">
-                <label className="text-[10px] text-gray-400 block">Adicionar Imagem (Compactada automaticamente):</label>
+                <label className="text-[10px] text-slate-500 block">Adicionar Imagem (Compactada automaticamente):</label>
                 <input 
                   type="file" 
                   accept="image/jpeg, image/png, image/webp"
                   onChange={handleImageUpload}
                   disabled={uploading}
-                  className="w-full text-xs text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-amber-400 hover:file:bg-slate-700 cursor-pointer"
+                  className="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-800 hover:file:bg-slate-300 cursor-pointer"
                 />
-                {uploading && <p className="text-[10px] text-amber-400 animate-pulse">Compactando e enviando imagem...</p>}
+                {uploading && <p className="text-[10px] text-amber-600 animate-pulse font-semibold">Compactando e enviando imagem...</p>}
                 {imagemUrl && (
-                  <div className="relative mt-2 bg-slate-950 border border-slate-700 p-1 rounded-xl flex items-center justify-center">
+                  <div className="relative mt-2 bg-slate-100 border border-slate-200 p-1 rounded-xl flex items-center justify-center">
                     <img src={imagemUrl} alt="Preview" className="w-full h-auto max-h-48 object-contain rounded-lg" />
                     <button 
                       type="button" 
@@ -293,7 +293,7 @@ function ClassificadosConteudo() {
               <button 
                 type="submit" 
                 disabled={salvando || uploading}
-                className="w-full bg-amber-500 hover:bg-amber-600 text-blue-950 font-black py-2.5 rounded-xl text-xs transition shadow-md disabled:opacity-50 mt-2"
+                className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl text-xs transition shadow-md disabled:opacity-50 mt-2"
               >
                 {salvando ? "Publicando..." : "Publicar no Mural"}
               </button>
@@ -301,46 +301,46 @@ function ClassificadosConteudo() {
           )}
         </div>
       ) : (
-        <div className="bg-blue-950/40 border border-blue-800/50 p-4 rounded-2xl text-center space-y-2">
-          <p className="text-xs text-blue-200">Faça login para anunciar seus produtos, serviços e vagas no portal.</p>
+        <div className="bg-blue-50 border border-blue-200 p-4 rounded-2xl text-center space-y-2">
+          <p className="text-xs text-blue-900 font-medium">Faça login para anunciar seus produtos, serviços e vagas no portal.</p>
         </div>
       )}
 
       {/* LISTA DE ANÚNCIOS */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
             {categoria === "Todos" ? "Mural Completo" : `Mural: ${categoria}`}
           </h2>
-          <span className="text-[10px] text-gray-500">{anunciosFiltrados.length} anúncio(s)</span>
+          <span className="text-[10px] text-slate-500">{anunciosFiltrados.length} anúncio(s)</span>
         </div>
         
         {loading ? (
-          <p className="text-center text-xs text-gray-500 py-6">Carregando avisos do Firestore...</p>
+          <p className="text-center text-xs text-slate-500 py-6">Carregando avisos do Firestore...</p>
         ) : anunciosFiltrados.length === 0 ? (
-          <p className="text-center text-xs text-gray-500 py-6">Nenhum anúncio nesta categoria ainda. Seja o primeiro!</p>
+          <p className="text-center text-xs text-slate-500 py-6">Nenhum anúncio nesta categoria ainda. Seja o primeiro!</p>
         ) : (
           anunciosFiltrados.map((item) => (
-            <div key={item.id} className="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl space-y-2.5 shadow">
+            <div key={item.id} className="bg-white border border-slate-200 p-3.5 rounded-2xl space-y-2.5 shadow-sm hover:shadow-md transition">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold bg-blue-900/60 text-blue-300 px-2 py-0.5 rounded-lg border border-blue-700/40">
+                <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-lg border border-blue-200">
                   {item.categoria}
                 </span>
                 <div className="flex items-center gap-1.5">
-                  <img src={item.autorFoto} alt={item.autorNome} className="w-5 h-5 rounded-full border border-amber-400 object-cover" />
-                  <span className="text-[10px] text-gray-400">{item.autorNome}</span>
+                  <img src={item.autorFoto} alt={item.autorNome} className="w-5 h-5 rounded-full border border-slate-300 object-cover" />
+                  <span className="text-[10px] font-semibold text-slate-600">{item.autorNome}</span>
                 </div>
               </div>
 
               {item.imagemUrl && (
-                <div className="w-full bg-slate-950 rounded-xl border border-slate-800 p-1 flex items-center justify-center overflow-hidden">
+                <div className="w-full bg-slate-100 rounded-xl border border-slate-200/80 p-1 flex items-center justify-center overflow-hidden">
                   <img src={item.imagemUrl} alt={item.titulo} className="w-full h-auto max-h-80 object-contain mx-auto rounded-lg" />
                 </div>
               )}
 
               <div>
-                <h3 className="font-bold text-sm text-white">{item.titulo}</h3>
-                <p className="text-xs text-gray-300 mt-1 whitespace-pre-line">{item.descricao}</p>
+                <h3 className="font-bold text-sm text-slate-900">{item.titulo}</h3>
+                <p className="text-xs text-slate-600 mt-1 whitespace-pre-line">{item.descricao}</p>
               </div>
             </div>
           ))
@@ -353,7 +353,7 @@ function ClassificadosConteudo() {
 
 export default function ClassificadosPage() {
   return (
-    <Suspense fallback={<div className="text-center py-10 text-xs text-amber-400">Carregando Classificados...</div>}>
+    <Suspense fallback={<div className="text-center py-10 text-xs text-amber-600">Carregando Classificados...</div>}>
       <ClassificadosConteudo />
     </Suspense>
   );
