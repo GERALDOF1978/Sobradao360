@@ -150,6 +150,9 @@ function ClassificadosConteudo() {
   const [salvando, setSalvando] = useState(false);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [anuncioEmEdicao, setAnuncioEmEdicao] = useState<Anuncio | null>(null);
+  const [filtroEmpregos, setFiltroEmpregos] = useState<
+  "todos" | "trampolim" | "manual"
+>("todos");
 
   const categorias = [
     { nome: "Todos", icone: "🌐" },
@@ -481,7 +484,7 @@ if (filtroMeusAnuncios && user) {
   );
 }
 
-const anunciosFiltrados =
+let anunciosFiltrados =
   categoria === "Todos"
     ? todosOsAnuncios
     : todosOsAnuncios.filter((a) => {
@@ -491,7 +494,6 @@ const anunciosFiltrados =
         const categoriaSelecionada =
           categoria.toLowerCase().trim();
 
-        // Emprego e Empregos serão tratados como a mesma categoria
         if (categoriaSelecionada === "empregos") {
           return (
             categoriaAnuncio === "empregos" ||
@@ -499,13 +501,69 @@ const anunciosFiltrados =
           );
         }
 
-        return categoriaAnuncio === categoriaSelecionada;
+        return (
+          categoriaAnuncio ===
+          categoriaSelecionada
+        );
       });
 
-const anunciosPaginados = anunciosFiltrados.slice(
-  0,
-  limiteVisivel
-);
+// ==========================================
+// FILTROS INTERNOS DE EMPREGOS
+// ==========================================
+if (categoria === "Empregos") {
+  if (filtroEmpregos === "trampolim") {
+    anunciosFiltrados =
+      anunciosFiltrados.filter(
+        (a) =>
+          a.autorUid ===
+          "trampolim-oficial"
+      );
+  }
+
+  if (filtroEmpregos === "manual") {
+    anunciosFiltrados =
+      anunciosFiltrados.filter(
+        (a) =>
+          a.autorUid !==
+          "trampolim-oficial"
+      );
+  }
+
+  // ========================================
+  // ORDENAÇÃO: MAIS RECENTES PRIMEIRO
+  // ========================================
+  const transformarData = (valor: any) => {
+    if (!valor) return 0;
+
+    // Firestore Timestamp
+    if (
+      typeof valor.toDate ===
+      "function"
+    ) {
+      return valor.toDate().getTime();
+    }
+
+    // Data em texto
+    const data =
+      new Date(valor).getTime();
+
+    return Number.isNaN(data)
+      ? 0
+      : data;
+  };
+
+  anunciosFiltrados.sort(
+    (a, b) =>
+      transformarData(b.createdAt) -
+      transformarData(a.createdAt)
+  );
+}
+
+const anunciosPaginados =
+  anunciosFiltrados.slice(
+    0,
+    limiteVisivel
+  );
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 p-4 font-sans max-w-md mx-auto space-y-6 pb-20">
@@ -728,6 +786,44 @@ const anunciosPaginados = anunciosFiltrados.slice(
                   </div>
                 </div>
               )}
+
+
+              {categoria === "Empregos" && (
+  <div className="mb-5 flex flex-wrap gap-2">
+    <button
+      onClick={() => setFiltroEmpregos("todos")}
+      className={`rounded-full px-4 py-2 text-xs font-bold transition ${
+        filtroEmpregos === "todos"
+          ? "bg-yellow-500 text-black"
+          : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+      }`}
+    >
+      💼 Todas
+    </button>
+
+    <button
+      onClick={() => setFiltroEmpregos("trampolim")}
+      className={`rounded-full px-4 py-2 text-xs font-bold transition ${
+        filtroEmpregos === "trampolim"
+          ? "bg-yellow-500 text-black"
+          : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+      }`}
+    >
+      🌐 Trampolim
+    </button>
+
+    <button
+      onClick={() => setFiltroEmpregos("manual")}
+      className={`rounded-full px-4 py-2 text-xs font-bold transition ${
+        filtroEmpregos === "manual"
+          ? "bg-yellow-500 text-black"
+          : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+      }`}
+    >
+      👤 Manual / PAT
+    </button>
+  </div>
+)}
 
             {loading ? (
               <p className="text-center text-xs text-slate-500 py-6">
