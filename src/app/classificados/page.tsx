@@ -468,25 +468,44 @@ setVagasTrampolim(vagasConvertidas);
     }
   };
 
-  let todosOsAnuncios = [
-    ...vagasPat,
-    ...vagasTrampolim,
-    ...telefonesUteis,
-    ...anunciosFirestore,
-  ];
+ let todosOsAnuncios = [
+  ...vagasPat,
+  ...vagasTrampolim,
+  ...telefonesUteis,
+  ...anunciosFirestore,
+];
 
-  if (filtroMeusAnuncios && user) {
-    todosOsAnuncios = todosOsAnuncios.filter((a) => a.autorUid === user.uid);
-  }
+if (filtroMeusAnuncios && user) {
+  todosOsAnuncios = todosOsAnuncios.filter(
+    (a) => a.autorUid === user.uid
+  );
+}
 
-  const anunciosFiltrados =
-    categoria === "Todos"
-      ? todosOsAnuncios
-      : todosOsAnuncios.filter(
-          (a) => a.categoria?.toLowerCase() === categoria.toLowerCase()
-        );
+const anunciosFiltrados =
+  categoria === "Todos"
+    ? todosOsAnuncios
+    : todosOsAnuncios.filter((a) => {
+        const categoriaAnuncio =
+          a.categoria?.toLowerCase().trim();
 
-  const anunciosPaginados = anunciosFiltrados.slice(0, limiteVisivel);
+        const categoriaSelecionada =
+          categoria.toLowerCase().trim();
+
+        // Emprego e Empregos serão tratados como a mesma categoria
+        if (categoriaSelecionada === "empregos") {
+          return (
+            categoriaAnuncio === "empregos" ||
+            categoriaAnuncio === "emprego"
+          );
+        }
+
+        return categoriaAnuncio === categoriaSelecionada;
+      });
+
+const anunciosPaginados = anunciosFiltrados.slice(
+  0,
+  limiteVisivel
+);
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 p-4 font-sans max-w-md mx-auto space-y-6 pb-20">
