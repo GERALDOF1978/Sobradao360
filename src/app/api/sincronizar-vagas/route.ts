@@ -26,23 +26,25 @@ export async function GET() {
     console.log("======================================");
 
     do {
-      console.log(`Buscando página ${pagina}/${totalPaginas}...`);
+      console.log(
+        `Buscando página ${pagina}/${totalPaginas}...`
+      );
 
+      // Criamos os parâmetros sem repetir "status"
       const params = new URLSearchParams({
         smart_filter: "false",
         q: "",
         type: "vacancy",
         order_by: "latest",
-
         page: String(pagina),
         page_limit: String(PAGE_LIMIT),
-
-        status: "available",
-        status: "extended",
-
         locale: "Rio Claro",
         operation_range: "25",
       });
+
+      // O Trampolim recebe os dois status
+      params.append("status", "available");
+      params.append("status", "extended");
 
       const response = await fetch(
         `${TRAMPOLIM_API}?${params.toString()}`,
@@ -50,7 +52,7 @@ export async function GET() {
           method: "GET",
           headers: {
             Accept: "application/json",
-            "User-Agent": "Sobradão360/1.0",
+            "User-Agent": "Sobradao360/1.0",
           },
           cache: "no-store",
         }
@@ -75,7 +77,7 @@ export async function GET() {
       );
 
       /*
-       * Processa cada vaga
+       * PROCESSA CADA VAGA
        */
       for (const vaga of vagas) {
         try {
@@ -88,10 +90,10 @@ export async function GET() {
            * ID ORIGINAL DO TRAMPOLIM
            *
            * Exemplo:
-           * trampolim_12345
+           * 12345
            *
-           * Dessa maneira, a mesma vaga nunca
-           * será criada novamente.
+           * Documento:
+           * trampolim_12345
            */
           const idTrampolim = String(vaga.id);
 
@@ -104,49 +106,56 @@ export async function GET() {
           const existente = await referencia.get();
 
           /*
-           * Dados que serão armazenados
+           * DADOS DA VAGA
            */
           const dados = {
             ...vaga,
 
-            // Controle da integração
             idTrampolim,
+
             fonte: "trampolim",
 
-            // Parâmetros usados na pesquisa
             cidadeBusca: "Rio Claro",
+
             raioBusca: 25,
 
-            // Status no Sobradão 360
             ativo: true,
 
-            // Controle de sincronização
-            atualizadoEm: FieldValue.serverTimestamp(),
+            atualizadoEm:
+              FieldValue.serverTimestamp(),
           };
 
+          /*
+           * VAGA JÁ EXISTE
+           */
           if (existente.exists) {
-            /*
-             * VAGA JÁ EXISTE
-             *
-             * Atualiza sem apagar outros campos
-             * que eventualmente existam no documento.
-             */
             await referencia.set(dados, {
               merge: true,
             });
 
             atualizadas++;
-          } else {
-            /*
-             * VAGA NOVA
-             */
+
+            console.log(
+              `Vaga atualizada: ${idTrampolim}`
+            );
+          }
+
+          /*
+           * VAGA NOVA
+           */
+          else {
             await referencia.set({
               ...dados,
 
-              criadoEm: FieldValue.serverTimestamp(),
+              criadoEm:
+                FieldValue.serverTimestamp(),
             });
 
             novas++;
+
+            console.log(
+              `Nova vaga: ${idTrampolim}`
+            );
           }
 
           totalProcessadas++;
@@ -181,7 +190,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
 
-      mensagem: "Sincronização das vagas concluída.",
+      mensagem:
+        "Sincronização das vagas concluída.",
 
       fonte: "Trampolim",
 
@@ -189,7 +199,8 @@ export async function GET() {
 
       raioKm: 25,
 
-      paginasConsultadas: totalPaginas,
+      paginasConsultadas:
+        totalPaginas,
 
       totalProcessadas,
 
@@ -201,7 +212,8 @@ export async function GET() {
 
       tempoMs,
 
-      sincronizadoEm: new Date().toISOString(),
+      sincronizadoEm:
+        new Date().toISOString(),
     });
   } catch (error) {
     console.error(
@@ -223,7 +235,8 @@ export async function GET() {
 
         erro: mensagem,
 
-        paginasConsultadas: pagina - 1,
+        paginasConsultadas:
+          pagina - 1,
 
         totalProcessadas,
 

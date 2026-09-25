@@ -12,17 +12,20 @@ export async function GET() {
       order_by: "latest",
       page: "1",
       page_limit: "50",
-      status: "available",
-      status: "extended",
       locale: "Rio Claro",
       operation_range: "25",
     });
+
+    // Adiciona os dois status sem repetir a propriedade
+    params.append("status", "available");
+    params.append("status", "extended");
 
     const response = await fetch(
       `${TRAMPOLIM_API}?${params.toString()}`,
       {
         headers: {
           Accept: "application/json",
+          "User-Agent": "Sobradão360/1.0",
         },
         cache: "no-store",
       }
@@ -54,7 +57,8 @@ export async function GET() {
     return NextResponse.json(
       {
         success: false,
-        error: "Não foi possível consultar as vagas do Trampolim.",
+        error:
+          "Não foi possível consultar as vagas do Trampolim.",
       },
       {
         status: 500,
