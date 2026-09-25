@@ -22,14 +22,31 @@ const imagensPadraoPorCategoria: Record<string, string> = {
   "Utilidades": "https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=800&auto=format&fit=crop&q=60",
 };
 
-// Vagas Oficiais do PAT / Prefeitura de Rio Claro integradas no app
-const vagasOficiaisRioClaro = [
+// 1. Movemos a interface para CIMA para o TS reconhecê-la nas vagas do PAT
+interface Anuncio {
+  id: string;
+  titulo: string;
+  descricao: string;
+  categoria: string;
+  preco?: string | null;
+  salario?: string | null;
+  imagemUrl?: string;
+  autorUid: string;
+  autorNome: string;
+  autorFoto: string;
+  createdAt: any;
+  oficial?: boolean;
+}
+
+// 2. Tipamos a lista estática como: Anuncio[]
+const vagasOficiaisRioClaro: Anuncio[] = [
   {
     id: "pat-1",
     titulo: "Operador de Logística / Armazém",
     descricao: "Vaga oficial PAT Rio Claro. Requisitos: Ensino médio completo, experiência com carga e descarga. Envie currículo pelo portal da prefeitura.",
     categoria: "Empregos",
     salario: "R$ 1.850,00 + Benefícios",
+    preco: null,
     imagemUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=60",
     autorUid: "sistema-pat",
     autorNome: "PAT Rio Claro (Oficial)",
@@ -43,6 +60,7 @@ const vagasOficiaisRioClaro = [
     descricao: "Vaga oficial PAT Rio Claro. Comércio local busca profissionais com agilidade, simpatia e disponibilidade de horário.",
     categoria: "Empregos",
     salario: "R$ 1.620,00 + VT",
+    preco: null,
     imagemUrl: "https://images.unsplash.com/photo-1556742049-0a67d553c2a3?w=800&auto=format&fit=crop&q=60",
     autorUid: "sistema-pat",
     autorNome: "PAT Rio Claro (Oficial)",
@@ -56,6 +74,7 @@ const vagasOficiaisRioClaro = [
     descricao: "Vaga oficial PAT Rio Claro. Oportunidade para prestação de serviços em condomínios e empresas da cidade.",
     categoria: "Empregos",
     salario: "R$ 1.550,00 + Vale Alimentação",
+    preco: null,
     imagemUrl: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=60",
     autorUid: "sistema-pat",
     autorNome: "PAT Rio Claro (Oficial)",
@@ -107,21 +126,6 @@ function compressImage(file: File, maxWidth = 1000, quality = 0.75): Promise<Fil
     };
     reader.onerror = (err) => reject(err);
   });
-}
-
-interface Anuncio {
-  id: string;
-  titulo: string;
-  descricao: string;
-  categoria: string;
-  preco?: string;
-  salario?: string;
-  imagemUrl?: string;
-  autorUid: string;
-  autorNome: string;
-  autorFoto: string;
-  createdAt: any;
-  oficial?: boolean;
 }
 
 function ClassificadosConteudo() {
@@ -294,7 +298,6 @@ function ClassificadosConteudo() {
     }
   };
 
-  // Junta as vagas oficiais do PAT com as do Firestore
   const todosOsAnuncios = [...vagasOficiaisRioClaro, ...anunciosFirestore];
 
   const anunciosFiltrados = categoria === "Todos" 
@@ -491,7 +494,6 @@ function ClassificadosConteudo() {
                     <span className="text-[10px] font-semibold text-slate-600">{item.autorNome}</span>
                   </div>
 
-                  {/* Botão de excluir apenas para anúncios comuns criados por usuários (ou admin) */}
                   {!item.oficial && (isAdmin || (user && user.uid === item.autorUid)) && (
                     <button
                       onClick={() => deletarAnuncio(item.id)}
