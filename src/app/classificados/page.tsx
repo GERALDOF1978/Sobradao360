@@ -313,6 +313,7 @@ function ClassificadosConteudo() {
         ))}
       </div>
 
+      {/* PAINEL DE DESTAQUE OFICIAL PARA A CATEGORIA EMPREGOS */}
       {categoria === "Empregos" && (
         <div className="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white rounded-3xl p-4 shadow-md space-y-3 border border-indigo-700/50">
           <div className="flex items-center justify-between">
@@ -320,17 +321,19 @@ function ClassificadosConteudo() {
               <span className="bg-amber-400 text-slate-950 text-xs font-black px-2 py-0.5 rounded-lg">PAT</span>
               <h2 className="text-xs font-black uppercase tracking-wider text-amber-300">Vagas Oficiais - Rio Claro</h2>
             </div>
-            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">● Atualizado</span>
+            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">● Oficial</span>
           </div>
           <p className="text-xs text-indigo-100 leading-relaxed">
-            As oportunidades abaixo são integradas automaticamente do Posto de Atendimento ao Trabalhador.
+            Consulte as vagas atualizadas do Posto de Atendimento ao Trabalhador da Prefeitura de Rio Claro.
           </p>
-          <button 
-            onClick={() => setModalPatAberto(true)}
-            className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black py-2.5 px-3 rounded-xl text-xs text-center shadow transition flex items-center justify-center gap-1.5"
+          <a 
+            href="https://vagas.rioclaro.sp.gov.br" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black py-3 px-3 rounded-xl text-xs text-center shadow transition flex items-center justify-center gap-2 block"
           >
-            🌐 Acessar Portal do PAT (Sem sair do App)
-          </button>
+            🌐 Abrir Portal do PAT (Nova aba)
+          </a>
         </div>
       )}
 
