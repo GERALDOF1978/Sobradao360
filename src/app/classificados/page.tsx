@@ -7,7 +7,6 @@ import { db } from "@/lib/firebase";
 import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
 
-// Função de compressão de imagens via Canvas
 function compressImage(file: File, maxWidth = 1000, quality = 0.75): Promise<File> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -78,6 +77,7 @@ function ClassificadosConteudo() {
   const [imagemUrl, setImagemUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [mostrarForm, setMostrarForm] = useState(false);
 
   const categorias = [
     { nome: "Todos", icone: "🌐" },
@@ -184,6 +184,7 @@ function ClassificadosConteudo() {
       setTitulo("");
       setDescricao("");
       setImagemUrl("");
+      setMostrarForm(false);
       alert("Anúncio publicado com sucesso no mural! 🎉");
       buscarAnuncios();
     } catch (error) {
@@ -227,73 +228,85 @@ function ClassificadosConteudo() {
         ))}
       </div>
 
-      {/* FORMULÁRIO DE NOVO ANÚNCIO */}
+      {/* BOTÃO E FORMULÁRIO DE NOVO ANÚNCIO (FECHADO POR PADRÃO) */}
       {user ? (
-        <form onSubmit={handlePublicar} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3 shadow-lg">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-amber-400">Publicar Novo Anúncio</h2>
-          
-          <input 
-            type="text" 
-            placeholder="Título do produto, serviço ou vaga" 
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
-          />
-
-          <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
-            <span className="text-[11px] text-gray-400">Categoria da publicação:</span>
-            <span className="text-xs font-black bg-amber-400 text-blue-950 px-2.5 py-0.5 rounded-lg shadow">
-              {categoria === "Todos" ? "Anuncie" : categoria}
-            </span>
-          </div>
-
-          <textarea 
-            placeholder="Descreva os detalhes, telefone de contato, requisitos ou valores..." 
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-            rows={3}
-            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400 resize-none"
-          />
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] text-gray-400 block">Adicionar Imagem (Compactada automaticamente):</label>
-            <input 
-              type="file" 
-              accept="image/jpeg, image/png, image/webp"
-              onChange={handleImageUpload}
-              disabled={uploading}
-              className="w-full text-xs text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-amber-400 hover:file:bg-slate-700 cursor-pointer"
-            />
-            {uploading && <p className="text-[10px] text-amber-400 animate-pulse">Compactando e enviando imagem...</p>}
-            {imagemUrl && (
-              <div className="relative mt-2 bg-slate-950 border border-slate-700 p-1 rounded-xl flex items-center justify-center">
-                <img src={imagemUrl} alt="Preview" className="w-full h-auto max-h-48 object-contain rounded-lg" />
-                <button 
-                  type="button" 
-                  onClick={() => setImagemUrl("")} 
-                  className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold shadow"
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={salvando || uploading}
-            className="w-full bg-amber-500 hover:bg-amber-600 text-blue-950 font-black py-2.5 rounded-xl text-xs transition shadow-md disabled:opacity-50 mt-2"
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setMostrarForm(!mostrarForm)}
+            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-blue-950 font-black py-3 px-4 rounded-2xl text-xs shadow-lg transition flex items-center justify-center gap-2"
           >
-            {salvando ? "Publicando..." : "Publicar no Mural"}
+            {mostrarForm ? "✕ Fechar Formulário" : `➕ Publicar Anúncio em ${categoria === "Todos" ? "Anuncie" : categoria}`}
           </button>
-        </form>
+
+          {mostrarForm && (
+            <form onSubmit={handlePublicar} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3 shadow-lg">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-amber-400">Publicar Novo Anúncio</h2>
+              
+              <input 
+                type="text" 
+                placeholder="Título do produto, serviço ou vaga" 
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+              />
+
+              <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 p-2.5 rounded-xl">
+                <span className="text-[11px] text-gray-400">Categoria da publicação:</span>
+                <span className="text-xs font-black bg-amber-400 text-blue-950 px-2.5 py-0.5 rounded-lg shadow">
+                  {categoria === "Todos" ? "Anuncie" : categoria}
+                </span>
+              </div>
+
+              <textarea 
+                placeholder="Descreva os detalhes, telefone de contato, requisitos ou valores..." 
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+                rows={3}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400 resize-none"
+              />
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-gray-400 block">Adicionar Imagem (Compactada automaticamente):</label>
+                <input 
+                  type="file" 
+                  accept="image/jpeg, image/png, image/webp"
+                  onChange={handleImageUpload}
+                  disabled={uploading}
+                  className="w-full text-xs text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-amber-400 hover:file:bg-slate-700 cursor-pointer"
+                />
+                {uploading && <p className="text-[10px] text-amber-400 animate-pulse">Compactando e enviando imagem...</p>}
+                {imagemUrl && (
+                  <div className="relative mt-2 bg-slate-950 border border-slate-700 p-1 rounded-xl flex items-center justify-center">
+                    <img src={imagemUrl} alt="Preview" className="w-full h-auto max-h-48 object-contain rounded-lg" />
+                    <button 
+                      type="button" 
+                      onClick={() => setImagemUrl("")} 
+                      className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold shadow"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={salvando || uploading}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-blue-950 font-black py-2.5 rounded-xl text-xs transition shadow-md disabled:opacity-50 mt-2"
+              >
+                {salvando ? "Publicando..." : "Publicar no Mural"}
+              </button>
+            </form>
+          )}
+        </div>
       ) : (
         <div className="bg-blue-950/40 border border-blue-800/50 p-4 rounded-2xl text-center space-y-2">
           <p className="text-xs text-blue-200">Faça login para anunciar seus produtos, serviços e vagas no portal.</p>
         </div>
       )}
 
-      {/* LISTA DE ANÚNCIOS COM IMAGEM SEM CORTES */}
+      {/* LISTA DE ANÚNCIOS */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">
@@ -319,7 +332,6 @@ function ClassificadosConteudo() {
                 </div>
               </div>
 
-              {/* CONTEINER DE IMAGEM COM OBJECT-CONTAIN */}
               {item.imagemUrl && (
                 <div className="w-full bg-slate-950 rounded-xl border border-slate-800 p-1 flex items-center justify-center overflow-hidden">
                   <img src={item.imagemUrl} alt={item.titulo} className="w-full h-auto max-h-80 object-contain mx-auto rounded-lg" />
