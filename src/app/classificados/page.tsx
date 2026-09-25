@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, updateDoc, doc, getDocs, getDoc, deleteDoc, setDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
+import TelefonesUteisLista from "@/components/TelefonesUteisLista";
 
 const imagensPadraoPorCategoria: Record<string, string> = {
   "Anuncie": "https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp",
@@ -460,104 +461,114 @@ function ClassificadosConteudo() {
       )}
 
       {/* LISTA DE ANÚNCIOS */}
-      <div className="space-y-3">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            {filtroMeusAnuncios ? "Meus Anúncios" : (categoria === "Todos" ? "Mural Completo" : categoria)}
-          </h2>
-          <span className="text-[10px] text-slate-500">{anunciosFiltrados.length} item(ns)</span>
-        </div>
-        
-        {loading ? (
-          <p className="text-center text-xs text-slate-500 py-6">Carregando anúncios...</p>
-        ) : anunciosPaginados.length === 0 ? (
-          <p className="text-center text-xs text-slate-500 py-6">Nenhum anúncio encontrado.</p>
-        ) : (
-          anunciosPaginados.map((item) => {
-            const isMeuAnuncio = user && user.uid === item.autorUid;
+      {/* LISTA DE ANÚNCIOS OU UTILIDADES */}
+<div className="space-y-3">
+  
+  {/* Se a categoria selecionada for "Utilidades", mostramos a lista moderna de telefones */}
+  {categoria === "Utilidades" ? (
+    <TelefonesUteisLista />
+  ) : (
+    <>
+      <div className="flex justify-between items-center">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+          {filtroMeusAnuncios ? "Meus Anúncios" : (categoria === "Todos" ? "Mural Completo" : categoria)}
+        </h2>
+        <span className="text-[10px] text-slate-500">{anunciosFiltrados.length} item(ns)</span>
+      </div>
+      
+      {loading ? (
+        <p className="text-center text-xs text-slate-500 py-6">Carregando anúncios...</p>
+      ) : anunciosPaginados.length === 0 ? (
+        <p className="text-center text-xs text-slate-500 py-6">Nenhum anúncio encontrado.</p>
+      ) : (
+        anunciosPaginados.map((item) => {
+          const isMeuAnuncio = user && user.uid === item.autorUid;
 
-            return (
-              <div key={item.id} className="bg-white border border-slate-200 p-3.5 rounded-2xl space-y-2.5 shadow-sm relative">
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-lg border border-blue-200">{item.categoria}</span>
-                    {item.oficial && <span className="text-[9px] font-black bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md">🏛️ OFICIAL</span>}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <img src={item.autorFoto} alt={item.autorNome} className="w-5 h-5 rounded-full border object-cover" />
-                      <span className="text-[10px] font-semibold text-slate-600">{item.autorNome}</span>
-                    </div>
-
-                    {!item.oficial && (
-                      <div className="flex items-center gap-1">
-                        {isMeuAnuncio && (
-                          <button
-                            onClick={() => setAnuncioEmEdicao(item)}
-                            className="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-lg transition"
-                            title="Editar"
-                          >
-                            ✏️
-                          </button>
-                        )}
-
-                        {(isAdmin || isMeuAnuncio) && (
-                          <button
-                            onClick={() => deletarAnuncio(item.id)}
-                            className="bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-lg transition"
-                            title="Excluir"
-                          >
-                            🗑️
-                          </button>
-                        )}
-
-                        {isAdmin && !isMeuAnuncio && (
-                          <button
-                            onClick={() => alternarBloqueioMorador(item.autorUid, item.autorNome, false)}
-                            className="bg-slate-200 hover:bg-red-600 hover:text-white text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-lg transition"
-                            title="Bloquear Morador"
-                          >
-                            🚫 Bloquear
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+          return (
+            <div key={item.id} className="bg-white border border-slate-200 p-3.5 rounded-2xl space-y-2.5 shadow-sm relative">
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-lg border border-blue-200">{item.categoria}</span>
+                  {item.oficial && <span className="text-[9px] font-black bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md">🏛️ OFICIAL</span>}
                 </div>
 
-                {item.imagemUrl && (
-                  <div className="w-full bg-slate-100 rounded-xl border p-1 flex items-center justify-center overflow-hidden">
-                    <img src={item.imagemUrl} alt={item.titulo} className="w-full h-auto max-h-72 object-contain mx-auto rounded-lg" />
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <img src={item.autorFoto} alt={item.autorNome} className="w-5 h-5 rounded-full border object-cover" />
+                    <span className="text-[10px] font-semibold text-slate-600">{item.autorNome}</span>
                   </div>
-                )}
 
-                <div className="space-y-1">
-                  <h3 className="font-bold text-sm text-slate-900">{item.titulo}</h3>
-                  {item.preco && (
-                    categoria === "Utilidades" ? (
-                      <a href={`tel:${item.preco.replace(/\D/g, '')}`} className="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-xl inline-flex items-center gap-1.5 shadow transition">
-                        📞 Ligar Agora: {item.preco}
-                      </a>
-                    ) : (
-                      <p className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg inline-block border">💰 Preço: {item.preco}</p>
-                    )
+                  {!item.oficial && (
+                    <div className="flex items-center gap-1">
+                      {isMeuAnuncio && (
+                        <button
+                          onClick={() => setAnuncioEmEdicao(item)}
+                          className="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-lg transition"
+                          title="Editar"
+                        >
+                          ✏️
+                        </button>
+                      )}
+
+                      {(isAdmin || isMeuAnuncio) && (
+                        <button
+                          onClick={() => deletarAnuncio(item.id)}
+                          className="bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-lg transition"
+                          title="Excluir"
+                        >
+                          🗑️
+                        </button>
+                      )}
+
+                      {isAdmin && !isMeuAnuncio && (
+                        <button
+                          onClick={() => alternarBloqueioMorador(item.autorUid, item.autorNome, false)}
+                          className="bg-slate-200 hover:bg-red-600 hover:text-white text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-lg transition"
+                          title="Bloquear Morador"
+                        >
+                          🚫 Bloquear
+                        </button>
+                      )}
+                    </div>
                   )}
-                  {item.salario && <p className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg inline-block border">💼 Salário: {item.salario}</p>}
-                  <p className="text-xs text-slate-600 mt-1 whitespace-pre-line">{item.descricao}</p>
                 </div>
               </div>
-            );
-          })
-        )}
 
-        {!loading && anunciosFiltrados.length > limiteVisivel && (
-          <button onClick={() => setLimiteVisivel(limiteVisivel + 15)} className="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-3 rounded-xl text-xs transition mt-4">
-            ⬇️ Ver mais...
-          </button>
-        )}
-      </div>
+              {item.imagemUrl && (
+                <div className="w-full bg-slate-100 rounded-xl border p-1 flex items-center justify-center overflow-hidden">
+                  <img src={item.imagemUrl} alt={item.titulo} className="w-full h-auto max-h-72 object-contain mx-auto rounded-lg" />
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <h3 className="font-bold text-sm text-slate-900">{item.titulo}</h3>
+                {item.preco && (
+                  categoria === "Utilidades" ? (
+                    <a href={`tel:${item.preco.replace(/\D/g, '')}`} className="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-xl inline-flex items-center gap-1.5 shadow transition">
+                      📞 Ligar Agora: {item.preco}
+                    </a>
+                  ) : (
+                    <p className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg inline-block border">💰 Preço: {item.preco}</p>
+                  )
+                )}
+                {item.salario && <p className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg inline-block border">💼 Salário: {item.salario}</p>}
+                <p className="text-xs text-slate-600 mt-1 whitespace-pre-line">{item.descricao}</p>
+              </div>
+            </div>
+          );
+        })
+      )}
+
+      {!loading && anunciosFiltrados.length > limiteVisivel && (
+        <button onClick={() => setLimiteVisivel(limiteVisivel + 15)} className="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-3 rounded-xl text-xs transition mt-4">
+          ⬇️ Ver mais...
+        </button>
+      )}
+    </>
+  )}
+
+</div>
 
       {/* MODAL DE EDIÇÃO */}
       {anuncioEmEdicao && (
