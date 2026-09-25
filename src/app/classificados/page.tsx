@@ -7,7 +7,6 @@ import { db } from "@/lib/firebase";
 import { collection, addDoc, getDocs, doc, getDoc, deleteDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
 
-// Imagens padrão automáticas por categoria quando o morador não envia foto
 const imagensPadraoPorCategoria: Record<string, string> = {
   "Anuncie": "https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp",
   "Empregos": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&auto=format&fit=crop&q=60",
@@ -92,7 +91,6 @@ function ClassificadosConteudo() {
 
   const [categoria, setCategoria] = useState(categoriaURL);
 
-  // Estados do formulário dinâmico
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [preco, setPreco] = useState("");
@@ -118,7 +116,6 @@ function ClassificadosConteudo() {
     { nome: "Utilidades", icone: "📞" },
   ];
 
-  // Sincroniza categoria e verifica se o usuário é Administrador
   useEffect(() => {
     const cat = searchParams.get("categoria");
     if (cat) setCategoria(cat);
@@ -133,10 +130,7 @@ function ClassificadosConteudo() {
       try {
         const userRef = doc(db, "usuarios", user.uid);
         const docSnap = await getDoc(userRef);
-        if (docSnap.exists() && docSnap.data().isAdmin) {
-          setIsAdmin(true);
-        } else if (user.email === "geraldo@email.com" || user.email?.includes("admin")) {
-          // Fallback de email admin se necessário
+        if ((docSnap.exists() && docSnap.data().isAdmin) || user.email?.includes("admin")) {
           setIsAdmin(true);
         }
       } catch (err) {
@@ -211,8 +205,6 @@ function ClassificadosConteudo() {
     }
 
     const categoriaPublicacao = categoria === "Todos" ? "Anuncie" : categoria;
-    
-    // Atribui imagem padrão caso o usuário não tenha enviado nenhuma
     const imagemFinal = imagemUrl || imagensPadraoPorCategoria[categoriaPublicacao] || imagensPadraoPorCategoria["Anuncie"];
 
     setSalvando(true);
@@ -294,6 +286,32 @@ function ClassificadosConteudo() {
         ))}
       </div>
 
+      {/* PAINEL DE DESTAQUE OFICIAL PARA A CATEGORIA EMPREGOS (PREFEITURA DE RIO CLARO / PAT) */}
+      {categoria === "Empregos" && (
+        <div className="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white rounded-3xl p-4 shadow-md space-y-3 border border-indigo-700/50">
+          <div className="flex items-center gap-2">
+            <span className="bg-amber-400 text-slate-950 text-xs font-black px-2 py-0.5 rounded-lg">PAT</span>
+            <h2 className="text-xs font-black uppercase tracking-wider text-amber-300">Prefeitura de Rio Claro</h2>
+          </div>
+          <p className="text-xs text-indigo-100 leading-relaxed">
+            Consulte as vagas oficiais do Posto de Atendimento ao Trabalhador (PAT) e cadastre seu currículo no portal municipal.
+          </p>
+          <div className="pt-1 flex flex-col gap-2">
+            <a 
+              href="https://vagas.rioclaro.sp.gov.br" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black py-2.5 px-3 rounded-xl text-xs text-center shadow transition flex items-center justify-center gap-1.5"
+            >
+              🌐 Acessar Portal da Empregabilidade
+            </a>
+            <p className="text-[10px] text-indigo-300 text-center">
+              📍 Sede presencial: Rua 6, nº 676 - Centro (para quem precisa de suporte com computadores).
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* BOTÃO E FORMULÁRIO DINÂMICO DE NOVO ANÚNCIO */}
       {user ? (
         <div className="space-y-3">
@@ -313,7 +331,7 @@ function ClassificadosConteudo() {
               
               <input 
                 type="text" 
-                placeholder="Título principal do anúncio" 
+                placeholder={categoria === "Empregos" ? "Título da vaga / Cargo (Ex: Auxiliar Administrativo)" : "Título principal do anúncio"} 
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600"
@@ -347,7 +365,7 @@ function ClassificadosConteudo() {
               )}
 
               <textarea 
-                placeholder="Descreva os detalhes, contactos, requisitos ou informações importantes..." 
+                placeholder={categoria === "Empregos" ? "Descreva os requisitos, carga horária, e-mail ou WhatsApp para envio de currículo..." : "Descreva os detalhes, contactos, requisitos ou informações importantes..."} 
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 rows={3}
@@ -355,7 +373,7 @@ function ClassificadosConteudo() {
               />
 
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-500 block">Adicionar Imagem (Opcional - caso não envie, criaremos uma padrão):</label>
+                <label className="text-[10px] text-slate-500 block">Adicionar Imagem (Opcional - caso não envie, usaremos a padrão da categoria):</label>
                 <input 
                   type="file" 
                   accept="image/jpeg, image/png, image/webp"
@@ -422,7 +440,6 @@ function ClassificadosConteudo() {
                     <span className="text-[10px] font-semibold text-slate-600">{item.autorNome}</span>
                   </div>
 
-                  {/* BOTÃO DE ADMIN PARA EXCLUIR ANÚNCIO */}
                   {(isAdmin || (user && user.uid === item.autorUid)) && (
                     <button
                       onClick={() => deletarAnuncio(item.id)}
@@ -444,7 +461,6 @@ function ClassificadosConteudo() {
               <div className="space-y-1">
                 <h3 className="font-bold text-sm text-slate-900">{item.titulo}</h3>
                 
-                {/* EXIBIÇÃO DE PREÇO OU SALÁRIO SE EXISTIREM */}
                 {item.preco && (
                   <p className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg inline-block border border-emerald-200">
                     💰 Preço: {item.preco}
