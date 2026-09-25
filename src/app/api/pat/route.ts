@@ -3,64 +3,77 @@ import * as cheerio from "cheerio";
 
 export async function GET() {
   try {
-    // A URL oficial do Trampolim filtrada para Rio Claro
-    const url = "https://www.trampolim.sp.gov.br/pt/busca/?smart_filter=false&q=&type=vacancy&order_by=latest&page=1&page_limit=10&status=available&status=extended&locale=Rio+Claro&operation_range=25";
+    const url = "https://www.trampolim.sp.gov.br/pt/busca/?smart_filter=false&q=&type=vacancy&order_by=latest&page=1&page_limit=15&status=available&status=extended&locale=Rio+Claro&operation_range=25";
 
-    // O SEGREDO DA ATUALIZAÇÃO AUTOMÁTICA ESTÁ AQUI:
-    // next: { revalidate: 86400 } diz ao Next.js para atualizar essa busca a cada 24 horas (86400 segundos) automaticamente.
-    const response = await fetch(url, { next: { revalidate: 86400 } });
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
+      next: { revalidate: 86400 } // Revalida e atualiza automaticamente a cada 24 horas
+    });
+
     const html = await response.text();
-
     const $ = cheerio.load(html);
     const vagas: any[] = [];
 
-    // Tenta encontrar os cards de vagas no HTML do Trampolim.
-    // Nota: Como o Trampolim pode usar classes CSS dinâmicas, se o cheerio não achar os itens,
-    // ele pulará para o nosso "fallback" abaixo.
-    $('.job-card-class').each((index, element) => { // Substitua '.job-card-class' pela classe real inspecionando o site deles se necessário
-      const titulo = $(element).find('.job-title').text().trim();
-      const descricao = $(element).find('.job-description').text().trim();
-      const salario = $(element).find('.job-salary').text().trim();
-
-      if (titulo) {
-        vagas.push({
-          id: `pat-vaga-${index}`,
-          titulo: titulo,
-          descricao: descricao + "\n\nCandidatar-se no site oficial do Trampolim.",
-          categoria: "Empregos",
-          salario: salario || "A combinar",
-          oficial: true, // Aciona o selo "🏛️ OFICIAL" azulzinho no seu frontend
-          autorUid: "pat-oficial",
-          autorNome: "PAT Rio Claro",
-          autorFoto: "https://rioclaro.sp.gov.br/wp-content/uploads/2022/10/cropped-Brasao-32x32.png", // Brasão da Prefeitura
-          createdAt: new Date().toISOString(), // Data de hoje
-        });
+    // 1. Tenta extrair a lista direta de vagas do JSON embutido na página (Next.js / Nuxt data)
+    $('script').each((_, element) => {
+      const content = $(element).html() || '';
+      if (element.attribs.id === '__NEXT_DATA__' || content.includes('vacancies')) {
+        try {
+          const parsed = JSON.parse(content);
+          // Procura dentro da estrutura do JSON por arrays de vagas
+          const listaBruta = parsed?.props?.pageProps?.vacancies || parsed?.props?.pageProps?.initialState?.vacancies || [];
+          
+          listaBruta.forEach((vaga: any, index: number) => {
+            vagas.push({
+              id: `pat-vaga-${vaga.id || index}`,
+              titulo: vaga.title || vaga.occupation || vaga.name,
+              descricao: vaga.description || `Vaga de ${vaga.title || "emprego"} disponibilizada pelo PAT de Rio Claro. Acesse o Trampolim para candidatar-se.`,
+              categoria: "Empregos",
+              salario: vaga.salary ? `R$ ${vaga.salary}` : "A combinar",
+              oficial: true,
+              autorUid: "pat-oficial",
+              autorNome: "PAT Rio Claro",
+              autorFoto: "https://rioclaro.sp.gov.br/wp-content/uploads/2022/10/cropped-Brasao-32x32.png",
+              createdAt: new Date().toISOString(),
+            });
+          });
+        } catch (e) {
+          // Ignora erros de parse de scripts irrelevantes
+        }
       }
     });
 
-    // FALLBACK: Se o Trampolim proteger a página contra raspagem (Scraping) ou carregar via JavaScript,
-    // nós enviamos um Card Oficial padrão avisando que há novas vagas disponíveis hoje.
+    // 2. Se a extração via JSON não encontrar itens, varre os blocos visíveis do HTML
     if (vagas.length === 0) {
-      vagas.push({
-        id: "pat-vaga-destaque-hoje",
-        titulo: "Novas Vagas de Emprego Disponíveis no PAT",
-        descricao: "A lista de empregos foi atualizada hoje no sistema da Prefeitura. Acesse o portal Trampolim pelo botão acima para conferir os cargos abertos e enviar seu currículo.",
-        categoria: "Empregos",
-        salario: "Consultar no site",
-        oficial: true,
-        autorUid: "pat-oficial",
-        autorNome: "PAT Rio Claro",
-        autorFoto: "https://rioclaro.sp.gov.br/wp-content/uploads/2022/10/cropped-Brasao-32x32.png",
-        createdAt: new Date().toISOString(),
+      $('article, div[class*="vacancy"], div[class*="job"], div[class*="card"]').each((index, element) => {
+        const titulo = $(element).find('h2, h3, h4, [class*="title"]').first().text().trim();
+        const descricao = $(element).find('p, [class*="description"], [class*="summary"]').first().text().trim();
+        const salario = $(element).find('[class*="salary"], [class*="wage"]').first().text().trim();
+
+        // Evita duplicados e títulos vazios ou irrelevantes
+        if (titulo && titulo.length > 3 && !vagas.some(v => v.titulo === titulo)) {
+          vagas.push({
+            id: `pat-html-${index}`,
+            titulo: titulo,
+            descricao: descricao || "Vaga oficial capturada do sistema do Posto de Atendimento ao Trabalhador de Rio Claro.",
+            categoria: "Empregos",
+            salario: salario || "A combinar",
+            oficial: true,
+            autorUid: "pat-oficial",
+            autorNome: "PAT Rio Claro",
+            autorFoto: "https://rioclaro.sp.gov.br/wp-content/uploads/2022/10/cropped-Brasao-32x32.png",
+            createdAt: new Date().toISOString(),
+          });
+        }
       });
     }
 
     return NextResponse.json({ success: true, vagas });
   } catch (error) {
-    console.error("Erro ao buscar vagas do PAT:", error);
-    return NextResponse.json(
-      { success: false, error: "Não foi possível carregar as vagas hoje." },
-      { status: 500 }
-    );
+    console.error("Erro na busca de vagas do PAT:", error);
+    return NextResponse.json({ success: false, vagas: [] }, { status: 500 });
   }
 }
