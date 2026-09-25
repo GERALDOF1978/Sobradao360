@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, updateDoc, getDocs, doc, getDoc, deleteDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, updateDoc, doc, getDocs, getDoc, deleteDoc, setDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
 
 const imagensPadraoPorCategoria: Record<string, string> = {
@@ -87,14 +87,15 @@ function ClassificadosConteudo() {
 
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isBloqueado, setIsBloqueado] = useState(false);
   
   const [anunciosFirestore, setAnunciosFirestore] = useState<Anuncio[]>([]);
   const [vagasPat, setVagasPat] = useState<Anuncio[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Paginação e Modais
+  // Paginação e Filtros
   const [limiteVisivel, setLimiteVisivel] = useState(15);
-  const [filtroMeusAnuncios, setFiltroMeusAnuncios] = useState(false); // Botão "Meus Anúncios"
+  const [filtroMeusAnuncios, setFiltroMeusAnuncios] = useState(false);
 
   const [categoria, setCategoria] = useState(categoriaURL);
   const [titulo, setTitulo] = useState("");
@@ -134,22 +135,35 @@ function ClassificadosConteudo() {
   }, [searchParams]);
 
   useEffect(() => {
-    async function verificarAdmin() {
+    async function verificarPermissoesUser() {
       if (!user) {
         setIsAdmin(false);
+        setIsBloqueado(false);
         return;
       }
       try {
         const userRef = doc(db, "usuarios", user.uid);
         const docSnap = await getDoc(userRef);
-        if ((docSnap.exists() && docSnap.data().isAdmin) || user.email?.includes("admin")) {
-          setIsAdmin(true);
+        
+        if (docSnap.exists()) {
+          const dados = docSnap.data();
+          if (dados.isAdmin || user.email?.includes("admin")) setIsAdmin(true);
+          if (dados.bloqueado) setIsBloqueado(true);
+        } else {
+          // Se o documento não existir no Firestore, cria um padrão
+          await setDoc(userRef, {
+            nome: user.displayName || "Morador",
+            email: user.email,
+            isAdmin: user.email?.includes("admin") || false,
+            bloqueado: false,
+            createdAt: serverTimestamp()
+          }, { merge: true });
         }
       } catch (err) {
-        console.error("Erro ao verificar admin:", err);
+        console.error("Erro ao verificar permissões:", err);
       }
     }
-    verificarAdmin();
+    verificarPermissoesUser();
   }, [user]);
 
   const buscarAnuncios = async () => {
@@ -178,6 +192,22 @@ function ClassificadosConteudo() {
   useEffect(() => {
     buscarAnuncios();
   }, []);
+
+  // FUNÇÃO DE ADMIN PARA BLOQUEAR OU DESBLOQUEAR MORADOR
+  const alternarBloqueioMorador = async (autorUid: string, autorNome: string, statusAtualBloqueio: boolean) => {
+    if (!isAdmin) return;
+    const acao = statusAtualBloqueio ? "desbloquear" : "bloquear";
+    if (!confirm(`Tem certeza que deseja ${acao} o morador ${autorNome} de publicar anúncios?`)) return;
+
+    try {
+      const userRef = doc(db, "usuarios", autorUid);
+      await setDoc(userRef, { bloqueado: !statusAtualBloqueio }, { merge: true });
+      alert(`Morador ${autorNome} foi ${statusAtualBloqueio ? "desbloqueado" : "bloqueado"} com sucesso.`);
+      buscarAnuncios();
+    } catch (error) {
+      alert("Erro ao alterar o status de bloqueio do morador.");
+    }
+  };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, isEditing = false) => {
     const files = event.target.files;
@@ -214,6 +244,10 @@ function ClassificadosConteudo() {
     e.preventDefault();
     if (!user) {
       alert("Você precisa estar logado para publicar!");
+      return;
+    }
+    if (isBloqueado) {
+      alert("Sua conta está bloqueada pela administração e você não pode publicar novos anúncios.");
       return;
     }
     if (!titulo.trim() || !descricao.trim()) {
@@ -287,7 +321,6 @@ function ClassificadosConteudo() {
     }
   };
 
-  // Junta os dados e aplica filtros
   let todosOsAnuncios = [...vagasPat, ...anunciosFirestore];
 
   if (filtroMeusAnuncios && user) {
@@ -313,7 +346,12 @@ function ClassificadosConteudo() {
         </div>
       </div>
 
-      {/* BOTÃO RÁPIDO PARA "MEUS ANÚNCIOS" */}
+      {isBloqueado && (
+        <div className="bg-red-50 border border-red-300 text-red-800 p-3 rounded-2xl text-xs font-semibold text-center">
+          🚫 A sua conta está atualmente bloqueada pela administração e não pode publicar novos classificados.
+        </div>
+      )}
+
       {user && (
         <button
           onClick={() => setFiltroMeusAnuncios(!filtroMeusAnuncios)}
@@ -323,7 +361,7 @@ function ClassificadosConteudo() {
               : "bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50"
           }`}
         >
-          {filtroMeusAnuncios ? "👤 A mostrar apenas os seus anúncios (Clique para ver todos)" : "📋 Ver os meus anúncios publicados (Gerir / Excluir)"}
+          {filtroMeusAnuncios ? "👤 A mostrar apenas os seus anúncios" : "📋 Ver os meus anúncios (Gerir / Excluir)"}
         </button>
       )}
 
@@ -341,7 +379,7 @@ function ClassificadosConteudo() {
         ))}
       </div>
 
-      {user && !filtroMeusAnuncios && (
+      {user && !filtroMeusAnuncios && !isBloqueado && (
         <div className="space-y-3">
           <button
             type="button"
@@ -360,7 +398,7 @@ function ClassificadosConteudo() {
                 placeholder="Título principal" 
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none"
               />
 
               {categoria === "Compre & Venda" && (
@@ -369,7 +407,7 @@ function ClassificadosConteudo() {
                   placeholder="Preço (Ex: R$ 150,00)" 
                   value={preco}
                   onChange={(e) => setPreco(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none"
+                  className="w-full bg-slate-50 border rounded-xl px-3 py-2 text-xs"
                 />
               )}
 
@@ -379,7 +417,7 @@ function ClassificadosConteudo() {
                   placeholder="Salário / Benefícios" 
                   value={salario}
                   onChange={(e) => setSalario(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none"
+                  className="w-full bg-slate-50 border rounded-xl px-3 py-2 text-xs"
                 />
               )}
 
@@ -388,7 +426,7 @@ function ClassificadosConteudo() {
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 rows={3}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none resize-none"
+                className="w-full bg-slate-50 border rounded-xl px-3 py-2 text-xs resize-none"
               />
 
               <input 
@@ -396,7 +434,7 @@ function ClassificadosConteudo() {
                 accept="image/jpeg, image/png, image/webp"
                 onChange={(e) => handleImageUpload(e, false)}
                 disabled={uploading}
-                className="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-800"
+                className="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-200"
               />
               {uploading && <p className="text-[10px] text-amber-600 animate-pulse">Enviando imagem...</p>}
 
@@ -447,25 +485,38 @@ function ClassificadosConteudo() {
                       <span className="text-[10px] font-semibold text-slate-600">{item.autorNome}</span>
                     </div>
 
-                    {/* BOTÕES DE EDITAR E EXCLUIR PARA O DONO OU ADMIN */}
-                    {!item.oficial && (isAdmin || isMeuAnuncio) && (
+                    {/* BOTÕES DE EDITAR, EXCLUIR E MODERAÇÃO DO ADMIN (BLOQUEAR MORADOR) */}
+                    {!item.oficial && (
                       <div className="flex items-center gap-1">
                         {isMeuAnuncio && (
                           <button
                             onClick={() => setAnuncioEmEdicao(item)}
                             className="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-lg transition"
-                            title="Editar Anúncio"
+                            title="Editar"
                           >
-                            ✏️ Editar
+                            ✏️
                           </button>
                         )}
-                        <button
-                          onClick={() => deletarAnuncio(item.id)}
-                          className="bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-lg transition"
-                          title="Excluir Anúncio"
-                        >
-                          🗑️
-                        </button>
+
+                        {(isAdmin || isMeuAnuncio) && (
+                          <button
+                            onClick={() => deletarAnuncio(item.id)}
+                            className="bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-lg transition"
+                            title="Excluir"
+                          >
+                            🗑️
+                          </button>
+                        )}
+
+                        {isAdmin && !isMeuAnuncio && (
+                          <button
+                            onClick={() => alternarBloqueioMorador(item.autorUid, item.autorNome, false)}
+                            className="bg-slate-200 hover:bg-red-600 hover:text-white text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-lg transition"
+                            title="Bloquear Morador"
+                          >
+                            🚫 Bloquear
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -495,13 +546,13 @@ function ClassificadosConteudo() {
         )}
       </div>
 
-      {/* MODAL DE EDIÇÃO DE ANÚNCIO */}
+      {/* MODAL DE EDIÇÃO */}
       {anuncioEmEdicao && (
         <div className="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
           <form onSubmit={salvarEdicao} className="bg-white w-full max-w-sm rounded-3xl p-5 space-y-3 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b pb-2">
               <h2 className="text-xs font-black uppercase text-amber-600">✏️ Editar Anúncio</h2>
-              <button type="button" onClick={() => setAnuncioEmEdicao(null)} className="text-slate-500 font-bold text-xs">✕ Fechar</button>
+              <button type="button" onClick={() => setAnuncioEmEdicao(null)} className="text-slate-500 font-bold text-xs">✕</button>
             </div>
 
             <div className="space-y-1">
@@ -532,7 +583,7 @@ function ClassificadosConteudo() {
                 <input 
                   type="text" 
                   value={anuncioEmEdicao.salario || ""}
-                  onChange={(e) => setAnuncioEmEdicao({ ...anuncioEmEdicao, salarios: e.target.value } as any)}
+                  onChange={(e) => setAnuncioEmEdicao({ ...anuncioEmEdicao, salario: e.target.value })}
                   className="w-full bg-slate-50 border rounded-xl px-3 py-2 text-xs"
                 />
               </div>
