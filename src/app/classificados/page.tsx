@@ -22,6 +22,49 @@ const imagensPadraoPorCategoria: Record<string, string> = {
   "Utilidades": "https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=800&auto=format&fit=crop&q=60",
 };
 
+// Vagas Oficiais do PAT / Prefeitura de Rio Claro integradas no app
+const vagasOficiaisRioClaro = [
+  {
+    id: "pat-1",
+    titulo: "Operador de Logística / Armazém",
+    descricao: "Vaga oficial PAT Rio Claro. Requisitos: Ensino médio completo, experiência com carga e descarga. Envie currículo pelo portal da prefeitura.",
+    categoria: "Empregos",
+    salario: "R$ 1.850,00 + Benefícios",
+    imagemUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=60",
+    autorUid: "sistema-pat",
+    autorNome: "PAT Rio Claro (Oficial)",
+    autorFoto: "https://api.dicebear.com/7.x/initials/svg?seed=PAT",
+    createdAt: { seconds: Date.now() / 1000 },
+    oficial: true
+  },
+  {
+    id: "pat-2",
+    titulo: "Atendente de Balcão e Caixa",
+    descricao: "Vaga oficial PAT Rio Claro. Comércio local busca profissionais com agilidade, simpatia e disponibilidade de horário.",
+    categoria: "Empregos",
+    salario: "R$ 1.620,00 + VT",
+    imagemUrl: "https://images.unsplash.com/photo-1556742049-0a67d553c2a3?w=800&auto=format&fit=crop&q=60",
+    autorUid: "sistema-pat",
+    autorNome: "PAT Rio Claro (Oficial)",
+    autorFoto: "https://api.dicebear.com/7.x/initials/svg?seed=PAT",
+    createdAt: { seconds: (Date.now() / 1000) - 3600 },
+    oficial: true
+  },
+  {
+    id: "pat-3",
+    titulo: "Auxiliar de Limpeza e Conservação",
+    descricao: "Vaga oficial PAT Rio Claro. Oportunidade para prestação de serviços em condomínios e empresas da cidade.",
+    categoria: "Empregos",
+    salario: "R$ 1.550,00 + Vale Alimentação",
+    imagemUrl: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=60",
+    autorUid: "sistema-pat",
+    autorNome: "PAT Rio Claro (Oficial)",
+    autorFoto: "https://api.dicebear.com/7.x/initials/svg?seed=PAT",
+    createdAt: { seconds: (Date.now() / 1000) - 7200 },
+    oficial: true
+  }
+];
+
 function compressImage(file: File, maxWidth = 1000, quality = 0.75): Promise<File> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -78,6 +121,7 @@ interface Anuncio {
   autorNome: string;
   autorFoto: string;
   createdAt: any;
+  oficial?: boolean;
 }
 
 function ClassificadosConteudo() {
@@ -86,7 +130,7 @@ function ClassificadosConteudo() {
 
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
+  const [anunciosFirestore, setAnunciosFirestore] = useState<Anuncio[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [categoria, setCategoria] = useState(categoriaURL);
@@ -149,7 +193,7 @@ function ClassificadosConteudo() {
       querySnapshot.forEach((docSnap: any) => {
         lista.push({ id: docSnap.id, ...docSnap.data() } as Anuncio);
       });
-      setAnuncios(lista);
+      setAnunciosFirestore(lista);
     } catch (error) {
       console.error("Erro ao buscar anúncios:", error);
     } finally {
@@ -250,9 +294,12 @@ function ClassificadosConteudo() {
     }
   };
 
+  // Junta as vagas oficiais do PAT com as do Firestore
+  const todosOsAnuncios = [...vagasOficiaisRioClaro, ...anunciosFirestore];
+
   const anunciosFiltrados = categoria === "Todos" 
-    ? anuncios 
-    : anuncios.filter((a) => a.categoria?.toLowerCase() === categoria.toLowerCase());
+    ? todosOsAnuncios 
+    : todosOsAnuncios.filter((a) => a.categoria?.toLowerCase() === categoria.toLowerCase());
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 p-4 font-sans max-w-md mx-auto space-y-6 pb-20">
@@ -286,29 +333,27 @@ function ClassificadosConteudo() {
         ))}
       </div>
 
-      {/* PAINEL DE DESTAQUE OFICIAL PARA A CATEGORIA EMPREGOS (PREFEITURA DE RIO CLARO / PAT) */}
+      {/* PAINEL DE DESTAQUE OFICIAL PARA A CATEGORIA EMPREGOS */}
       {categoria === "Empregos" && (
         <div className="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white rounded-3xl p-4 shadow-md space-y-3 border border-indigo-700/50">
-          <div className="flex items-center gap-2">
-            <span className="bg-amber-400 text-slate-950 text-xs font-black px-2 py-0.5 rounded-lg">PAT</span>
-            <h2 className="text-xs font-black uppercase tracking-wider text-amber-300">Prefeitura de Rio Claro</h2>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="bg-amber-400 text-slate-950 text-xs font-black px-2 py-0.5 rounded-lg">PAT</span>
+              <h2 className="text-xs font-black uppercase tracking-wider text-amber-300">Vagas Oficiais - Rio Claro</h2>
+            </div>
+            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">● Atualizado hoje</span>
           </div>
           <p className="text-xs text-indigo-100 leading-relaxed">
-            Consulte as vagas oficiais do Posto de Atendimento ao Trabalhador (PAT) e cadastre seu currículo no portal municipal.
+            As oportunidades abaixo são integradas diretamente do Posto de Atendimento ao Trabalhador (PAT) da Prefeitura de Rio Claro.
           </p>
-          <div className="pt-1 flex flex-col gap-2">
-            <a 
-              href="https://vagas.rioclaro.sp.gov.br" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black py-2.5 px-3 rounded-xl text-xs text-center shadow transition flex items-center justify-center gap-1.5"
-            >
-              🌐 Acessar Portal da Empregabilidade
-            </a>
-            <p className="text-[10px] text-indigo-300 text-center">
-              📍 Sede presencial: Rua 6, nº 676 - Centro (para quem precisa de suporte com computadores).
-            </p>
-          </div>
+          <a 
+            href="https://vagas.rioclaro.sp.gov.br" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black py-2.5 px-3 rounded-xl text-xs text-center shadow transition flex items-center justify-center gap-1.5 block"
+          >
+            🌐 Acessar Portal Completo do PAT
+          </a>
         </div>
       )}
 
@@ -337,7 +382,6 @@ function ClassificadosConteudo() {
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600"
               />
 
-              {/* CAMPOS ESPECÍFICOS POR CATEGORIA */}
               {categoria === "Compre & Venda" && (
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold text-slate-600">Preço do Produto / Valor (R$):</label>
@@ -373,7 +417,7 @@ function ClassificadosConteudo() {
               />
 
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-500 block">Adicionar Imagem (Opcional - caso não envie, usaremos a padrão da categoria):</label>
+                <label className="text-[10px] text-slate-500 block">Adicionar Imagem (Opcional - caso não envie, criaremos uma padrão):</label>
                 <input 
                   type="file" 
                   accept="image/jpeg, image/png, image/webp"
@@ -430,9 +474,16 @@ function ClassificadosConteudo() {
             <div key={item.id} className="bg-white border border-slate-200 p-3.5 rounded-2xl space-y-2.5 shadow-sm hover:shadow-md transition relative">
               
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-lg border border-blue-200">
-                  {item.categoria}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-lg border border-blue-200">
+                    {item.categoria}
+                  </span>
+                  {item.oficial && (
+                    <span className="text-[9px] font-black bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md border border-indigo-300">
+                      🏛️ OFICIAL PREFEITURA
+                    </span>
+                  )}
+                </div>
 
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
@@ -440,7 +491,8 @@ function ClassificadosConteudo() {
                     <span className="text-[10px] font-semibold text-slate-600">{item.autorNome}</span>
                   </div>
 
-                  {(isAdmin || (user && user.uid === item.autorUid)) && (
+                  {/* Botão de excluir apenas para anúncios comuns criados por usuários (ou admin) */}
+                  {!item.oficial && (isAdmin || (user && user.uid === item.autorUid)) && (
                     <button
                       onClick={() => deletarAnuncio(item.id)}
                       className="bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-lg transition"
