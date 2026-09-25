@@ -4,8 +4,24 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, doc, getDoc, deleteDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
+
+// Imagens padrão automáticas por categoria quando o morador não envia foto
+const imagensPadraoPorCategoria: Record<string, string> = {
+  "Anuncie": "https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp",
+  "Empregos": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&auto=format&fit=crop&q=60",
+  "Compre & Venda": "https://images.unsplash.com/photo-1555529771-835f59fc5efe?w=800&auto=format&fit=crop&q=60",
+  "Alimentação": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop&q=60",
+  "Reformas": "https://images.unsplash.com/photo-1581094288338-2314dddb7ece?w=800&auto=format&fit=crop&q=60",
+  "Lazer": "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&auto=format&fit=crop&q=60",
+  "Automotivo": "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&auto=format&fit=crop&q=60",
+  "Zeladoria": "https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=800&auto=format&fit=crop&q=60",
+  "Notícias": "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop&q=60",
+  "Pet & Saúde": "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=800&auto=format&fit=crop&q=60",
+  "Eventos": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=60",
+  "Utilidades": "https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=800&auto=format&fit=crop&q=60",
+};
 
 function compressImage(file: File, maxWidth = 1000, quality = 0.75): Promise<File> {
   return new Promise((resolve, reject) => {
@@ -56,7 +72,10 @@ interface Anuncio {
   titulo: string;
   descricao: string;
   categoria: string;
+  preco?: string;
+  salario?: string;
   imagemUrl?: string;
+  autorUid: string;
   autorNome: string;
   autorFoto: string;
   createdAt: any;
@@ -67,13 +86,17 @@ function ClassificadosConteudo() {
   const categoriaURL = searchParams.get("categoria") || "Todos";
 
   const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
   const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [categoria, setCategoria] = useState(categoriaURL);
 
+  // Estados do formulário dinâmico
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
+  const [preco, setPreco] = useState("");
+  const [salario, setSalario] = useState("");
   const [imagemUrl, setImagemUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -95,12 +118,33 @@ function ClassificadosConteudo() {
     { nome: "Utilidades", icone: "📞" },
   ];
 
+  // Sincroniza categoria e verifica se o usuário é Administrador
   useEffect(() => {
     const cat = searchParams.get("categoria");
-    if (cat) {
-      setCategoria(cat);
-    }
+    if (cat) setCategoria(cat);
   }, [searchParams]);
+
+  useEffect(() => {
+    async function verificarAdmin() {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+      try {
+        const userRef = doc(db, "usuarios", user.uid);
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists() && docSnap.data().isAdmin) {
+          setIsAdmin(true);
+        } else if (user.email === "geraldo@email.com" || user.email?.includes("admin")) {
+          // Fallback de email admin se necessário
+          setIsAdmin(true);
+        }
+      } catch (err) {
+        console.error("Erro ao verificar permissão de admin:", err);
+      }
+    }
+    verificarAdmin();
+  }, [user]);
 
   const buscarAnuncios = async () => {
     setLoading(true);
@@ -108,8 +152,8 @@ function ClassificadosConteudo() {
       const q = query(collection(db, "anuncios"), orderBy("createdAt", "desc"));
       const querySnapshot = await getDocs(q);
       const lista: Anuncio[] = [];
-      querySnapshot.forEach((doc: any) => {
-        lista.push({ id: doc.id, ...doc.data() } as Anuncio);
+      querySnapshot.forEach((docSnap: any) => {
+        lista.push({ id: docSnap.id, ...docSnap.data() } as Anuncio);
       });
       setAnuncios(lista);
     } catch (error) {
@@ -167,6 +211,9 @@ function ClassificadosConteudo() {
     }
 
     const categoriaPublicacao = categoria === "Todos" ? "Anuncie" : categoria;
+    
+    // Atribui imagem padrão caso o usuário não tenha enviado nenhuma
+    const imagemFinal = imagemUrl || imagensPadraoPorCategoria[categoriaPublicacao] || imagensPadraoPorCategoria["Anuncie"];
 
     setSalvando(true);
     try {
@@ -174,7 +221,9 @@ function ClassificadosConteudo() {
         titulo,
         descricao,
         categoria: categoriaPublicacao,
-        imagemUrl: imagemUrl || null,
+        preco: categoriaPublicacao === "Compre & Venda" ? preco : null,
+        salario: categoriaPublicacao === "Empregos" ? salario : null,
+        imagemUrl: imagemFinal,
         autorUid: user.uid,
         autorNome: user.displayName || "Morador",
         autorFoto: user.photoURL || "https://api.dicebear.com/7.x/thumbs/svg?seed=padrao",
@@ -183,6 +232,8 @@ function ClassificadosConteudo() {
 
       setTitulo("");
       setDescricao("");
+      setPreco("");
+      setSalario("");
       setImagemUrl("");
       setMostrarForm(false);
       alert("Anúncio publicado com sucesso no mural! 🎉");
@@ -192,6 +243,18 @@ function ClassificadosConteudo() {
       alert("Erro ao salvar no Firestore.");
     } finally {
       setSalvando(false);
+    }
+  };
+
+  const deletarAnuncio = async (id: string) => {
+    if (!confirm("Tem certeza que deseja remover este anúncio?")) return;
+    try {
+      await deleteDoc(doc(db, "anuncios", id));
+      alert("Anúncio removido com sucesso.");
+      buscarAnuncios();
+    } catch (error) {
+      console.error("Erro ao excluir anúncio:", error);
+      alert("Erro ao excluir anúncio.");
     }
   };
 
@@ -207,7 +270,10 @@ function ClassificadosConteudo() {
         <Link href="/" className="text-xs bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-3 py-1.5 rounded-xl transition">
           ← Voltar ao Início
         </Link>
-        <h1 className="text-sm font-black text-slate-900">🛍️ Classificados & Guia</h1>
+        <div className="flex items-center gap-2">
+          {isAdmin && <span className="bg-red-100 text-red-700 text-[10px] font-black px-2 py-0.5 rounded-full border border-red-300">ADMIN</span>}
+          <h1 className="text-sm font-black text-slate-900">🛍️ Classificados</h1>
+        </div>
       </div>
 
       {/* FILTROS DE CATEGORIA */}
@@ -228,7 +294,7 @@ function ClassificadosConteudo() {
         ))}
       </div>
 
-      {/* BOTÃO E FORMULÁRIO DE NOVO ANÚNCIO (FECHADO POR PADRÃO) */}
+      {/* BOTÃO E FORMULÁRIO DINÂMICO DE NOVO ANÚNCIO */}
       {user ? (
         <div className="space-y-3">
           <button
@@ -236,30 +302,52 @@ function ClassificadosConteudo() {
             onClick={() => setMostrarForm(!mostrarForm)}
             className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 active:scale-95 text-slate-950 font-black py-3 px-4 rounded-2xl text-xs shadow-md transition flex items-center justify-center gap-2"
           >
-            {mostrarForm ? "✕ Fechar Formulário" : `➕ Publicar Anúncio em ${categoria === "Todos" ? "Anuncie" : categoria}`}
+            {mostrarForm ? "✕ Fechar Formulário" : `➕ Publicar em ${categoria === "Todos" ? "Anuncie" : categoria}`}
           </button>
 
           {mostrarForm && (
             <form onSubmit={handlePublicar} className="bg-white border border-slate-200 p-4 rounded-2xl space-y-3 shadow-sm">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-amber-600">Publicar Novo Anúncio</h2>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-amber-600">
+                Novo Anúncio: {categoria === "Todos" ? "Anuncie" : categoria}
+              </h2>
               
               <input 
                 type="text" 
-                placeholder="Título do produto, serviço ou vaga" 
+                placeholder="Título principal do anúncio" 
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600"
               />
 
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-2.5 rounded-xl">
-                <span className="text-[11px] text-slate-500">Categoria da publicação:</span>
-                <span className="text-xs font-black bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-lg shadow-sm">
-                  {categoria === "Todos" ? "Anuncie" : categoria}
-                </span>
-              </div>
+              {/* CAMPOS ESPECÍFICOS POR CATEGORIA */}
+              {categoria === "Compre & Venda" && (
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-slate-600">Preço do Produto / Valor (R$):</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: R$ 150,00 ou A combinar" 
+                    value={preco}
+                    onChange={(e) => setPreco(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+              )}
+
+              {categoria === "Empregos" && (
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-slate-600">Salário / Faixa Salarial / Benefícios:</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: R$ 2.500 + Vale Alimentação" 
+                    value={salario}
+                    onChange={(e) => setSalario(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+              )}
 
               <textarea 
-                placeholder="Descreva os detalhes, telefone de contato, requisitos ou valores..." 
+                placeholder="Descreva os detalhes, contactos, requisitos ou informações importantes..." 
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 rows={3}
@@ -267,7 +355,7 @@ function ClassificadosConteudo() {
               />
 
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-500 block">Adicionar Imagem (Compactada automaticamente):</label>
+                <label className="text-[10px] text-slate-500 block">Adicionar Imagem (Opcional - caso não envie, criaremos uma padrão):</label>
                 <input 
                   type="file" 
                   accept="image/jpeg, image/png, image/webp"
@@ -321,14 +409,29 @@ function ClassificadosConteudo() {
           <p className="text-center text-xs text-slate-500 py-6">Nenhum anúncio nesta categoria ainda. Seja o primeiro!</p>
         ) : (
           anunciosFiltrados.map((item) => (
-            <div key={item.id} className="bg-white border border-slate-200 p-3.5 rounded-2xl space-y-2.5 shadow-sm hover:shadow-md transition">
+            <div key={item.id} className="bg-white border border-slate-200 p-3.5 rounded-2xl space-y-2.5 shadow-sm hover:shadow-md transition relative">
+              
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-lg border border-blue-200">
                   {item.categoria}
                 </span>
-                <div className="flex items-center gap-1.5">
-                  <img src={item.autorFoto} alt={item.autorNome} className="w-5 h-5 rounded-full border border-slate-300 object-cover" />
-                  <span className="text-[10px] font-semibold text-slate-600">{item.autorNome}</span>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <img src={item.autorFoto} alt={item.autorNome} className="w-5 h-5 rounded-full border border-slate-300 object-cover" />
+                    <span className="text-[10px] font-semibold text-slate-600">{item.autorNome}</span>
+                  </div>
+
+                  {/* BOTÃO DE ADMIN PARA EXCLUIR ANÚNCIO */}
+                  {(isAdmin || (user && user.uid === item.autorUid)) && (
+                    <button
+                      onClick={() => deletarAnuncio(item.id)}
+                      className="bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-lg transition"
+                      title="Excluir Anúncio"
+                    >
+                      🗑️ Excluir
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -338,8 +441,22 @@ function ClassificadosConteudo() {
                 </div>
               )}
 
-              <div>
+              <div className="space-y-1">
                 <h3 className="font-bold text-sm text-slate-900">{item.titulo}</h3>
+                
+                {/* EXIBIÇÃO DE PREÇO OU SALÁRIO SE EXISTIREM */}
+                {item.preco && (
+                  <p className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg inline-block border border-emerald-200">
+                    💰 Preço: {item.preco}
+                  </p>
+                )}
+
+                {item.salario && (
+                  <p className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg inline-block border border-indigo-200">
+                    💼 Salário/Benefícios: {item.salario}
+                  </p>
+                )}
+
                 <p className="text-xs text-slate-600 mt-1 whitespace-pre-line">{item.descricao}</p>
               </div>
             </div>
