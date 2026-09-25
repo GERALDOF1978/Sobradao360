@@ -212,15 +212,16 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-gray-100 pb-16 font-sans">
-      <header className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-950 border-b border-blue-800/80 sticky top-0 z-40 shadow-xl">
+    <div className="min-h-screen bg-slate-100 text-slate-900 pb-16 font-sans">
+      {/* HEADER TEMA CLARO COM BLUE GRADIENT */}
+      <header className="bg-gradient-to-r from-blue-800 via-blue-900 to-blue-800 border-b border-blue-900 sticky top-0 z-40 shadow-md">
         <div className="max-w-md mx-auto px-4 py-2.5 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <span className="bg-amber-400 text-blue-950 text-xs font-black px-2 py-0.5 rounded-lg shadow">360</span>
+            <span className="bg-amber-400 text-slate-950 text-xs font-black px-2 py-0.5 rounded-lg shadow">360</span>
             <h1 className="font-black text-sm tracking-tight text-white">Sobradão 360</h1>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-blue-900/60 border border-blue-700/50 px-2.5 py-1 rounded-xl text-[11px] font-semibold text-blue-200">
+          <div className="flex items-center gap-1.5 bg-blue-950/40 border border-blue-700/50 px-2.5 py-1 rounded-xl text-[11px] font-semibold text-blue-100">
             <span>{clima ? clima.condicao : "⛅"}</span>
             <span>{clima ? `${clima.temp}°C` : "26°C"}</span>
           </div>
@@ -230,30 +231,32 @@ export default function Home() {
               <img
                 src={profileImageUrl || user.photoURL || "https://api.dicebear.com/7.x/thumbs/svg?seed=padrao"}
                 alt="Avatar"
-                className="w-7 h-7 rounded-full border border-amber-400 object-cover"
+                className="w-7 h-7 rounded-full border border-amber-400 object-cover shadow-sm"
               />
-              <button onClick={logout} className="text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-gray-300 px-3 py-1 rounded-xl shadow transition">
+              <button onClick={logout} className="text-[11px] font-bold bg-blue-950 hover:bg-blue-900 text-blue-100 px-3 py-1 rounded-xl shadow transition">
                 Sair
               </button>
             </div>
           ) : (
-            <button onClick={() => setIsModalOpen(true)} className="text-[11px] font-bold bg-amber-500 hover:bg-amber-600 text-blue-950 px-3 py-1 rounded-xl shadow transition">
+            <button onClick={() => setIsModalOpen(true)} className="text-[11px] font-bold bg-amber-400 hover:bg-amber-500 text-slate-950 px-3 py-1 rounded-xl shadow transition">
               Entrar
             </button>
           )}
         </div>
       </header>
 
-      <div className="bg-amber-500/10 border-b border-amber-500/20 py-1.5 px-4 overflow-hidden">
+      {/* TICKER DE ALERTAS */}
+      <div className="bg-amber-50 border-b border-amber-200 py-1.5 px-4 overflow-hidden">
         <div className="max-w-md mx-auto flex items-center gap-2">
-          <span className="text-[10px] bg-amber-500 text-blue-950 font-black px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">Plantão</span>
-          <p className="text-[11px] text-amber-200 font-medium truncate animate-pulse">{alertas[alertaAtual]}</p>
+          <span className="text-[10px] bg-amber-500 text-slate-950 font-black px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 shadow-sm">Plantão</span>
+          <p className="text-[11px] text-amber-900 font-semibold truncate animate-pulse">{alertas[alertaAtual]}</p>
         </div>
       </div>
 
       <main className="max-w-md mx-auto px-4 py-4 space-y-5">
-        <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white rounded-3xl shadow-2xl overflow-hidden border border-blue-700/50 flex flex-col">
-          <div className="w-full bg-slate-950 p-2 relative flex flex-col items-center">
+        {/* BANNER PRINCIPAL */}
+        <section className="bg-gradient-to-br from-blue-800 via-blue-900 to-indigo-950 text-white rounded-3xl shadow-xl overflow-hidden border border-blue-700/50 flex flex-col">
+          <div className="w-full bg-slate-900 p-2 relative flex flex-col items-center">
             <img
               src="https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp"
               alt="Banner Sobradão 360"
@@ -261,44 +264,45 @@ export default function Home() {
             />
 
             <div className="w-full mt-2 px-2 flex items-center justify-between gap-2">
-              <span className="bg-amber-400 text-blue-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow shrink-0">
+              <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow shrink-0">
                 Portal Oficial
               </span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-slate-900 px-2.5 py-1 rounded-full border border-emerald-500/30 shadow shrink-0">
+              <span className="text-[10px] font-bold text-emerald-400 bg-slate-950 px-2.5 py-1 rounded-full border border-emerald-500/30 shadow shrink-0">
                 ● {loadingDados ? "..." : `${moradoresReais} moradores ativos`}
               </span>
             </div>
           </div>
 
           <div className="p-4 space-y-3">
-            <p className="text-xs text-blue-200 text-center font-medium leading-relaxed">
+            <p className="text-xs text-blue-100 text-center font-medium leading-relaxed">
               Conectando comércios, avisos e moradores do nosso bairro.
             </p>
 
             <button
               onClick={user ? () => setIsModalOpen(true) : loginWithGoogle}
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-blue-950 font-black py-3 px-4 rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 active:scale-95 text-slate-950 font-black py-3 px-4 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-2"
             >
               {user ? "🚀 Meu Perfil & Avisos" : "🚀 Participe da Comunidade!"}
             </button>
           </div>
         </section>
 
+        {/* SERVIÇOS RÁPIDOS (CARDS CLAROS) */}
         <section className="space-y-2.5">
           <div className="flex justify-between items-center px-1">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Categorias & Serviços</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Categorias & Serviços</h3>
           </div>
           <div className="grid grid-cols-4 gap-2">
             {servicosRapidos.map((s, index) => (
               <Link 
                 key={index} 
                 href={s.link} 
-                className="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-2 rounded-2xl flex flex-col items-center justify-center text-center gap-1.5 shadow-sm hover:border-amber-400 transition group min-h-[85px]"
+                className="bg-white hover:bg-slate-50 border border-slate-200/90 p-2 rounded-2xl flex flex-col items-center justify-center text-center gap-1.5 shadow-sm hover:border-amber-400 transition group min-h-[85px]"
               >
                 <div className={`w-9 h-9 rounded-xl ${s.cor} flex items-center justify-center text-white text-base shadow-md group-hover:scale-110 transition shrink-0`}>
                   {s.icone}
                 </div>
-                <span className="text-[9px] font-semibold text-gray-200 leading-tight text-center break-words w-full">
+                <span className="text-[9px] font-bold text-slate-700 leading-tight text-center break-words w-full group-hover:text-slate-900">
                   {s.titulo}
                 </span>
               </Link>
@@ -306,24 +310,25 @@ export default function Home() {
           </div>
         </section>
 
+        {/* FEED DE ANÚNCIOS (CARDS BRANCOS COM SOMBRA) */}
         <section className="space-y-4 pt-2">
           <div className="flex justify-between items-center px-1">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Publicações Recentes</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Publicações Recentes</h3>
           </div>
 
           {loadingDados ? (
-            <p className="text-center text-xs text-gray-500 py-6">A carregar publicações...</p>
+            <p className="text-center text-xs text-slate-500 py-6">A carregar publicações...</p>
           ) : anuncios.length === 0 ? (
-            <p className="text-center text-xs text-gray-500 py-6">Nenhuma publicação encontrada.</p>
+            <p className="text-center text-xs text-slate-500 py-6">Nenhuma publicação encontrada.</p>
           ) : (
             <div className="space-y-4">
               {anuncios.map((anuncio) => (
                 <div
                   key={anuncio.id}
-                  className="bg-slate-900 border border-slate-800 rounded-3xl p-4 space-y-3 shadow-xl"
+                  className="bg-white border border-slate-200/80 rounded-3xl p-4 space-y-3 shadow-sm hover:shadow-md transition"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="bg-blue-900/60 text-blue-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-700/50">
+                    <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-200/80">
                       {anuncio.categoria || "Anúncio"}
                     </span>
                     {anuncio.autorNome && (
@@ -331,15 +336,15 @@ export default function Home() {
                         <img
                           src={anuncio.autorFoto || "https://api.dicebear.com/7.x/thumbs/svg?seed=user"}
                           alt={anuncio.autorNome}
-                          className="w-5 h-5 rounded-full object-cover"
+                          className="w-5 h-5 rounded-full object-cover border border-slate-300"
                         />
-                        <span className="text-[11px] font-medium text-gray-400">{anuncio.autorNome}</span>
+                        <span className="text-[11px] font-semibold text-slate-600">{anuncio.autorNome}</span>
                       </div>
                     )}
                   </div>
 
                   {anuncio.imagemUrl && (
-                    <div className="w-full bg-slate-950 rounded-2xl overflow-hidden p-1 flex items-center justify-center">
+                    <div className="w-full bg-slate-100 rounded-2xl border border-slate-200/70 overflow-hidden p-1 flex items-center justify-center">
                       <img
                         src={anuncio.imagemUrl}
                         alt={anuncio.titulo || "Imagem da publicação"}
@@ -349,9 +354,9 @@ export default function Home() {
                   )}
 
                   <div className="space-y-1">
-                    <h4 className="font-bold text-sm text-white">{anuncio.titulo}</h4>
+                    <h4 className="font-bold text-sm text-slate-900">{anuncio.titulo}</h4>
                     {anuncio.descricao && (
-                      <p className="text-xs text-gray-400 leading-relaxed">{anuncio.descricao}</p>
+                      <p className="text-xs text-slate-600 leading-relaxed">{anuncio.descricao}</p>
                     )}
                   </div>
                 </div>
@@ -361,16 +366,17 @@ export default function Home() {
         </section>
       </main>
 
+      {/* MODAL CLARO */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-5 text-white max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center sticky top-0 bg-slate-900 py-1 z-10 border-b border-slate-800">
-              <h3 className="font-bold text-base text-amber-400">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-5 text-slate-900 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center sticky top-0 bg-white py-1 z-10 border-b border-slate-100">
+              <h3 className="font-bold text-base text-blue-900">
                 {user ? `Olá, ${user.displayName}` : "Junte-se ao Sobradão 360"}
               </h3>
               <button 
                 onClick={() => setIsModalOpen(false)} 
-                className="w-8 h-8 rounded-full bg-slate-800 text-gray-400 flex items-center justify-center text-xs font-bold hover:bg-slate-700"
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs font-bold hover:bg-slate-200"
               >
                 ✕
               </button>
@@ -378,10 +384,10 @@ export default function Home() {
 
             {!user ? (
               <div className="py-6 text-center space-y-4">
-                <p className="text-sm text-gray-400">Para participar dos avisos, interagir no portal e cadastrar seu negócio, faça login com sua conta Google.</p>
+                <p className="text-sm text-slate-600">Para participar dos avisos, interagir no portal e cadastrar seu negócio, faça login com sua conta Google.</p>
                 <button
                   onClick={loginWithGoogle}
-                  className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 font-bold py-3 px-4 rounded-xl text-sm shadow-md hover:bg-gray-100 transition"
+                  className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white font-bold py-3 px-4 rounded-xl text-sm shadow-md hover:bg-slate-800 transition"
                 >
                   <img src="https://authjs.dev/img/providers/google.svg" alt="Google" className="w-5 h-5" />
                   Entrar com Google
@@ -394,11 +400,11 @@ export default function Home() {
                     <img
                       src={profileImageUrl || "https://api.dicebear.com/7.x/thumbs/svg?seed=padrao"}
                       alt="Avatar"
-                      className="w-20 h-20 rounded-full border-4 border-slate-700 shadow-lg object-cover"
+                      className="w-20 h-20 rounded-full border-4 border-slate-200 shadow-md object-cover"
                     />
                     <label
                       htmlFor="uploadAvatar"
-                      className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer text-[10px] font-bold text-white transition"
+                      className="absolute inset-0 flex items-center justify-center bg-slate-950/60 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer text-[10px] font-bold text-white transition"
                     >
                       {uploading ? "..." : "Alterar"}
                     </label>
@@ -412,16 +418,16 @@ export default function Home() {
                   </div>
 
                   <div>
-                    <p className="font-bold text-lg">{user.displayName}</p>
-                    <p className="text-xs text-gray-400">{user.email}</p>
+                    <p className="font-bold text-lg text-slate-900">{user.displayName}</p>
+                    <p className="text-xs text-slate-500">{user.email}</p>
                   </div>
                 </div>
 
-                {uploading && <p className="text-xs text-amber-500 text-center animate-pulse">⚙️ Alterando foto e salvando no perfil...</p>}
+                {uploading && <p className="text-xs text-amber-600 text-center animate-pulse font-semibold">⚙️ Alterando foto e salvando no perfil...</p>}
 
                 <div className="space-y-1 text-left">
-                  <label htmlFor="celularInput" className="text-xs font-semibold text-gray-300 flex items-center gap-1">
-                    Celular / WhatsApp <span className="text-amber-400">*</span>
+                  <label htmlFor="celularInput" className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                    Celular / WhatsApp <span className="text-amber-500">*</span>
                   </label>
                   <input
                     id="celularInput"
@@ -431,19 +437,19 @@ export default function Home() {
                     maxLength={15}
                     value={celular}
                     onChange={handleCelularChange}
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition"
+                    className="w-full bg-slate-50 border border-slate-300 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
                   />
                 </div>
 
-                <div className="bg-slate-800/80 p-3.5 rounded-2xl space-y-1 border border-slate-700/50">
-                  <p className="text-xs text-gray-300 font-semibold">Sobre sua participação:</p>
-                  <p className="text-[11px] text-gray-400">Você agora faz parte da comunidade Sobradão 360. Seu perfil está ativo no Firestore.</p>
+                <div className="bg-slate-50 p-3.5 rounded-2xl space-y-1 border border-slate-200">
+                  <p className="text-xs text-slate-700 font-semibold">Sobre sua participação:</p>
+                  <p className="text-[11px] text-slate-500">Você agora faz parte da comunidade Sobradão 360. Seu perfil está ativo no Firestore.</p>
                 </div>
 
                 <button
                   onClick={handleCompletarCadastro}
                   disabled={salvando}
-                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-blue-950 font-black py-3.5 px-4 rounded-2xl text-sm shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 active:scale-95 text-slate-950 font-black py-3.5 px-4 rounded-2xl text-sm shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {salvando ? "Salvando..." : (perfilSalvo ? "Perfil Confirmado! ✓" : "Confirmar Perfil")}
                 </button>
