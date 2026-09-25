@@ -9,11 +9,13 @@ interface TelefoneUtil {
   telefone: string;
   horario: string;
   icone: string;
+  isWhatsapp?: boolean;
 }
 
 export default function TelefonesUteisLista() {
   const [telefones, setTelefones] = useState<TelefoneUtil[]>([]);
   const [busca, setBusca] = useState("");
+  const [filtroAtivo, setFiltroAtivo] = useState("Todos");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,20 +35,51 @@ export default function TelefonesUteisLista() {
     carregar();
   }, []);
 
-  const telefonesFiltrados = telefones.filter((item) =>
-    item.titulo.toLowerCase().includes(busca.toLowerCase()) ||
-    item.categoria.toLowerCase().includes(busca.toLowerCase()) ||
-    item.telefone.includes(busca)
-  );
+  // Botões de filtro rápido no cabeçalho
+  const categoriasFiltro = ["Todos", "Água", "Energia", "Internet", "Saúde", "Emergência", "WhatsApp"];
+
+  const telefonesFiltrados = telefones.filter((item) => {
+    const correspondeBusca =
+      item.titulo.toLowerCase().includes(busca.toLowerCase()) ||
+      item.categoria.toLowerCase().includes(busca.toLowerCase()) ||
+      item.telefone.includes(busca);
+
+    if (filtroAtivo === "Todos") return correspondeBusca;
+    if (filtroAtivo === "WhatsApp") return correspondeBusca && item.isWhatsapp;
+    return correspondeBusca && item.categoria.toLowerCase().includes(filtroAtivo.toLowerCase());
+  });
 
   return (
     <div className="space-y-4">
+      {/* BOTÕES DE FILTRO RÁPIDO NO CABEÇALHO */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+        {categoriasFiltro.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setFiltroAtivo(cat)}
+            className={`text-xs font-bold px-3.5 py-1.5 rounded-xl whitespace-nowrap transition shadow-sm ${
+              filtroAtivo === cat
+                ? "bg-amber-500 text-white shadow-amber-200"
+                : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            {cat === "Água" && "💧 "}
+            {cat === "Energia" && "⚡ "}
+            {cat === "Internet" && "🌐 "}
+            {cat === "Saúde" && "🏥 "}
+            {cat === "Emergência" && "🚨 "}
+            {cat === "WhatsApp" && "💬 "}
+            {cat}
+          </button>
+        ))}
+      </div>
+
       {/* CAMPO DE BUSCA */}
       <div className="relative">
         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">🔍</span>
         <input
           type="text"
-          placeholder="Pesquisar por nome, categoria ou número (ex: Polícia, UPA, 190)..."
+          placeholder="Pesquisar por nome, categoria ou número (ex: DAAE, UPA, 156)..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           className="w-full bg-white border border-slate-200 rounded-2xl pl-10 pr-4 py-3 text-xs text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition"
@@ -63,10 +96,14 @@ export default function TelefonesUteisLista() {
         {loading ? (
           <p className="text-center py-8 text-xs text-slate-500">A carregar diretório de telefones...</p>
         ) : telefonesFiltrados.length === 0 ? (
-          <p className="text-center py-8 text-xs text-slate-500">Nenhum contacto encontrado para "{busca}".</p>
+          <p className="text-center py-8 text-xs text-slate-500">Nenhum contacto encontrado.</p>
         ) : (
           telefonesFiltrados.map((item) => {
             const numeroLimpo = item.telefone.replace(/\D/g, "");
+            const linkAcao = item.isWhatsapp
+              ? `https://wa.me/55${numeroLimpo}`
+              : `tel:${numeroLimpo}`;
+
             return (
               <div key={item.id} className="p-3.5 hover:bg-slate-50/80 transition flex items-center justify-between gap-3">
                 
@@ -83,21 +120,25 @@ export default function TelefonesUteisLista() {
                       </span>
                       {item.horario && item.horario !== "—" && (
                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                          item.horario === "24h" ? "bg-emerald-100 text-emerald-800" : "bg-blue-50 text-blue-700"
+                          item.horario === "24h" ? "bg-emerald-100 text-emerald-800" : item.horario === "WhatsApp" ? "bg-green-100 text-green-800" : "bg-blue-50 text-blue-700"
                         }`}>
-                          🕒 {item.horario}
+                          {item.horario === "WhatsApp" ? "💬 WhatsApp" : `🕒 ${item.horario}`}
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
 
-                {/* Botão de Disque Direto */}
+                {/* Botão de Disque Direto ou WhatsApp */}
                 <a
-                  href={`tel:${numeroLimpo}`}
-                  className="flex-shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs px-3.5 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5"
+                  href={linkAcao}
+                  target={item.isWhatsapp ? "_blank" : "_self"}
+                  rel={item.isWhatsapp ? "noopener noreferrer" : ""}
+                  className={`flex-shrink-0 text-white font-black text-xs px-3.5 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5 ${
+                    item.isWhatsapp ? "bg-emerald-600 hover:bg-emerald-700" : "bg-slate-800 hover:bg-slate-900"
+                  }`}
                 >
-                  <span>📞</span>
+                  <span>{item.isWhatsapp ? "💬" : "📞"}</span>
                   <span>{item.telefone}</span>
                 </a>
 
