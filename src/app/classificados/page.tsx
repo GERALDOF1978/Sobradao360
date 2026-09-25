@@ -462,6 +462,7 @@ function ClassificadosConteudo() {
 
       {/* LISTA DE ANÚNCIOS */}
      
+{/* LISTA DE ANÚNCIOS OU UTILIDADES */}
 <div className="space-y-3">
   
   {/* Se a categoria selecionada for "Utilidades", mostramos a lista moderna de telefones */}
@@ -476,10 +477,9 @@ function ClassificadosConteudo() {
         <span className="text-[10px] text-slate-500">{anunciosFiltrados.length} item(ns)</span>
       </div>
 
-      {/* CARD BONITO E OFICIAL DO PAT / PREFEITURA PARA ACESSAR O SITE */}
+      {/* CARD OFICIAL DO PAT / PREFEITURA PARA ACESSAR A PÁGINA DE EMPREGO */}
       {(categoria === "Empregos" || categoria === "Emprego") && !filtroMeusAnuncios && (
         <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900 text-white p-5 rounded-3xl shadow-xl relative overflow-hidden space-y-3 border border-indigo-700/50">
-          {/* Efeito decorativo de fundo */}
           <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none"></div>
 
           <div className="flex items-start justify-between gap-3 relative z-10">
@@ -491,20 +491,20 @@ function ClassificadosConteudo() {
                 Posto de Atendimento ao Trabalhador (PAT)
               </h3>
               <p className="text-xs text-indigo-100/90 leading-relaxed">
-                Consulte vagas de emprego abertas, encaminhamento para o seguro-desemprego e serviços oficiais de intermediação de mão de obra.
+                Consulte vagas de emprego abertas, emissão de laudos e serviços oficiais de intermediação de mão de obra[cite: 2].
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 pt-1 relative z-10">
             <a
-              href="https://www.rioclaro.sp.gov.br" 
+              href="https://rioclaro.sp.gov.br/pcd/pessoas-com-deficiencia-poderao-obter-laudo-para-acesso-a-emprego/" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-center"
             >
               <span>🌐</span>
-              <span>Acessar Site Oficial</span>
+              <span>Acessar Página de Emprego</span>
             </a>
             <a
               href="tel:1935331238"
