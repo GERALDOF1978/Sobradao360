@@ -475,6 +475,24 @@ function ClassificadosConteudo() {
         </h2>
         <span className="text-[10px] text-slate-500">{anunciosFiltrados.length} item(ns)</span>
       </div>
+
+      {/* CARD OFICIAL DA PREFEITURA / PAT (Exibido na aba Empregos) */}
+      {(categoria === "Empregos" || categoria === "Emprego") && !filtroMeusAnuncios && (
+        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 p-4 rounded-2xl shadow-sm flex items-center justify-between gap-3">
+          <div className="space-y-1">
+            <span className="text-[9px] font-black bg-indigo-600 text-white px-2 py-0.5 rounded-md uppercase tracking-wider">🏛️ Prefeitura de Rio Claro</span>
+            <h3 className="font-bold text-xs text-slate-900">Posto de Atendimento ao Trabalhador (PAT)</h3>
+            <p className="text-[11px] text-slate-600">Consulte vagas de emprego abertas e serviços oficiais de intermediação de mão de obra.</p>
+          </div>
+          <a
+            href="tel:1935331238"
+            className="flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs px-3.5 py-2.5 rounded-xl shadow transition flex items-center gap-1.5"
+          >
+            <span>📞</span>
+            <span>Ligar PAT</span>
+          </a>
+        </div>
+      )}
       
       {loading ? (
         <p className="text-center text-xs text-slate-500 py-6">Carregando anúncios...</p>
