@@ -25,6 +25,7 @@ interface Curriculo {
   habilidades: string;
   pretensao: string;
   disponibilidade: string;
+  imagemCurriculo?: string;
 }
 
 interface ContatoCurriculo {
@@ -46,6 +47,7 @@ export default function Curriculos() {
 
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  const [enviandoImagem, setEnviandoImagem] = useState(false);
 
   const [nome, setNome] = useState("");
   const [profissao, setProfissao] = useState("");
@@ -63,67 +65,190 @@ export default function Curriculos() {
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
 
+  // ================================
+  // IMAGEM DO CURRÍCULO
+  // ================================
+  const [arquivoCurriculo, setArquivoCurriculo] =
+    useState<File | null>(null);
+
+  const [previewCurriculo, setPreviewCurriculo] =
+    useState("");
+
+  const [imagemCurriculoUrl, setImagemCurriculoUrl] =
+    useState("");
+
+  // ================================
+  // CARREGAR CURRÍCULOS
+  // ================================
   const carregarCurriculos = async () => {
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const snapshot = await getDocs(
-      collection(db, "curriculos")
-    );
+      const snapshot = await getDocs(
+        collection(db, "curriculos")
+      );
 
-    const lista: Curriculo[] = [];
+      const lista: Curriculo[] = [];
 
-    for (let i = 0; i < snapshot.docs.length; i++) {
-      const registro = snapshot.docs[i];
-      const dados = registro.data();
+      for (let i = 0; i < snapshot.docs.length; i++) {
+        const registro = snapshot.docs[i];
+        const dados = registro.data();
 
-      const curriculo: Curriculo = {
-        id: registro.id,
-        uid: dados.uid || registro.id,
-        nome: dados.nome || "",
-        profissao: dados.profissao || "",
-        cidade: dados.cidade || "",
-        bairro: dados.bairro || "",
-        resumo: dados.resumo || "",
-        experiencia: dados.experiencia || "",
-        escolaridade: dados.escolaridade || "",
-        habilidades: dados.habilidades || "",
-        pretensao: dados.pretensao || "",
-        disponibilidade:
-          dados.disponibilidade || "",
-      };
+        const curriculo: Curriculo = {
+          id: registro.id,
+          uid: dados.uid || registro.id,
+          nome: dados.nome || "",
+          profissao: dados.profissao || "",
+          cidade: dados.cidade || "",
+          bairro: dados.bairro || "",
+          resumo: dados.resumo || "",
+          experiencia: dados.experiencia || "",
+          escolaridade: dados.escolaridade || "",
+          habilidades: dados.habilidades || "",
+          pretensao: dados.pretensao || "",
+          disponibilidade:
+            dados.disponibilidade || "",
+          imagemCurriculo:
+            dados.imagemCurriculo || "",
+        };
 
-      lista.push(curriculo);
+        lista.push(curriculo);
+      }
+
+      setCurriculos(lista);
+    } catch (error) {
+      console.error(
+        "Erro ao carregar currículos:",
+        error
+      );
+    } finally {
+      setLoading(false);
     }
-
-    setCurriculos(lista);
-  } catch (error) {
-    console.error(
-      "Erro ao carregar currículos:",
-      error
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     carregarCurriculos();
   }, []);
 
+  // ================================
+  // SELECIONAR IMAGEM
+  // ================================
+  const selecionarImagem = (
+    arquivo: File | null
+  ) => {
+    if (!arquivo) return;
+
+    if (!arquivo.type.startsWith("image/")) {
+      alert(
+        "Selecione uma imagem JPG, PNG ou WEBP."
+      );
+      return;
+    }
+
+    if (arquivo.size > 10 * 1024 * 1024) {
+      alert(
+        "A imagem deve ter no máximo 10 MB."
+      );
+      return;
+    }
+
+    setArquivoCurriculo(arquivo);
+
+    const preview =
+      URL.createObjectURL(arquivo);
+
+    setPreviewCurriculo(preview);
+  };
+
+  // ================================
+  // ENVIAR IMAGEM PARA IMGBB
+  // ================================
+  const enviarImagemCurriculo = async (
+    arquivo: File
+  ): Promise<string> => {
+    const formData = new FormData();
+
+    formData.append("file", arquivo);
+
+    const response = await fetch(
+      "/api/upload-imagem",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const dados = await response.json();
+
+    if (!response.ok || !dados.success) {
+      throw new Error(
+        dados.error ||
+          "Não foi possível enviar a imagem."
+      );
+    }
+
+    if (!dados.url) {
+      throw new Error(
+        "O servidor não retornou a URL da imagem."
+      );
+    }
+
+    return dados.url;
+  };
+
+  // ================================
+  // SALVAR CURRÍCULO
+  // ================================
   const salvarCurriculo = async () => {
     if (!user) {
-      alert("Entre ou cadastre-se para cadastrar seu currículo.");
+      alert(
+        "Entre ou cadastre-se para cadastrar seu currículo."
+      );
       return;
     }
 
     if (!nome.trim() || !profissao.trim()) {
-      alert("Informe seu nome e sua profissão.");
+      alert(
+        "Informe seu nome e sua profissão."
+      );
       return;
     }
 
     try {
       setSalvando(true);
+
+      let urlImagem = imagemCurriculoUrl;
+
+      // ================================
+      // ENVIA IMAGEM SE FOI SELECIONADA
+      // ================================
+      if (arquivoCurriculo) {
+        try {
+          setEnviandoImagem(true);
+
+          urlImagem =
+            await enviarImagemCurriculo(
+              arquivoCurriculo
+            );
+
+          setImagemCurriculoUrl(
+            urlImagem
+          );
+        } catch (erroImagem) {
+          console.error(
+            "Erro ao enviar imagem:",
+            erroImagem
+          );
+
+          alert(
+            "Não foi possível enviar a imagem do currículo."
+          );
+
+          return;
+        } finally {
+          setEnviandoImagem(false);
+        }
+      }
 
       const referencia = doc(
         db,
@@ -131,29 +256,57 @@ export default function Curriculos() {
         user.uid
       );
 
-      // Dados públicos
+      // ================================
+      // DADOS PÚBLICOS
+      // ================================
       await setDoc(
         referencia,
         {
           uid: user.uid,
+
           nome: nome.trim(),
-          profissao: profissao.trim(),
-          cidade: cidade.trim(),
-          bairro: bairro.trim(),
-          resumo: resumo.trim(),
-          experiencia: experiencia.trim(),
-          escolaridade: escolaridade.trim(),
-          habilidades: habilidades.trim(),
-          pretensao: pretensao.trim(),
+
+          profissao:
+            profissao.trim(),
+
+          cidade:
+            cidade.trim(),
+
+          bairro:
+            bairro.trim(),
+
+          resumo:
+            resumo.trim(),
+
+          experiencia:
+            experiencia.trim(),
+
+          escolaridade:
+            escolaridade.trim(),
+
+          habilidades:
+            habilidades.trim(),
+
+          pretensao:
+            pretensao.trim(),
+
           disponibilidade:
             disponibilidade.trim(),
+
+          imagemCurriculo:
+            urlImagem || "",
+
           atualizadoEm:
             serverTimestamp(),
         },
-        { merge: true }
+        {
+          merge: true,
+        }
       );
 
-      // Dados de contato ficam separados
+      // ================================
+      // CONTATO PRIVADO
+      // ================================
       await setDoc(
         doc(
           db,
@@ -163,19 +316,35 @@ export default function Curriculos() {
           "contato"
         ),
         {
-          telefone: telefone.trim(),
-          whatsapp: whatsapp.trim(),
+          telefone:
+            telefone.trim(),
+
+          whatsapp:
+            whatsapp.trim(),
+
           email:
-            email.trim() || user.email || "",
+            email.trim() ||
+            user.email ||
+            "",
+
           atualizadoEm:
             serverTimestamp(),
         },
-        { merge: true }
+        {
+          merge: true,
+        }
       );
 
-      alert("Currículo cadastrado com sucesso!");
+      alert(
+        "Currículo cadastrado com sucesso!"
+      );
 
       setMostrarFormulario(false);
+
+      // Limpa campos de upload
+      setArquivoCurriculo(null);
+      setPreviewCurriculo("");
+      setImagemCurriculoUrl("");
 
       await carregarCurriculos();
     } catch (error) {
@@ -192,7 +361,12 @@ export default function Curriculos() {
     }
   };
 
-  const verContato = async (id: string) => {
+  // ================================
+  // VER CONTATO
+  // ================================
+  const verContato = async (
+    id: string
+  ) => {
     if (!user) {
       alert(
         "Entre ou cadastre-se para visualizar o contato."
@@ -239,6 +413,10 @@ export default function Curriculos() {
 
   return (
     <div className="space-y-5">
+
+      {/* ================================
+          CABEÇALHO
+      ================================= */}
       <div className="rounded-2xl bg-slate-900 p-5 text-white">
         <h2 className="text-lg font-bold">
           📄 Currículos
@@ -250,20 +428,92 @@ export default function Curriculos() {
         </p>
 
         <button
-          onClick={() => setMostrarFormulario(true)}
-          className="mt-4 rounded-xl bg-yellow-500 px-4 py-2 text-sm font-bold text-black"
+          onClick={() =>
+            setMostrarFormulario(true)
+          }
+          className="mt-4 rounded-xl bg-yellow-500 px-4 py-2 text-sm font-bold text-black hover:bg-yellow-400"
         >
           + Cadastrar meu currículo
         </button>
       </div>
 
+      {/* ================================
+          FORMULÁRIO
+      ================================= */}
       {mostrarFormulario && (
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+
           <h3 className="mb-4 text-base font-bold text-slate-800">
             📄 Meu Currículo
           </h3>
 
+          {/* ================================
+              ARTE DO CURRÍCULO
+          ================================= */}
+          <div className="mb-5 rounded-2xl border-2 border-dashed border-yellow-400 bg-yellow-50 p-4">
+
+            <p className="text-sm font-bold text-slate-800">
+              🖼️ Já possui uma arte do seu currículo?
+            </p>
+
+            <p className="mt-1 text-xs text-slate-600">
+              Você pode enviar a imagem do currículo
+              que já criou.
+            </p>
+
+            <p className="mt-1 text-[11px] text-slate-500">
+              JPG, PNG ou WEBP • Máximo de 10 MB
+            </p>
+
+            <label className="mt-3 inline-block cursor-pointer rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800">
+              📤 Enviar imagem do currículo
+
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const arquivo =
+                    e.target.files?.[0] ||
+                    null;
+
+                  selecionarImagem(
+                    arquivo
+                  );
+                }}
+              />
+            </label>
+
+            {previewCurriculo && (
+              <div className="mt-4">
+
+                <p className="mb-2 text-xs font-semibold text-slate-600">
+                  Pré-visualização:
+                </p>
+
+                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                  <img
+                    src={previewCurriculo}
+                    alt="Pré-visualização do currículo"
+                    className="max-h-[600px] w-full object-contain"
+                  />
+                </div>
+
+                <p className="mt-2 text-xs text-green-700">
+                  ✅ Imagem selecionada:
+                  {" "}
+                  {arquivoCurriculo?.name}
+                </p>
+
+              </div>
+            )}
+          </div>
+
+          {/* ================================
+              DADOS DO CURRÍCULO
+          ================================= */}
           <div className="grid gap-3">
+
             <input
               value={nome}
               onChange={(e) =>
@@ -276,17 +526,22 @@ export default function Curriculos() {
             <input
               value={profissao}
               onChange={(e) =>
-                setProfissao(e.target.value)
+                setProfissao(
+                  e.target.value
+                )
               }
               placeholder="Profissão / cargo desejado"
               className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
             />
 
             <div className="grid gap-3 sm:grid-cols-2">
+
               <input
                 value={cidade}
                 onChange={(e) =>
-                  setCidade(e.target.value)
+                  setCidade(
+                    e.target.value
+                  )
                 }
                 placeholder="Cidade"
                 className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
@@ -295,17 +550,22 @@ export default function Curriculos() {
               <input
                 value={bairro}
                 onChange={(e) =>
-                  setBairro(e.target.value)
+                  setBairro(
+                    e.target.value
+                  )
                 }
                 placeholder="Bairro"
                 className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
               />
+
             </div>
 
             <textarea
               value={resumo}
               onChange={(e) =>
-                setResumo(e.target.value)
+                setResumo(
+                  e.target.value
+                )
               }
               placeholder="Apresentação profissional"
               rows={3}
@@ -315,7 +575,9 @@ export default function Curriculos() {
             <textarea
               value={experiencia}
               onChange={(e) =>
-                setExperiencia(e.target.value)
+                setExperiencia(
+                  e.target.value
+                )
               }
               placeholder="Experiência profissional"
               rows={4}
@@ -325,7 +587,9 @@ export default function Curriculos() {
             <input
               value={escolaridade}
               onChange={(e) =>
-                setEscolaridade(e.target.value)
+                setEscolaridade(
+                  e.target.value
+                )
               }
               placeholder="Escolaridade"
               className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
@@ -334,7 +598,9 @@ export default function Curriculos() {
             <textarea
               value={habilidades}
               onChange={(e) =>
-                setHabilidades(e.target.value)
+                setHabilidades(
+                  e.target.value
+                )
               }
               placeholder="Habilidades e conhecimentos"
               rows={3}
@@ -344,7 +610,9 @@ export default function Curriculos() {
             <input
               value={pretensao}
               onChange={(e) =>
-                setPretensao(e.target.value)
+                setPretensao(
+                  e.target.value
+                )
               }
               placeholder="Pretensão salarial"
               className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
@@ -353,22 +621,37 @@ export default function Curriculos() {
             <input
               value={disponibilidade}
               onChange={(e) =>
-                setDisponibilidade(e.target.value)
+                setDisponibilidade(
+                  e.target.value
+                )
               }
               placeholder="Disponibilidade (horário, início imediato etc.)"
               className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
             />
 
+            {/* ================================
+                CONTATO
+            ================================= */}
             <div className="mt-2 border-t pt-4">
+
               <p className="mb-3 text-xs font-bold text-slate-600">
                 🔒 Dados de contato
               </p>
 
+              <p className="mb-3 text-[11px] text-slate-500">
+                Seus dados de contato ficam separados
+                e só poderão ser consultados por usuários
+                que estiverem logados.
+              </p>
+
               <div className="grid gap-3 sm:grid-cols-2">
+
                 <input
                   value={telefone}
                   onChange={(e) =>
-                    setTelefone(e.target.value)
+                    setTelefone(
+                      e.target.value
+                    )
                   }
                   placeholder="Telefone"
                   className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
@@ -377,48 +660,81 @@ export default function Curriculos() {
                 <input
                   value={whatsapp}
                   onChange={(e) =>
-                    setWhatsapp(e.target.value)
+                    setWhatsapp(
+                      e.target.value
+                    )
                   }
                   placeholder="WhatsApp"
                   className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
                 />
+
               </div>
 
               <input
                 value={email}
                 onChange={(e) =>
-                  setEmail(e.target.value)
+                  setEmail(
+                    e.target.value
+                  )
                 }
                 placeholder="E-mail"
+                type="email"
                 className="mt-3 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
               />
+
             </div>
 
-            <div className="flex gap-2 pt-2">
+            {/* ================================
+                BOTÕES
+            ================================= */}
+            <div className="flex flex-wrap gap-2 pt-2">
+
               <button
-                onClick={salvarCurriculo}
-                disabled={salvando}
-                className="rounded-xl bg-yellow-500 px-5 py-2 text-sm font-bold text-black"
+                onClick={
+                  salvarCurriculo
+                }
+                disabled={
+                  salvando ||
+                  enviandoImagem
+                }
+                className="rounded-xl bg-yellow-500 px-5 py-2 text-sm font-bold text-black hover:bg-yellow-400 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {salvando
+                {enviandoImagem
+                  ? "Enviando imagem..."
+                  : salvando
                   ? "Salvando..."
                   : "Salvar currículo"}
               </button>
 
               <button
-                onClick={() =>
-                  setMostrarFormulario(false)
-                }
-                className="rounded-xl bg-slate-200 px-5 py-2 text-sm font-semibold text-slate-700"
+                onClick={() => {
+                  setMostrarFormulario(
+                    false
+                  );
+
+                  setArquivoCurriculo(
+                    null
+                  );
+
+                  setPreviewCurriculo(
+                    ""
+                  );
+                }}
+                className="rounded-xl bg-slate-200 px-5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-300"
               >
                 Cancelar
               </button>
+
             </div>
           </div>
         </div>
       )}
 
+      {/* ================================
+          LISTA DE CURRÍCULOS
+      ================================= */}
       <div>
+
         <h3 className="mb-3 text-sm font-bold text-slate-700">
           Profissionais disponíveis
         </h3>
@@ -433,112 +749,170 @@ export default function Curriculos() {
           </p>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
-            {curriculos.map((curriculo) => (
-              <div
-                key={curriculo.id}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-              >
-                <h4 className="text-base font-bold text-slate-900">
-                  {curriculo.nome}
-                </h4>
 
-                <p className="text-sm font-semibold text-yellow-600">
-                  {curriculo.profissao}
-                </p>
+            {curriculos.map(
+              (curriculo) => (
+                <div
+                  key={curriculo.id}
+                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                >
 
-                <p className="mt-2 text-xs text-slate-500">
-                  📍 {curriculo.bairro
-                    ? `${curriculo.bairro}, `
-                    : ""}
-                  {curriculo.cidade}
-                </p>
+                  {/* ================================
+                      ARTE DO CURRÍCULO
+                  ================================= */}
+                  {curriculo.imagemCurriculo && (
+                    <div className="border-b border-slate-200 bg-slate-50 p-3">
 
-                {curriculo.resumo && (
-                  <p className="mt-3 text-sm text-slate-600">
-                    {curriculo.resumo}
-                  </p>
-                )}
-
-                {curriculo.experiencia && (
-                  <p className="mt-3 text-xs text-slate-600">
-                    <strong>Experiência:</strong>{" "}
-                    {curriculo.experiencia}
-                  </p>
-                )}
-
-                {curriculo.escolaridade && (
-                  <p className="mt-2 text-xs text-slate-600">
-                    <strong>Escolaridade:</strong>{" "}
-                    {curriculo.escolaridade}
-                  </p>
-                )}
-
-                {curriculo.habilidades && (
-                  <p className="mt-2 text-xs text-slate-600">
-                    <strong>Habilidades:</strong>{" "}
-                    {curriculo.habilidades}
-                  </p>
-                )}
-
-                {curriculo.pretensao && (
-                  <p className="mt-2 text-xs text-slate-600">
-                    <strong>Pretensão:</strong>{" "}
-                    {curriculo.pretensao}
-                  </p>
-                )}
-
-                {contatos[curriculo.id] ? (
-                  <div className="mt-4 rounded-xl bg-slate-50 p-3 text-xs">
-                    {contatos[curriculo.id]
-                      .telefone && (
-                      <p>
-                        📞{" "}
-                        {
-                          contatos[
-                            curriculo.id
-                          ].telefone
+                      <img
+                        src={
+                          curriculo.imagemCurriculo
                         }
+                        alt={`Currículo de ${curriculo.nome}`}
+                        className="max-h-[650px] w-full rounded-xl object-contain"
+                        loading="lazy"
+                      />
+
+                    </div>
+                  )}
+
+                  <div className="p-5">
+
+                    <h4 className="text-base font-bold text-slate-900">
+                      {curriculo.nome}
+                    </h4>
+
+                    <p className="text-sm font-semibold text-yellow-600">
+                      {curriculo.profissao}
+                    </p>
+
+                    <p className="mt-2 text-xs text-slate-500">
+                      📍{" "}
+                      {curriculo.bairro
+                        ? `${curriculo.bairro}, `
+                        : ""}
+                      {curriculo.cidade}
+                    </p>
+
+                    {curriculo.resumo && (
+                      <p className="mt-3 text-sm text-slate-600">
+                        {curriculo.resumo}
                       </p>
                     )}
 
-                    {contatos[curriculo.id]
-                      .whatsapp && (
-                      <p className="mt-1">
-                        💬{" "}
-                        {
-                          contatos[
-                            curriculo.id
-                          ].whatsapp
-                        }
+                    {curriculo.experiencia && (
+                      <p className="mt-3 text-xs text-slate-600">
+                        <strong>
+                          Experiência:
+                        </strong>{" "}
+                        {curriculo.experiencia}
                       </p>
                     )}
 
-                    {contatos[curriculo.id]
-                      .email && (
-                      <p className="mt-1">
-                        ✉️{" "}
-                        {
-                          contatos[
-                            curriculo.id
-                          ].email
-                        }
+                    {curriculo.escolaridade && (
+                      <p className="mt-2 text-xs text-slate-600">
+                        <strong>
+                          Escolaridade:
+                        </strong>{" "}
+                        {curriculo.escolaridade}
                       </p>
                     )}
+
+                    {curriculo.habilidades && (
+                      <p className="mt-2 text-xs text-slate-600">
+                        <strong>
+                          Habilidades:
+                        </strong>{" "}
+                        {curriculo.habilidades}
+                      </p>
+                    )}
+
+                    {curriculo.pretensao && (
+                      <p className="mt-2 text-xs text-slate-600">
+                        <strong>
+                          Pretensão:
+                        </strong>{" "}
+                        {curriculo.pretensao}
+                      </p>
+                    )}
+
+                    {curriculo.disponibilidade && (
+                      <p className="mt-2 text-xs text-slate-600">
+                        <strong>
+                          Disponibilidade:
+                        </strong>{" "}
+                        {curriculo.disponibilidade}
+                      </p>
+                    )}
+
+                    {/* ================================
+                        CONTATO
+                    ================================= */}
+                    {contatos[
+                      curriculo.id
+                    ] ? (
+                      <div className="mt-4 rounded-xl bg-slate-50 p-3 text-xs">
+
+                        {contatos[
+                          curriculo.id
+                        ].telefone && (
+                          <p>
+                            📞{" "}
+                            {
+                              contatos[
+                                curriculo.id
+                              ].telefone
+                            }
+                          </p>
+                        )}
+
+                        {contatos[
+                          curriculo.id
+                        ].whatsapp && (
+                          <p className="mt-1">
+                            💬{" "}
+                            {
+                              contatos[
+                                curriculo.id
+                              ].whatsapp
+                            }
+                          </p>
+                        )}
+
+                        {contatos[
+                          curriculo.id
+                        ].email && (
+                          <p className="mt-1">
+                            ✉️{" "}
+                            {
+                              contatos[
+                                curriculo.id
+                              ].email
+                            }
+                          </p>
+                        )}
+
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          verContato(
+                            curriculo.id
+                          )
+                        }
+                        className="mt-4 w-full rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800"
+                      >
+                        🔒 Ver contato
+                      </button>
+                    )}
+
                   </div>
-                ) : (
-                  <button
-                    onClick={() =>
-                      verContato(curriculo.id)
-                    }
-                    className="mt-4 w-full rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white"
-                  >
-                    🔒 Ver contato
-                  </button>
-                )}
-              </div>
-            ))}
+                </div>
+              )
+            )}
+
           </div>
         )}
+
       </div>
     </div>
   );
