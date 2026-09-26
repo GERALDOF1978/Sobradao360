@@ -645,7 +645,7 @@ function ClassificadosConteudo() {
   );
 
   const vagasConvertidas: Anuncio[] = vagasSnapshot.docs.map(
-  (item) => {
+  (item: any) => {
       const vaga = item.data();
 
       return {
