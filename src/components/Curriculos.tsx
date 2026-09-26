@@ -171,12 +171,12 @@ export default function Curriculos() {
   formData.append("file", arquivo);
 
   const response = await fetch(
-    "/api/upload-imagem",
-    {
-      method: "POST",
-      body: formData,
-    }
-  );
+  "/api/upload-image",
+  {
+    method: "POST",
+    body: formData,
+  }
+);
 
   const contentType =
     response.headers.get(
@@ -185,7 +185,8 @@ export default function Curriculos() {
 
   if (!contentType.includes("application/json")) {
     throw new Error(
-      `A rota /api/upload-imagem não retornou JSON. HTTP ${response.status}.`
+      
+      `A rota /api/upload-image não retornou JSON. HTTP ${response.status}.`
     );
   }
 
