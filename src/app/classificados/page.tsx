@@ -19,6 +19,8 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import TelefonesUteisLista from "@/components/TelefonesUteisLista";
+import Curriculos from "@/components/Curriculos";
+
 
 const imagensPadraoPorCategoria: Record<string, string> = {
   Anuncie: "https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp",
@@ -151,7 +153,7 @@ function ClassificadosConteudo() {
   const [mostrarForm, setMostrarForm] = useState(false);
   const [anuncioEmEdicao, setAnuncioEmEdicao] = useState<Anuncio | null>(null);
   const [filtroEmpregos, setFiltroEmpregos] = useState<
-  "todos" | "trampolim" | "manual"
+  "todos" | "trampolim" | "manual" | "curriculos"
 >("todos");
 
   const categorias = [
@@ -822,19 +824,37 @@ const anunciosPaginados =
     >
       👤 Manual / PAT
     </button>
-  </div>
+    
+    <button
+  onClick={() => setFiltroEmpregos("curriculos")}
+  className={`rounded-full px-4 py-2 text-xs font-bold transition ${
+    filtroEmpregos === "curriculos"
+      ? "bg-yellow-500 text-black"
+      : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+  }`}
+>
+  📄 Currículos
+</button>
+</div>
 )}
 
-            {loading ? (
-              <p className="text-center text-xs text-slate-500 py-6">
-                Carregando anúncios...
-              </p>
-            ) : anunciosPaginados.length === 0 ? (
-              <p className="text-center text-xs text-slate-500 py-6">
-                Nenhum anúncio encontrado.
-              </p>
-            ) : (
-              anunciosPaginados.map((item) => {
+{categoria === "Empregos" &&
+  filtroEmpregos === "curriculos" && (
+    <Curriculos />
+)}
+
+{categoria === "Empregos" &&
+filtroEmpregos === "curriculos" ? null : loading ? (
+  <p className="text-center text-xs text-slate-500 py-6">
+    Carregando anúncios...
+  </p>
+) : anunciosPaginados.length === 0 ? (
+  <p className="text-center text-xs text-slate-500 py-6">
+    Nenhum anúncio encontrado.
+  </p>
+) : (
+  anunciosPaginados.map((item) => {
+
                 const isMeuAnuncio = user && user.uid === item.autorUid;
                 const isTrampolim = item.origem === "trampolim";
                 const isPat =
