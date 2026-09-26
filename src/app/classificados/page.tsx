@@ -822,7 +822,7 @@ const anunciosPaginados =
           : "bg-slate-200 text-slate-700 hover:bg-slate-300"
       }`}
     >
-      👤 Manual / PAT
+      👤 Manual
     </button>
     
     <button
