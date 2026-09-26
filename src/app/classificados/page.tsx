@@ -76,22 +76,36 @@ interface Anuncio {
   createdAt: any;
   oficial?: boolean;
 
-  // Origem do anúncio
   origem?: "pat" | "trampolim" | "morador";
 
-  
+  // =========================
+  // DADOS TRAMPOLIM
+  // =========================
 
-  // Dados Trampolim
   urlTrampolim?: string | null;
   idTrampolim?: string | null;
+
   empresa?: string | null;
   cidade?: string | null;
   bairro?: string | null;
+
   quantidadeVagas?: number | string | null;
   beneficios?: string | null;
   prazo?: string | null;
 
-  // Dados privados do morador
+  escolaridade?: string | null;
+  experiencia?: string | null;
+  turno?: string | null;
+  formatoTrabalho?: string | null;
+  tipoContrato?: string | null;
+  exclusividade?: string | null;
+  areaInteresse?: string | null;
+  tipoSalario?: string | null;
+
+  // =========================
+  // CONTATO PRIVADO MORADOR
+  // =========================
+
   contatoPrivado?: {
     nome?: string;
     whatsapp?: string;
@@ -100,6 +114,10 @@ interface Anuncio {
     bairro?: string;
   } | null;
 }
+
+// =====================================================
+// COMPACTAR IMAGEM
+// =====================================================
 
 function compressImage(
   file: File,
@@ -117,8 +135,7 @@ function compressImage(
       img.src = event.target?.result as string;
 
       img.onload = () => {
-        const canvas =
-          document.createElement("canvas");
+        const canvas = document.createElement("canvas");
 
         let width = img.width;
         let height = img.height;
@@ -134,8 +151,7 @@ function compressImage(
         canvas.width = width;
         canvas.height = height;
 
-        const ctx =
-          canvas.getContext("2d");
+        const ctx = canvas.getContext("2d");
 
         if (!ctx) {
           return reject(
@@ -159,19 +175,17 @@ function compressImage(
               );
             }
 
-            const compressedFile =
-              new File(
-                [blob],
-                file.name.replace(
-                  /\.[^/.]+$/,
-                  ""
-                ) + ".webp",
-                {
-                  type: "image/webp",
-                  lastModified:
-                    Date.now(),
-                }
-              );
+            const compressedFile = new File(
+              [blob],
+              file.name.replace(
+                /\.[^/.]+$/,
+                ""
+              ) + ".webp",
+              {
+                type: "image/webp",
+                lastModified: Date.now(),
+              }
+            );
 
             resolve(compressedFile);
           },
@@ -180,38 +194,32 @@ function compressImage(
         );
       };
 
-      img.onerror = (err) =>
-        reject(err);
+      img.onerror = (err) => reject(err);
     };
 
-    reader.onerror = (err) =>
-      reject(err);
+    reader.onerror = (err) => reject(err);
   });
 }
 
+// =====================================================
+// COMPONENTE PRINCIPAL
+// =====================================================
+
 function ClassificadosConteudo() {
-  const searchParams =
-    useSearchParams();
+  const searchParams = useSearchParams();
 
   const categoriaURL =
-    searchParams.get("categoria") ||
-    "Todos";
+    searchParams.get("categoria") || "Todos";
 
   const { user } = useAuth();
 
-  const [isAdmin, setIsAdmin] =
-    useState(false);
-
-  const [isBloqueado, setIsBloqueado] =
-    useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isBloqueado, setIsBloqueado] = useState(false);
 
   const [
     anunciosFirestore,
     setAnunciosFirestore,
   ] = useState<Anuncio[]>([]);
-
-  const [vagasPat, setVagasPat] =
-    useState<Anuncio[]>([]);
 
   const [
     vagasTrampolim,
@@ -223,8 +231,7 @@ function ClassificadosConteudo() {
     setTelefonesUteis,
   ] = useState<Anuncio[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
   const [
     limiteVisivel,
@@ -239,20 +246,11 @@ function ClassificadosConteudo() {
   const [categoria, setCategoria] =
     useState(categoriaURL);
 
-  const [titulo, setTitulo] =
-    useState("");
-
-  const [descricao, setDescricao] =
-    useState("");
-
-  const [preco, setPreco] =
-    useState("");
-
-  const [salario, setSalario] =
-    useState("");
-
-  const [imagemUrl, setImagemUrl] =
-    useState("");
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [preco, setPreco] = useState("");
+  const [salario, setSalario] = useState("");
+  const [imagemUrl, setImagemUrl] = useState("");
 
   const [uploading, setUploading] =
     useState(false);
@@ -268,9 +266,7 @@ function ClassificadosConteudo() {
   const [
     anuncioEmEdicao,
     setAnuncioEmEdicao,
-  ] = useState<Anuncio | null>(
-    null
-  );
+  ] = useState<Anuncio | null>(null);
 
   const [
     filtroEmpregos,
@@ -286,10 +282,8 @@ function ClassificadosConteudo() {
   // CONTATOS DO MORADOR
   // =====================================================
 
-  const [
-    contatoNome,
-    setContatoNome,
-  ] = useState("");
+  const [contatoNome, setContatoNome] =
+    useState("");
 
   const [
     contatoWhatsapp,
@@ -301,10 +295,8 @@ function ClassificadosConteudo() {
     setContatoTelefone,
   ] = useState("");
 
-  const [
-    contatoEmail,
-    setContatoEmail,
-  ] = useState("");
+  const [contatoEmail, setContatoEmail] =
+    useState("");
 
   const [
     contatoBairro,
@@ -324,6 +316,10 @@ function ClassificadosConteudo() {
       Anuncio["contatoPrivado"]
     >
   >({});
+
+  // =====================================================
+  // CATEGORIAS
+  // =====================================================
 
   const categorias = [
     {
@@ -385,8 +381,7 @@ function ClassificadosConteudo() {
   // =====================================================
 
   useEffect(() => {
-    const cat =
-      searchParams.get("categoria");
+    const cat = searchParams.get("categoria");
 
     if (cat) {
       setCategoria(cat);
@@ -436,15 +431,9 @@ function ClassificadosConteudo() {
             setIsAdmin(false);
           }
 
-          if (dados.bloqueado) {
-            setIsBloqueado(true);
-          } else {
-            setIsBloqueado(false);
-          }
-
-          // ============================================
-          // PREENCHER DADOS DE CONTATO
-          // ============================================
+          setIsBloqueado(
+            dados.bloqueado || false
+          );
 
           setContatoNome(
             dados.nome ||
@@ -611,143 +600,338 @@ function ClassificadosConteudo() {
       }
 
       // =================================================
-      // 3. VAGAS PAT
+      // 3. TRAMPOLIM
+      //
+      // IMPORTANTE:
+      // Vagas oficiais são públicas.
+      // Não dependem de login.
       // =================================================
 
-      const resPat =
-        await fetch("/api/pat");
+      const vagasSnapshot =
+        await getDocs(
+          collection(db, "vagas")
+        );
 
-      if (resPat.ok) {
-        const dadosPat =
-          await resPat.json();
+      const vagasConvertidas: Anuncio[] =
+        vagasSnapshot.docs.map(
+          (item: any) => {
+            const vaga =
+              item.data();
 
-        if (
-          dadosPat.success
-        ) {
-          setVagasPat(
-            dadosPat.vagas || []
-          );
-        } else {
-          setVagasPat([]);
-        }
-      } else {
-        setVagasPat([]);
-      }
+            // -------------------------------
+            // EMPRESA
+            // -------------------------------
+
+            const empresa =
+              vaga.enterprise
+                ?.fantasy_name ||
+              vaga.enterprise
+                ?.corporate_name ||
+              vaga.company ||
+              vaga.companyName ||
+              vaga.empresa ||
+              null;
+
+            // -------------------------------
+            // ENDEREÇO
+            // -------------------------------
+
+            const cidade =
+              vaga.address?.city ||
+              vaga.city ||
+              vaga.cidade ||
+              "Rio Claro";
+
+            const bairro =
+              vaga.address?.neighborhood ||
+              vaga.neighborhood ||
+              vaga.bairro ||
+              null;
+
+            // -------------------------------
+            // LOGO
+            // -------------------------------
+
+            const logo =
+              vaga.enterprise?.logo ||
+              vaga.logo ||
+              vaga.imageUrl ||
+              vaga.imagemUrl ||
+              imagensPadraoPorCategoria[
+                "Empregos"
+              ];
+
+            // -------------------------------
+            // SALÁRIO
+            // -------------------------------
+
+            let salarioFormatado:
+              string | null = null;
+
+            if (
+              vaga.salary_value != null
+            ) {
+              salarioFormatado =
+                `R$ ${Number(
+                  vaga.salary_value
+                ).toLocaleString(
+                  "pt-BR",
+                  {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }
+                )}`;
+            } else if (
+              vaga.salary_final_value !=
+              null
+            ) {
+              salarioFormatado =
+                `R$ ${Number(
+                  vaga.salary_final_value
+                ).toLocaleString(
+                  "pt-BR",
+                  {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }
+                )}`;
+            } else if (
+              vaga.salary_type?.value
+            ) {
+              salarioFormatado =
+                vaga.salary_type.value;
+            } else if (
+              vaga.salary != null
+            ) {
+              salarioFormatado =
+                String(vaga.salary);
+            } else if (
+              vaga.salario != null
+            ) {
+              salarioFormatado =
+                String(vaga.salario);
+            }
+
+            // -------------------------------
+            // BENEFÍCIOS
+            // -------------------------------
+
+            let beneficiosFormatados:
+              string | null = null;
+
+            if (
+              Array.isArray(
+                vaga.benefits
+              )
+            ) {
+              beneficiosFormatados =
+                vaga.benefits.join(
+                  " • "
+                );
+            } else if (
+              vaga.benefits
+            ) {
+              beneficiosFormatados =
+                String(
+                  vaga.benefits
+                );
+            } else if (
+              vaga.beneficios
+            ) {
+              beneficiosFormatados =
+                String(
+                  vaga.beneficios
+                );
+            }
+
+            // -------------------------------
+            // LINK DA VAGA
+            // -------------------------------
+
+            let urlTrampolim:
+              string | null = null;
+
+            if (
+              vaga.absolute_url
+            ) {
+              if (
+                String(
+                  vaga.absolute_url
+                ).startsWith(
+                  "http"
+                )
+              ) {
+                urlTrampolim =
+                  vaga.absolute_url;
+              } else {
+                urlTrampolim =
+                  `https://www.trampolim.sp.gov.br${vaga.absolute_url}`;
+              }
+            } else if (
+              vaga.url
+            ) {
+              urlTrampolim =
+                vaga.url;
+            } else if (
+              vaga.urlTrampolim
+            ) {
+              urlTrampolim =
+                vaga.urlTrampolim;
+            } else if (
+              vaga.id ||
+              item.id
+            ) {
+              urlTrampolim =
+                `https://www.trampolim.sp.gov.br/pt/vagas/${
+                  vaga.id || item.id
+                }/`;
+            }
+
+            // -------------------------------
+            // DATA
+            // -------------------------------
+
+            const createdAt =
+              vaga.publication_date ||
+              vaga.createdAt ||
+              vaga.created_at ||
+              null;
+
+            // -------------------------------
+            // RETORNO
+            // -------------------------------
+
+            return {
+              id: item.id,
+
+              titulo:
+                vaga.name ||
+                vaga.title ||
+                vaga.titulo ||
+                "Vaga de emprego",
+
+              descricao:
+                vaga.description ||
+                vaga.descricao ||
+                "Vaga disponível no Trampolim.",
+
+              categoria:
+                "Empregos",
+
+              salario:
+                salarioFormatado,
+
+              preco: null,
+
+              imagemUrl:
+                logo,
+
+              autorUid:
+                "trampolim",
+
+              autorNome:
+                "Trampolim",
+
+              autorFoto:
+                logo,
+
+              createdAt,
+
+              oficial: true,
+
+              origem:
+                "trampolim",
+
+              urlTrampolim,
+
+              idTrampolim:
+                String(
+                  vaga.id ||
+                    item.id
+                ),
+
+              empresa,
+
+              cidade,
+
+              bairro,
+
+              quantidadeVagas:
+                vaga.number_vacancies ??
+                vaga.quantity ??
+                vaga.quantityVacancies ??
+                vaga.vacancies ??
+                vaga.quantidadeVagas ??
+                null,
+
+              beneficios:
+                beneficiosFormatados,
+
+              prazo:
+                vaga.vacancy_viewing_deadline ||
+                vaga.deadline ||
+                vaga.prazo ||
+                null,
+
+              escolaridade:
+                vaga.min_education
+                  ?.value ||
+                vaga.education ||
+                null,
+
+              experiencia:
+                vaga.min_experience
+                  ?.value ||
+                vaga.experience ||
+                null,
+
+              turno:
+                vaga.work_shift
+                  ?.value ||
+                vaga.shift ||
+                null,
+
+              formatoTrabalho:
+                vaga.work_format
+                  ?.value ||
+                vaga.workFormat ||
+                null,
+
+              tipoContrato:
+                vaga.work_relationship
+                  ?.value ||
+                vaga.contract_type ||
+                null,
+
+              exclusividade:
+                vaga.exclusivity
+                  ?.value ||
+                null,
+
+              areaInteresse:
+                Array.isArray(
+                  vaga.area_interest
+                )
+                  ? vaga.area_interest.join(
+                      ", "
+                    )
+                  : vaga.area_interest ||
+                    null,
+
+              tipoSalario:
+                vaga.salary_type
+                  ?.value ||
+                null,
+            } as Anuncio;
+          }
+        );
+
+      setVagasTrampolim(
+        vagasConvertidas
+      );
 
       // =================================================
-      // 4. TRAMPOLIM
-      // SOMENTE USUÁRIO LOGADO
-      // =================================================
-
-    if (user) {
-  const vagasSnapshot = await getDocs(
-    collection(db, "vagas")
-  );
-
-  const vagasConvertidas: Anuncio[] = vagasSnapshot.docs.map(
-  (item: any) => {
-      const vaga = item.data();
-
-      return {
-        id: item.id,
-
-        titulo:
-          vaga.name ||
-          vaga.title ||
-          vaga.titulo ||
-          "Vaga de emprego",
-
-        descricao:
-          vaga.description ||
-          vaga.descricao ||
-          "Vaga disponível no Trampolim.",
-
-        categoria: "Empregos",
-
-        salario:
-          vaga.salary != null
-            ? String(vaga.salary)
-            : vaga.salario != null
-            ? String(vaga.salario)
-            : null,
-
-        preco: null,
-
-        imagemUrl:
-          vaga.logo ||
-          vaga.imageUrl ||
-          vaga.imagemUrl ||
-          imagensPadraoPorCategoria["Empregos"],
-
-        autorUid: "trampolim",
-
-        autorNome: "Trampolim",
-
-        autorFoto:
-          vaga.logo ||
-          vaga.imageUrl ||
-          imagensPadraoPorCategoria["Empregos"],
-
-        createdAt:
-          vaga.createdAt ||
-          vaga.created_at ||
-          null,
-
-        oficial: true,
-
-        origem: "trampolim",
-
-        urlTrampolim:
-          vaga.url ||
-          vaga.urlTrampolim ||
-          null,
-
-        idTrampolim: item.id,
-
-        empresa:
-          vaga.company ||
-          vaga.companyName ||
-          vaga.enterprise ||
-          vaga.empresa ||
-          null,
-
-        cidade:
-          vaga.city ||
-          vaga.cidade ||
-          "Rio Claro",
-
-        bairro:
-          vaga.neighborhood ||
-          vaga.bairro ||
-          null,
-
-        quantidadeVagas:
-          vaga.quantity ||
-          vaga.quantityVacancies ||
-          vaga.vacancies ||
-          vaga.quantidadeVagas ||
-          null,
-
-        beneficios:
-          vaga.benefits ||
-          vaga.beneficios ||
-          null,
-
-        prazo:
-          vaga.deadline ||
-          vaga.prazo ||
-          null,
-      };
-    }
-  );
-
-  setVagasTrampolim(vagasConvertidas);
-} else {
-  setVagasTrampolim([]);
-}
-
-      // =================================================
-      // 5. TELEFONES ÚTEIS
+      // 4. TELEFONES ÚTEIS
       // =================================================
 
       const resTel =
@@ -779,7 +963,7 @@ function ClassificadosConteudo() {
   };
 
   // =====================================================
-  // BUSCAR QUANDO USUÁRIO MUDA
+  // BUSCAR DADOS
   // =====================================================
 
   useEffect(() => {
@@ -1224,7 +1408,6 @@ function ClassificadosConteudo() {
   // =====================================================
 
   let todosOsAnuncios = [
-    ...vagasPat,
     ...vagasTrampolim,
     ...telefonesUteis,
     ...anunciosFirestore,
@@ -1315,10 +1498,6 @@ function ClassificadosConteudo() {
         );
     }
 
-    // ===================================================
-    // ORDENAÇÃO
-    // ===================================================
-
     const transformarData =
       (valor: any) => {
         if (!valor) return 0;
@@ -1364,6 +1543,10 @@ function ClassificadosConteudo() {
       0,
       limiteVisivel
     );
+
+  // =====================================================
+  // RENDER
+  // =====================================================
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 p-4 font-sans max-w-md mx-auto space-y-6 pb-20">
@@ -1508,8 +1691,6 @@ function ClassificadosConteudo() {
                   Novo Anúncio
                 </h2>
 
-                {/* TÍTULO */}
-
                 <input
                   type="text"
                   placeholder="Título principal"
@@ -1521,8 +1702,6 @@ function ClassificadosConteudo() {
                   }
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none"
                 />
-
-                {/* PREÇO */}
 
                 {categoria ===
                   "Compre & Venda" && (
@@ -1539,8 +1718,6 @@ function ClassificadosConteudo() {
                   />
                 )}
 
-                {/* SALÁRIO */}
-
                 {categoria ===
                   "Empregos" && (
                   <input
@@ -1555,8 +1732,6 @@ function ClassificadosConteudo() {
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs"
                   />
                 )}
-
-                {/* DESCRIÇÃO */}
 
                 <textarea
                   placeholder="Descreva os detalhes..."
@@ -1713,8 +1888,6 @@ function ClassificadosConteudo() {
                   </div>
                 )}
 
-                {/* PUBLICAR */}
-
                 <button
                   type="submit"
                   disabled={
@@ -1766,7 +1939,7 @@ function ClassificadosConteudo() {
             </div>
 
             {/* =================================================
-                CARD PAT
+                CARD PAT / TRAMPOLIM
                 ================================================= */}
 
             {(categoria ===
@@ -1783,10 +1956,7 @@ function ClassificadosConteudo() {
                     <div className="space-y-1.5">
 
                       <span className="inline-flex items-center gap-1 text-[10px] font-black bg-amber-400 text-slate-950 px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-sm">
-                        <span>
-                          🏛️
-                        </span>{" "}
-                        Prefeitura de
+                        🏛️ Prefeitura de
                         Rio Claro
                       </span>
 
@@ -1796,10 +1966,11 @@ function ClassificadosConteudo() {
 
                       <p className="text-xs text-indigo-100/90 leading-relaxed">
                         Consulte vagas de
-                        emprego abertas e
-                        serviços oficiais de
+                        emprego abertas,
+                        serviços de
                         intermediação de mão
-                        de obra.
+                        de obra e orientações
+                        para candidatura.
                       </p>
 
                     </div>
@@ -1813,27 +1984,15 @@ function ClassificadosConteudo() {
                       rel="noopener noreferrer"
                       className="flex-1 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-center"
                     >
-                      <span>
-                        🌐
-                      </span>
-
-                      <span>
-                        Acessar Vagas no
-                        Trampolim
-                      </span>
+                      🌐 Acessar Vagas no
+                      Trampolim
                     </a>
 
                     <a
                       href="tel:1935331238"
                       className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs py-3 px-4 rounded-xl backdrop-blur-md transition flex items-center gap-1.5 border border-white/20"
                     >
-                      <span>
-                        📞
-                      </span>
-
-                      <span>
-                        Ligar
-                      </span>
+                      📞 PAT
                     </a>
 
                   </div>
@@ -2106,7 +2265,7 @@ function ClassificadosConteudo() {
                           CONTEÚDO
                           ================================================= */}
 
-                      <div className="space-y-1">
+                      <div className="space-y-2">
 
                         <h3 className="font-bold text-sm text-slate-900">
                           {
@@ -2146,36 +2305,104 @@ function ClassificadosConteudo() {
                           </p>
                         )}
 
-                        {item.preco &&
-                          (categoria ===
-                          "Utilidades" ? (
-                            <a
-                              href={`tel:${item.preco.replace(
-                                /\D/g,
-                                ""
-                              )}`}
-                              className="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-xl inline-flex items-center gap-1.5 shadow transition"
-                            >
-                              📞 Ligar
-                              Agora:{" "}
-                              {
-                                item.preco
-                              }
-                            </a>
-                          ) : (
-                            <p className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg inline-block border">
-                              💰 Preço:{" "}
-                              {
-                                item.preco
-                              }
-                            </p>
-                          ))}
-
                         {item.salario && (
-                          <p className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg inline-block border">
-                            💼 Salário:{" "}
+                          <p className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg inline-block border">
+                            💰 Salário:{" "}
                             {
                               item.salario
+                            }
+                          </p>
+                        )}
+
+                        {item.tipoSalario && (
+                          <p className="text-[10px] text-slate-500">
+                            Tipo:{" "}
+                            {
+                              item.tipoSalario
+                            }
+                          </p>
+                        )}
+
+                        {item.escolaridade && (
+                          <p className="text-xs text-slate-600">
+                            🎓{" "}
+                            <strong>
+                              Escolaridade:
+                            </strong>{" "}
+                            {
+                              item.escolaridade
+                            }
+                          </p>
+                        )}
+
+                        {item.experiencia && (
+                          <p className="text-xs text-slate-600">
+                            🧰{" "}
+                            <strong>
+                              Experiência:
+                            </strong>{" "}
+                            {
+                              item.experiencia
+                            }
+                          </p>
+                        )}
+
+                        {item.turno && (
+                          <p className="text-xs text-slate-600">
+                            🕐{" "}
+                            <strong>
+                              Turno:
+                            </strong>{" "}
+                            {
+                              item.turno
+                            }
+                          </p>
+                        )}
+
+                        {item.formatoTrabalho && (
+                          <p className="text-xs text-slate-600">
+                            🏢{" "}
+                            <strong>
+                              Trabalho:
+                            </strong>{" "}
+                            {
+                              item.formatoTrabalho
+                            }
+                          </p>
+                        )}
+
+                        {item.tipoContrato && (
+                          <p className="text-xs text-slate-600">
+                            📄{" "}
+                            <strong>
+                              Contrato:
+                            </strong>{" "}
+                            {
+                              item.tipoContrato
+                            }
+                          </p>
+                        )}
+
+                        {item.exclusividade && (
+                          <p className="text-xs text-slate-600">
+                            ♿{" "}
+                            <strong>
+                              Exclusividade:
+                            </strong>{" "}
+                            {
+                              item.exclusividade
+                            }
+                          </p>
+                        )}
+
+                        {item.areaInteresse && (
+                          <p className="text-xs text-slate-600">
+                            📚{" "}
+                            <strong>
+                              Área:
+                            </strong>{" "}
+                            {
+                              item.areaInteresse
                             }
                           </p>
                         )}
@@ -2189,6 +2416,20 @@ function ClassificadosConteudo() {
                             {
                               item.beneficios
                             }
+                          </p>
+                        )}
+
+                        {item.prazo && (
+                          <p className="text-xs text-slate-600">
+                            📅{" "}
+                            <strong>
+                              Prazo:
+                            </strong>{" "}
+                            {new Date(
+                              item.prazo
+                            ).toLocaleDateString(
+                              "pt-BR"
+                            )}
                           </p>
                         )}
 
@@ -2359,17 +2600,30 @@ function ClassificadosConteudo() {
 
                       {isTrampolim &&
                         item.urlTrampolim && (
-                          <a
-                            href={
-                              item.urlTrampolim
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
-                          >
-                            🌐 Ver esta vaga no
-                            Trampolim
-                          </a>
+                          <div className="border-t border-slate-100 pt-3 space-y-2">
+
+                            <a
+                              href={
+                                item.urlTrampolim
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
+                            >
+                              🌐 Candidatar-se no
+                              Trampolim
+                            </a>
+
+                            <p className="text-[9px] text-center text-slate-500 leading-relaxed">
+                              A candidatura é
+                              realizada no portal
+                              oficial do Trampolim.
+                              O candidato poderá
+                              precisar entrar ou se
+                              cadastrar pelo gov.br.
+                            </p>
+
+                          </div>
                         )}
 
                     </div>
