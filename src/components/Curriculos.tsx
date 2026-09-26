@@ -430,15 +430,22 @@ export default function Curriculos() {
       {/* ================================
           CABEÇALHO
       ================================= */}
-      <div className="rounded-2xl bg-slate-900 p-5 text-white">
-        <h2 className="text-lg font-bold">
-          📄 Currículos
-        </h2>
+      {/* ================================
+    CABEÇALHO
+================================= */}
+<div className="rounded-2xl bg-slate-900 p-5 text-white">
 
-        <p className="mt-1 text-sm text-slate-300">
-          Cadastre seu currículo e fique disponível
-          para novas oportunidades em Rio Claro.
-        </p>
+  <h2 className="text-lg font-bold">
+    📄 Currículos
+  </h2>
+
+  <p className="mt-1 text-sm text-slate-300">
+    Profissionais cadastrados no Sobradão 360,
+    disponíveis para novas oportunidades em
+    Rio Claro.
+  </p>
+
+
 
         <button
           onClick={() =>
