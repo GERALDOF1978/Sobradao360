@@ -216,6 +216,8 @@ function ClassificadosConteudo() {
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [isBloqueado, setIsBloqueado] = useState(false);
+
+ 
   
 
   const [
@@ -270,14 +272,10 @@ function ClassificadosConteudo() {
     setAnuncioEmEdicao,
   ] = useState<Anuncio | null>(null);
 
-  const [
-    filtroEmpregos,
-    setFiltroEmpregos,
-  ] = useState<
-    | "trampolim"
-    | "manual"
-    | "curriculos"
-  >("trampolim");
+ 
+
+  const [filtroEmpregos, setFiltroEmpregos] =
+  useState<"trampolim" | "manual" | "curriculos">("trampolim");
 
   // =====================================================
   // CONTATOS DO MORADOR
@@ -1943,62 +1941,107 @@ function ClassificadosConteudo() {
                 CARD PAT / TRAMPOLIM
                 ================================================= */}
 
-            {(categoria ===
-              "Empregos" ||
-              categoria ===
-                "Emprego") &&
-              !filtroMeusAnuncios && (
-                <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900 text-white p-5 rounded-3xl shadow-xl relative overflow-hidden space-y-3 border border-indigo-700/50">
+           {/* =================================================
+    CARD INFORMATIVO — EMPREGOS
+    ================================================= */}
 
-                  <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />
+{(categoria === "Empregos" ||
+  categoria === "Emprego") &&
+  !filtroMeusAnuncios && (
+    <>
+      {/* =================================================
+          CARD TRAMPOLIM / PAT
+          ================================================= */}
 
-                  <div className="flex items-start justify-between gap-3 relative z-10">
+      {filtroEmpregos === "trampolim" && (
+        <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900 text-white p-5 rounded-3xl shadow-xl relative overflow-hidden space-y-3 border border-indigo-700/50">
 
-                    <div className="space-y-1.5">
+          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />
 
-                      <span className="inline-flex items-center gap-1 text-[10px] font-black bg-amber-400 text-slate-950 px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-sm">
-                        🏛️ Prefeitura de
-                        Rio Claro
-                      </span>
+          <div className="flex items-start justify-between gap-3 relative z-10">
 
-                      <h3 className="font-extrabold text-base text-white leading-snug">
-                        Posto de Atendimento ao Trabalhador (PAT)
-                      </h3>
+            <div className="space-y-1.5">
 
-                      <p className="text-xs text-indigo-100/90 leading-relaxed">
-                        Consulte vagas de
-                        emprego abertas,
-                        serviços de
-                        intermediação de mão
-                        de obra e orientações
-                        para candidatura.
-                      </p>
+              <span className="inline-flex items-center gap-1 text-[10px] font-black bg-amber-400 text-slate-950 px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-sm">
+                🌐 Trampolim / PAT
+              </span>
 
-                    </div>
-                  </div>
+              <h3 className="font-extrabold text-base text-white leading-snug">
+                Vagas oficiais do Trampolim
+              </h3>
 
-                  <div className="flex flex-wrap items-center gap-2 pt-1 relative z-10">
+              <p className="text-xs text-indigo-100/90 leading-relaxed">
+                Estas vagas são divulgadas pelo
+                Trampolim e estão relacionadas ao
+                atendimento do PAT de Rio Claro.
+                Consulte as oportunidades disponíveis
+                e veja as informações de cada vaga.
+              </p>
 
-                    <a
-                      href="https://www.trampolim.sp.gov.br/pt/busca/?smart_filter=false&q=&type=vacancy&order_by=latest&page=1&page_limit=10&status=available&status=extended&locale=Rio+Claro&operation_range=25"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-center"
-                    >
-                      🌐 Acessar Vagas no
-                      Trampolim
-                    </a>
+            </div>
 
-                    <a
-                      href="tel:1935331238"
-                      className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs py-3 px-4 rounded-xl backdrop-blur-md transition flex items-center gap-1.5 border border-white/20"
-                    >
-                      📞 PAT
-                    </a>
+          </div>
 
-                  </div>
-                </div>
-              )}
+          <div className="relative z-10 pt-1">
+
+            <div className="bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 text-[10px] text-indigo-100 leading-relaxed">
+              💡 Para se candidatar, você deverá
+              estar cadastrado no Sobradão 360.
+              Depois poderá acessar a vaga oficial
+              e, quando solicitado, continuar pelo
+              gov.br.
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
+      {/* =================================================
+          CARD MANUAL
+          ================================================= */}
+
+      {filtroEmpregos === "manual" && (
+        <div className="bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 text-white p-5 rounded-3xl shadow-xl relative overflow-hidden space-y-3 border border-emerald-700/50">
+
+          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl pointer-events-none" />
+
+          <div className="flex items-start justify-between gap-3 relative z-10">
+
+            <div className="space-y-1.5">
+
+              <span className="inline-flex items-center gap-1 text-[10px] font-black bg-emerald-300 text-emerald-950 px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-sm">
+                👤 Anúncios manuais
+              </span>
+
+              <h3 className="font-extrabold text-base text-white leading-snug">
+                Vagas cadastradas no Sobradão 360
+              </h3>
+
+              <p className="text-xs text-emerald-100/90 leading-relaxed">
+                Estas oportunidades são cadastradas
+                diretamente no Sobradão 360 por
+                moradores, empresas ou anunciantes.
+              </p>
+
+            </div>
+
+          </div>
+
+          <div className="relative z-10 pt-1">
+
+            <div className="bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 text-[10px] text-emerald-100 leading-relaxed">
+              💡 As informações de contato podem
+              exigir login no Sobradão 360 para
+              proteger os dados do anunciante.
+            </div>
+
+          </div>
+
+        </div>
+      )}
+    </>
+  )}
 
             {/* =================================================
                 FILTROS EMPREGOS
