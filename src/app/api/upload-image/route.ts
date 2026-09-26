@@ -1,79 +1,166 @@
-import { NextResponse } from 'next/server';
-import sharp from 'sharp';
-import FormData from 'form-data';
-import axios from 'axios';
+import { NextResponse } from "next/server";
+import sharp from "sharp";
+import FormData from "form-data";
+import axios from "axios";
 
-// Sua chave de API do ImgBB fornecida anteriormente
-const IMGBB_API_KEY = process.env.IMGBB_API_KEY;
-
-
+const IMGBB_API_KEY =
+  process.env.IMGBB_API_KEY;
 
 export async function POST(request: Request) {
   try {
-    // 1. Receber os dados do formulário
-    const formData = await request.formData();
-    const file = formData.get('file') as File | null;
+    if (!IMGBB_API_KEY) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "IMGBB_API_KEY não configurada no servidor.",
+        },
+        { status: 500 }
+      );
+    }
+
+    const formData =
+      await request.formData();
+
+    const file =
+      formData.get("file") as File | null;
 
     if (!file) {
-      return NextResponse.json({ error: 'Nenhum arquivo enviado.' }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Nenhum arquivo enviado.",
+        },
+        { status: 400 }
+      );
     }
 
-    // Validar se é realmente uma imagem (simples)
-    if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ error: 'O arquivo enviado não é uma imagem válida.' }, { status: 400 });
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "O arquivo enviado não é uma imagem válida.",
+        },
+        { status: 400 }
+      );
     }
 
-    // 2. Converter o arquivo para um Buffer para manipulação
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "A imagem deve ter no máximo 10 MB.",
+        },
+        { status: 400 }
+      );
+    }
 
-    // 3. A MÁGICA DA COMPACTAÇÃO: Usar Sharp para converter para WebP e comprimir
-    // Quality 80 é um excelente balanço entre qualidade visual e tamanho reduzido.
-    // progressive: true ajuda a carregar mais rápido em conexões lentas.
-    const compressedBuffer = await sharp(buffer)
-      .webp({ quality: 80, lossless: false, effort: 4 }) 
-      .toBuffer();
+    const arrayBuffer =
+      await file.arrayBuffer();
 
-    // 4. Preparar o envio para o ImgBB
-    // O ImgBB requer a imagem em base64 ou como um FormData (multipart/form-data)
-    const imgbbFormData = new FormData();
-    imgbbFormData.append('key', IMGBB_API_KEY);
-    // Adicionar a imagem bufferizada como base64 (método mais robusto via API)
-    imgbbFormData.append('image', compressedBuffer.toString('base64'));
-    // Opcional: Definir nome do arquivo no ImgBB (substituindo extensão por .webp)
-    imgbbFormData.append('name', file.name.split('.').slice(0, -1).join('.') + '.webp');
+    const buffer =
+      Buffer.from(arrayBuffer);
 
-    // 5. Chamar a API do ImgBB
-    const response = await axios.post('https://api.imgbb.com/1/upload', imgbbFormData, {
-      headers: {
-        ...imgbbFormData.getHeaders(),
-      },
-    });
+    // Compacta e converte para WebP
+    const compressedBuffer =
+      await sharp(buffer)
+        .webp({
+          quality: 80,
+          lossless: false,
+          effort: 4,
+        })
+        .toBuffer();
 
-    // 6. Retornar o link da imagem otimizada para o seu portal
-    const imageUrl = response.data.data.url;
-    const imageDeleteUrl = response.data.data.delete_url;
-    const imageName = response.data.data.title;
-    const imageSize = response.data.data.size; // em bytes
+    const imgbbFormData =
+      new FormData();
 
-    console.log(`✅ Imagem processada e enviada: ${imageName} | Tamanho original: ${buffer.length} bytes -> Comprimida: ${imageSize} bytes`);
+    imgbbFormData.append(
+      "key",
+      IMGBB_API_KEY
+    );
+
+    imgbbFormData.append(
+      "image",
+      compressedBuffer.toString("base64")
+    );
+
+    const nomeOriginal =
+      file.name
+        .split(".")
+        .slice(0, -1)
+        .join(".") ||
+      "curriculo";
+
+    imgbbFormData.append(
+      "name",
+      `${nomeOriginal}.webp`
+    );
+
+    const response =
+      await axios.post(
+        "https://api.imgbb.com/1/upload",
+        imgbbFormData,
+        {
+          headers:
+            imgbbFormData.getHeaders(),
+        }
+      );
+
+    const imageUrl =
+      response.data?.data?.url;
+
+    const imageDeleteUrl =
+      response.data?.data?.delete_url;
+
+    const imageName =
+      response.data?.data?.title;
+
+    const imageSize =
+      response.data?.data?.size;
+
+    if (!imageUrl) {
+      throw new Error(
+        "ImgBB não retornou a URL da imagem."
+      );
+    }
+
+    console.log(
+      `✅ Currículo enviado: ${imageName} | ` +
+        `${buffer.length} bytes -> ` +
+        `${imageSize || 0} bytes`
+    );
 
     return NextResponse.json({
       success: true,
-      url: imageUrl, // Use este URL no seu src/app/page.tsx
-      deleteUrl: imageDeleteUrl,
-      name: imageName,
-      sizeKb: Math.round(imageSize / 1024),
+      url: imageUrl,
+      deleteUrl:
+        imageDeleteUrl || null,
+      name:
+        imageName || nomeOriginal,
+      sizeKb: imageSize
+        ? Math.round(imageSize / 1024)
+        : null,
     });
-
   } catch (error: any) {
-    console.error('❌ Erro ao processar/enviar imagem:', error.message);
-    
-    // Tratamento de erros específico da API do ImgBB
-    if (error.response && error.response.data) {
-       return NextResponse.json({ error: `Erro do ImgBB: ${error.response.data.error.message}` }, { status: 500 });
-    }
+    console.error(
+      "❌ Erro ao processar/enviar imagem:",
+      error?.message || error
+    );
 
-    return NextResponse.json({ error: 'Ocorreu um erro interno ao processar a imagem.' }, { status: 500 });
+    const mensagem =
+      error?.response?.data?.error?.message ||
+      error?.message ||
+      "Ocorreu um erro interno ao processar a imagem.";
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Erro ao enviar imagem: ${mensagem}`,
+      },
+      { status: 500 }
+    );
   }
 }

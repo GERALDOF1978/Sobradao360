@@ -164,37 +164,49 @@ export default function Curriculos() {
   // ENVIAR IMAGEM PARA IMGBB
   // ================================
   const enviarImagemCurriculo = async (
-    arquivo: File
-  ): Promise<string> => {
-    const formData = new FormData();
+  arquivo: File
+): Promise<string> => {
+  const formData = new FormData();
 
-    formData.append("file", arquivo);
+  formData.append("file", arquivo);
 
-    const response = await fetch(
-      "/api/upload-imagem",
-      {
-        method: "POST",
-        body: formData,
-      }
+  const response = await fetch(
+    "/api/upload-imagem",
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
+
+  const contentType =
+    response.headers.get(
+      "content-type"
+    ) || "";
+
+  if (!contentType.includes("application/json")) {
+    throw new Error(
+      `A rota /api/upload-imagem não retornou JSON. HTTP ${response.status}.`
     );
+  }
 
-    const dados = await response.json();
+  const dados =
+    await response.json();
 
-    if (!response.ok || !dados.success) {
-      throw new Error(
-        dados.error ||
-          "Não foi possível enviar a imagem."
-      );
-    }
+  if (!response.ok || !dados.success) {
+    throw new Error(
+      dados.error ||
+        "Não foi possível enviar a imagem."
+    );
+  }
 
-    if (!dados.url) {
-      throw new Error(
-        "O servidor não retornou a URL da imagem."
-      );
-    }
+  if (!dados.url) {
+    throw new Error(
+      "O servidor não retornou a URL da imagem."
+    );
+  }
 
-    return dados.url;
-  };
+  return dados.url;
+};
 
   // ================================
   // SALVAR CURRÍCULO
