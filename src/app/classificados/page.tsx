@@ -705,7 +705,7 @@ const anunciosPaginados =
                   <img
                     src={imagemUrl}
                     alt="Preview"
-                    className="w-full h-auto max-h-36 object-contain rounded-lg"
+                    className="w-full h-auto max-h-[600px] object-contain rounded-lg"
                   />
                   <button
                     type="button"
@@ -947,7 +947,7 @@ filtroEmpregos === "curriculos" ? null : loading ? (
                         <img
                           src={item.imagemUrl}
                           alt={item.titulo}
-                          className="w-full h-auto max-h-72 object-contain mx-auto rounded-lg"
+                          className="w-full h-auto max-h-[600px] object-contain mx-auto rounded-lg"
                         />
                       </div>
                     )}
@@ -1146,7 +1146,7 @@ filtroEmpregos === "curriculos" ? null : loading ? (
                   <img
                     src={anuncioEmEdicao.imagemUrl}
                     alt="Preview"
-                    className="w-full h-auto max-h-36 object-contain rounded-lg"
+                    className="w-full h-auto max-h-[600px] object-contain rounded-lg"
                   />
                 </div>
               )}

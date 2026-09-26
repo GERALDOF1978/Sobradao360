@@ -1,10 +1,10 @@
+// src/app/api/upload-image/route.ts
 import { NextResponse } from "next/server";
 import sharp from "sharp";
 import FormData from "form-data";
 import axios from "axios";
 
-const IMGBB_API_KEY =
-  process.env.IMGBB_API_KEY;
+const IMGBB_API_KEY = process.env.IMGBB_API_KEY;
 
 export async function POST(request: Request) {
   try {
@@ -12,25 +12,21 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "IMGBB_API_KEY não configurada no servidor.",
+          error: "IMGBB_API_KEY não configurada no servidor.",
         },
         { status: 500 }
       );
     }
 
-    const formData =
-      await request.formData();
+    const formData = await request.formData();
 
-    const file =
-      formData.get("file") as File | null;
+    const file = formData.get("file") as File | null;
 
     if (!file) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "Nenhum arquivo enviado.",
+          error: "Nenhum arquivo enviado.",
         },
         { status: 400 }
       );
@@ -40,8 +36,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "O arquivo enviado não é uma imagem válida.",
+          error: "O arquivo enviado não é uma imagem válida.",
         },
         { status: 400 }
       );
@@ -51,31 +46,34 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "A imagem deve ter no máximo 10 MB.",
+          error: "A imagem deve ter no máximo 10 MB.",
         },
         { status: 400 }
       );
     }
 
-    const arrayBuffer =
-      await file.arrayBuffer();
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    const buffer =
-      Buffer.from(arrayBuffer);
+    // Corrige a orientação das fotos de celular,
+    // reduz imagens muito grandes sem aumentar imagens pequenas
+    // e converte para WebP com boa qualidade.
+    const compressedBuffer = await sharp(buffer)
+      .rotate()
+      .resize({
+        width: 1600,
+        height: 1600,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .webp({
+        quality: 85,
+        lossless: false,
+        effort: 4,
+      })
+      .toBuffer();
 
-    // Compacta e converte para WebP
-    const compressedBuffer =
-      await sharp(buffer)
-        .webp({
-          quality: 80,
-          lossless: false,
-          effort: 4,
-        })
-        .toBuffer();
-
-    const imgbbFormData =
-      new FormData();
+    const imgbbFormData = new FormData();
 
     imgbbFormData.append(
       "key",
@@ -91,23 +89,20 @@ export async function POST(request: Request) {
       file.name
         .split(".")
         .slice(0, -1)
-        .join(".") ||
-      "curriculo";
+        .join(".") || "imagem";
 
     imgbbFormData.append(
       "name",
       `${nomeOriginal}.webp`
     );
 
-    const response =
-      await axios.post(
-        "https://api.imgbb.com/1/upload",
-        imgbbFormData,
-        {
-          headers:
-            imgbbFormData.getHeaders(),
-        }
-      );
+    const response = await axios.post(
+      "https://api.imgbb.com/1/upload",
+      imgbbFormData,
+      {
+        headers: imgbbFormData.getHeaders(),
+      }
+    );
 
     const imageUrl =
       response.data?.data?.url;
@@ -128,21 +123,19 @@ export async function POST(request: Request) {
     }
 
     console.log(
-      `✅ Currículo enviado: ${imageName} | ` +
+      `✅ Imagem enviada: ${imageName} | ` +
         `${buffer.length} bytes -> ` +
-        `${imageSize || 0} bytes`
+        `${compressedBuffer.length} bytes`
     );
 
     return NextResponse.json({
       success: true,
       url: imageUrl,
-      deleteUrl:
-        imageDeleteUrl || null,
-      name:
-        imageName || nomeOriginal,
+      deleteUrl: imageDeleteUrl || null,
+      name: imageName || nomeOriginal,
       sizeKb: imageSize
         ? Math.round(imageSize / 1024)
-        : null,
+        : Math.round(compressedBuffer.length / 1024),
     });
   } catch (error: any) {
     console.error(
