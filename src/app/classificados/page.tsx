@@ -211,10 +211,12 @@ function ClassificadosConteudo() {
   const categoriaURL =
     searchParams.get("categoria") || "Todos";
 
-  const { user } = useAuth();
+  const { user, loginWithGoogle } = useAuth();
+  
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [isBloqueado, setIsBloqueado] = useState(false);
+  
 
   const [
     anunciosFirestore,
@@ -272,11 +274,10 @@ function ClassificadosConteudo() {
     filtroEmpregos,
     setFiltroEmpregos,
   ] = useState<
-    | "todos"
     | "trampolim"
     | "manual"
     | "curriculos"
-  >("todos");
+  >("trampolim");
 
   // =====================================================
   // CONTATOS DO MORADOR
@@ -2010,12 +2011,12 @@ function ClassificadosConteudo() {
                 <button
                   onClick={() =>
                     setFiltroEmpregos(
-                      "todos"
+                      "trampolim"
                     )
                   }
                   className={`rounded-full px-4 py-2 text-xs font-bold transition ${
                     filtroEmpregos ===
-                    "todos"
+                    "trampolim"
                       ? "bg-yellow-500 text-black"
                       : "bg-slate-200 text-slate-700 hover:bg-slate-300"
                   }`}
@@ -2580,13 +2581,13 @@ function ClassificadosConteudo() {
                                   contato.
                                 </p>
 
-                                <Link
-                                  href="/login"
-                                  className="inline-block mt-2 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-[10px] px-4 py-2 rounded-xl"
-                                >
-                                  Entrar /
-                                  Cadastrar
-                                </Link>
+                                <button
+  type="button"
+  onClick={() => loginWithGoogle()}
+  className="inline-block mt-2 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-[10px] px-4 py-2 rounded-xl"
+>
+  Entrar / Cadastrar
+</button>
 
                               </div>
                             )}
@@ -2598,39 +2599,66 @@ function ClassificadosConteudo() {
                           BOTÃO TRAMPOLIM
                           ================================================= */}
 
-                      {isTrampolim &&
-                        item.urlTrampolim && (
-                          <div className="border-t border-slate-100 pt-3 space-y-2">
+                      {/* =================================================
+    BOTÃO TRAMPOLIM
+    ================================================= */}
 
-                            <a
-                              href={
-                                item.urlTrampolim
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
-                            >
-                              🌐 Candidatar-se no
-                              Trampolim
-                            </a>
+{isTrampolim &&
+  item.urlTrampolim && (
+    <div className="border-t border-slate-100 pt-3 space-y-2">
 
-                            <p className="text-[9px] text-center text-slate-500 leading-relaxed">
-                              A candidatura é
-                              realizada no portal
-                              oficial do Trampolim.
-                              O candidato poderá
-                              precisar entrar ou se
-                              cadastrar pelo gov.br.
-                            </p>
+      {user ? (
+        <>
+          <a
+            href={item.urlTrampolim}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
+          >
+            🌐 Candidatar-se no Trampolim
+          </a>
 
-                          </div>
-                        )}
+          <p className="text-[9px] text-center text-slate-500 leading-relaxed">
+            Você está logado no Sobradão 360.
+            Clique acima para acessar a vaga
+            oficial no Trampolim e realizar sua
+            candidatura. Se solicitado, continue
+            pelo gov.br.
+          </p>
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={() => loginWithGoogle()}
+            className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
+          >
+            🔐 Entrar / Cadastrar para continuar
+          </button>
+
+          <p className="text-[9px] text-center text-slate-500 leading-relaxed">
+            Para acessar a candidatura no
+            Trampolim, primeiro entre ou cadastre-se
+            gratuitamente como morador no Sobradão 360.
+            Depois você poderá continuar para a vaga
+            oficial e, se solicitado, pelo gov.br.
+          </p>
+        </>
+      )}
+
+    </div>
+  )}
 
                     </div>
                   );
                 }
               )
             )}
+
+
+
+
+            
 
             {/* =================================================
                 VER MAIS
