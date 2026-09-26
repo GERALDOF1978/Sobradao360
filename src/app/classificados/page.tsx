@@ -1941,7 +1941,70 @@ function ClassificadosConteudo() {
                 CARD PAT / TRAMPOLIM
                 ================================================= */}
 
-           {/* =================================================
+ 
+
+            {/* =================================================
+                FILTROS EMPREGOS
+                ================================================= */}
+
+            {categoria ===
+              "Empregos" && (
+              <div className="mb-5 flex flex-wrap gap-2">
+
+                
+
+                <button
+                  onClick={() =>
+                    setFiltroEmpregos(
+                      "trampolim"
+                    )
+                  }
+                  className={`rounded-full px-4 py-2 text-xs font-bold transition ${
+                    filtroEmpregos ===
+                    "trampolim"
+                      ? "bg-yellow-500 text-black"
+                      : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                  }`}
+                >
+                  🌐 Trampolim
+                </button>
+
+                <button
+                  onClick={() =>
+                    setFiltroEmpregos(
+                      "manual"
+                    )
+                  }
+                  className={`rounded-full px-4 py-2 text-xs font-bold transition ${
+                    filtroEmpregos ===
+                    "manual"
+                      ? "bg-yellow-500 text-black"
+                      : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                  }`}
+                >
+                  👤 Manual
+                </button>
+
+                <button
+                  onClick={() =>
+                    setFiltroEmpregos(
+                      "curriculos"
+                    )
+                  }
+                  className={`rounded-full px-4 py-2 text-xs font-bold transition ${
+                    filtroEmpregos ===
+                    "curriculos"
+                      ? "bg-yellow-500 text-black"
+                      : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                  }`}
+                >
+                  📄 Currículos
+                </button>
+
+              </div>
+            )}
+
+{/* =================================================
     CARD INFORMATIVO — EMPREGOS
     ================================================= */}
 
@@ -2043,66 +2106,8 @@ function ClassificadosConteudo() {
     </>
   )}
 
-            {/* =================================================
-                FILTROS EMPREGOS
-                ================================================= */}
 
-            {categoria ===
-              "Empregos" && (
-              <div className="mb-5 flex flex-wrap gap-2">
-
-                
-
-                <button
-                  onClick={() =>
-                    setFiltroEmpregos(
-                      "trampolim"
-                    )
-                  }
-                  className={`rounded-full px-4 py-2 text-xs font-bold transition ${
-                    filtroEmpregos ===
-                    "trampolim"
-                      ? "bg-yellow-500 text-black"
-                      : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                  }`}
-                >
-                  🌐 Trampolim
-                </button>
-
-                <button
-                  onClick={() =>
-                    setFiltroEmpregos(
-                      "manual"
-                    )
-                  }
-                  className={`rounded-full px-4 py-2 text-xs font-bold transition ${
-                    filtroEmpregos ===
-                    "manual"
-                      ? "bg-yellow-500 text-black"
-                      : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                  }`}
-                >
-                  👤 Manual
-                </button>
-
-                <button
-                  onClick={() =>
-                    setFiltroEmpregos(
-                      "curriculos"
-                    )
-                  }
-                  className={`rounded-full px-4 py-2 text-xs font-bold transition ${
-                    filtroEmpregos ===
-                    "curriculos"
-                      ? "bg-yellow-500 text-black"
-                      : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                  }`}
-                >
-                  📄 Currículos
-                </button>
-
-              </div>
-            )}
+            
 
             {/* =================================================
                 CURRÍCULOS
