@@ -16,18 +16,15 @@ import {
 } from "lucide-react";
 
 import { db, auth } from "@/lib/firebase";
-
-// Funções do Firestore
 import { collection, query, where, getDocs } from "firebase/firestore";
-// Tipos do Firestore (importados separadamente como type)
-import type { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
-
-// Funções do Auth
 import { onAuthStateChanged, signOut } from "firebase/auth";
-// Tipos do Auth (importados separadamente como type)
-import type { User } from "firebase/auth";
 
-// Interfaces da aplicação
+interface AppUser {
+  uid: string;
+  displayName?: string | null;
+  photoURL?: string | null;
+}
+
 interface AnunciantePago {
   id: string;
   nomeComercio?: string;
@@ -74,7 +71,7 @@ const CATEGORIAS_PRINCIPAIS = [
 
 export default function HomePage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [clima, setClima] = useState({ temp: "--", condicao: "A carregar..." });
   const [avisos] = useState<string[]>([
     "Alerta de pet perdido: Poodle branco próximo da Praça Central",
@@ -84,15 +81,22 @@ export default function HomePage() {
   const [anunciantesPagos, setAnunciantesPagos] = useState<AnunciantePago[]>([]);
   const [loadingAnuncios, setLoadingAnuncios] = useState(true);
 
-  // Monitorizar Utilizador Autenticado
+  // 'currentUser' é inferido automaticamente pelo Firebase
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser: User | null) => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser({
+          uid: currentUser.uid,
+          displayName: currentUser.displayName,
+          photoURL: currentUser.photoURL,
+        });
+      } else {
+        setUser(null);
+      }
     });
     return () => unsubscribe();
   }, []);
 
-  // Obter Clima
   useEffect(() => {
     async function fetchClima() {
       try {
@@ -113,7 +117,6 @@ export default function HomePage() {
     fetchClima();
   }, []);
 
-  // Carrossel do Banner de Avisos
   useEffect(() => {
     if (avisos.length <= 1) return;
     const interval = setInterval(() => {
@@ -122,7 +125,7 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [avisos]);
 
-  // Carregar Cards Pagos do Firestore
+  // 'doc' é inferido automaticamente pelo Firestore
   useEffect(() => {
     async function fetchAnunciantes() {
       try {
@@ -133,7 +136,7 @@ export default function HomePage() {
         );
         const querySnapshot = await getDocs(q);
         const lista: AnunciantePago[] = [];
-        querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+        querySnapshot.forEach((doc) => {
           lista.push({ id: doc.id, ...doc.data() } as AnunciantePago);
         });
         setAnunciantesPagos(lista);
@@ -153,7 +156,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24 text-slate-800">
-      {/* 1. CABEÇALHO */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-xl bg-sky-600 flex items-center justify-center text-white font-black text-lg shadow-md shadow-sky-200">
@@ -206,7 +208,6 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* 2. TICKER DE PLANTÃO / AVISOS */}
       {avisos.length > 0 && (
         <div className="bg-amber-50 border-b border-amber-200/60 px-4 py-2 flex items-center gap-2 text-xs text-amber-900">
           <Bell className="w-4 h-4 text-amber-600 shrink-0 animate-bounce" />
@@ -230,7 +231,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 3. GRID DAS 4 CATEGORIAS PRINCIPAIS */}
         <section>
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 px-1">
             Acesso Rápido
@@ -259,7 +259,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 4. CARDS PAGOS */}
         <section className="pt-2">
           <div className="flex items-center justify-between mb-3 px-1">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">

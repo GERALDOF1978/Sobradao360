@@ -11,16 +11,14 @@ import {
 } from "lucide-react";
 
 import { db, auth } from "@/lib/firebase";
-
-// Funções do Firestore
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore";
-// Tipos do Firestore
-import type { QuerySnapshot, DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
-
-// Funções do Auth
 import { onAuthStateChanged } from "firebase/auth";
-// Tipos do Auth
-import type { User } from "firebase/auth";
+
+interface AppUser {
+  uid: string;
+  displayName?: string | null;
+  photoURL?: string | null;
+}
 
 interface Noticia {
   id: string;
@@ -41,7 +39,7 @@ const SUBCATEGORIAS_NOTICIAS = [
 
 export default function NoticiasPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [noticias, setNoticias] = useState<Noticia[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
@@ -51,18 +49,28 @@ export default function NoticiasPage() {
   const [conteudo, setConteudo] = useState("");
   const [enviando, setEnviando] = useState(false);
 
+  // 'currentUser' é inferido automaticamente
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser: User | null) => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser({
+          uid: currentUser.uid,
+          displayName: currentUser.displayName,
+          photoURL: currentUser.photoURL,
+        });
+      } else {
+        setUser(null);
+      }
     });
     return () => unsubscribe();
   }, []);
 
+  // 'snapshot' e 'doc' são inferidos automaticamente
   useEffect(() => {
     const q = query(collection(db, "noticias"), orderBy("criadoEm", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot: QuerySnapshot<DocumentData>) => {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs: Noticia[] = [];
-      snapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+      snapshot.forEach((doc) => {
         docs.push({ id: doc.id, ...doc.data() } as Noticia);
       });
       setNoticias(docs);
@@ -107,7 +115,7 @@ export default function NoticiasPage() {
     } catch (err) {
       console.error("Erro ao guardar notícia:", err);
       alert("Ocorreu um erro ao publicar a notícia.");
-    } finally {
+    } Finally {
       setEnviando(false);
     }
   };
@@ -168,7 +176,6 @@ export default function NoticiasPage() {
         )}
       </main>
 
-      {/* MODAL DE CRIAÇÃO */}
       {modalAberto && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 space-y-4">
