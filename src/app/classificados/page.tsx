@@ -1656,7 +1656,7 @@ function ClassificadosConteudo() {
 {user &&
   !filtroMeusAnuncios &&
   !isBloqueado &&
-  categoria === "Anuncie" && ( // 👈 Exibe APENAS se a categoria ativa for "Anuncie"
+  categoria === "Anuncie" && (
     <div className="space-y-3">
 
       <button
@@ -1664,9 +1664,7 @@ function ClassificadosConteudo() {
         onClick={() => setMostrarForm(!mostrarForm)}
         className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-slate-950 font-black py-3 px-4 rounded-2xl text-xs shadow-md transition flex items-center justify-center gap-2"
       >
-        {mostrarForm
-          ? "✕ Fechar Formulário"
-          : "➕ Publicar em Anuncie"}
+        {mostrarForm ? "✕ Fechar Formulário" : "➕ Publicar em Anuncie"}
       </button>
 
       {mostrarForm && (
@@ -1686,26 +1684,6 @@ function ClassificadosConteudo() {
             onChange={(e) => setTitulo(e.target.value)}
             className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none"
           />
-
-          {categoria === "Compre & Venda" && (
-            <input
-              type="text"
-              placeholder="Preço (Ex: R$ 150,00)"
-              value={preco}
-              onChange={(e) => setPreco(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs"
-            />
-          )}
-
-          {categoria === "Empregos" && (
-            <input
-              type="text"
-              placeholder="Salário / Benefícios"
-              value={salario}
-              onChange={(e) => setSalario(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs"
-            />
-          )}
 
           <textarea
             placeholder="Descreva os detalhes..."
@@ -1821,7 +1799,6 @@ function ClassificadosConteudo() {
       )}
     </div>
   )}
-      
 
       {/* =================================================
           LISTA
