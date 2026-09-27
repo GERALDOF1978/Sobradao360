@@ -4,10 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   collection,
-  DocumentData,
   getDocs,
   orderBy,
-  QueryDocumentSnapshot,
   query,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -78,9 +76,7 @@ function formatarData(timestamp: any): string {
   }
 }
 
-function transformarPublicacao(
-  docSnap: QueryDocumentSnapshot<DocumentData>
-): Publicacao {
+function transformarPublicacao(docSnap: any): Publicacao {
   const dados = docSnap.data();
 
   return {
@@ -115,7 +111,7 @@ async function buscarPublicacoes(): Promise<Publicacao[]> {
   const lista: Publicacao[] = [];
 
   snapshot.forEach(
-    (docSnap: QueryDocumentSnapshot<DocumentData>) => {
+    (docSnap: any) => {
       lista.push(transformarPublicacao(docSnap));
     }
   );
