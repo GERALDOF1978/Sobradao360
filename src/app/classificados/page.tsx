@@ -1938,20 +1938,12 @@ function ClassificadosConteudo() {
             </div>
 
             {/* =================================================
-                CARD PAT / TRAMPOLIM
-                ================================================= */}
-
- 
-
-            {/* =================================================
                 FILTROS EMPREGOS
                 ================================================= */}
 
             {categoria ===
               "Empregos" && (
               <div className="mb-5 flex flex-wrap gap-2">
-
-                
 
                 <button
                   onClick={() =>
@@ -2004,110 +1996,75 @@ function ClassificadosConteudo() {
               </div>
             )}
 
-{/* =================================================
-    CARD INFORMATIVO — EMPREGOS
-    ================================================= */}
+            {/* =================================================
+                CARD INFORMATIVO — EMPREGOS
+                ================================================= */}
 
-{(categoria === "Empregos" ||
-  categoria === "Emprego") &&
-  !filtroMeusAnuncios && (
-    <>
-      {/* =================================================
-          CARD TRAMPOLIM / PAT
-          ================================================= */}
+            {(categoria === "Empregos" ||
+              categoria === "Emprego") &&
+              !filtroMeusAnuncios && (
+                <>
+                  {filtroEmpregos === "trampolim" && (
+                    <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900 text-white p-5 rounded-3xl shadow-xl relative overflow-hidden space-y-3 border border-indigo-700/50">
+                      <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />
+                      <div className="flex items-start justify-between gap-3 relative z-10">
+                        <div className="space-y-1.5">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-black bg-amber-400 text-slate-950 px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-sm">
+                            🌐 Trampolim / PAT
+                          </span>
+                          <h3 className="font-extrabold text-base text-white leading-snug">
+                            Vagas oficiais do Trampolim
+                          </h3>
+                          <p className="text-xs text-indigo-100/90 leading-relaxed">
+                            Estas vagas são divulgadas pelo
+                            Trampolim e estão relacionadas ao
+                            atendimento do PAT de Rio Claro.
+                            Consulte as oportunidades disponíveis
+                            e veja as informações de cada vaga.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="relative z-10 pt-1">
+                        <div className="bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 text-[10px] text-indigo-100 leading-relaxed">
+                          💡 Para se candidatar, você deverá
+                          estar cadastrado no Sobradão 360.
+                          Depois poderá acessar a vaga oficial
+                          e, quando solicitado, continuar pelo
+                          gov.br.
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-      {filtroEmpregos === "trampolim" && (
-        <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900 text-white p-5 rounded-3xl shadow-xl relative overflow-hidden space-y-3 border border-indigo-700/50">
-
-          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />
-
-          <div className="flex items-start justify-between gap-3 relative z-10">
-
-            <div className="space-y-1.5">
-
-              <span className="inline-flex items-center gap-1 text-[10px] font-black bg-amber-400 text-slate-950 px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-sm">
-                🌐 Trampolim / PAT
-              </span>
-
-              <h3 className="font-extrabold text-base text-white leading-snug">
-                Vagas oficiais do Trampolim
-              </h3>
-
-              <p className="text-xs text-indigo-100/90 leading-relaxed">
-                Estas vagas são divulgadas pelo
-                Trampolim e estão relacionadas ao
-                atendimento do PAT de Rio Claro.
-                Consulte as oportunidades disponíveis
-                e veja as informações de cada vaga.
-              </p>
-
-            </div>
-
-          </div>
-
-          <div className="relative z-10 pt-1">
-
-            <div className="bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 text-[10px] text-indigo-100 leading-relaxed">
-              💡 Para se candidatar, você deverá
-              estar cadastrado no Sobradão 360.
-              Depois poderá acessar a vaga oficial
-              e, quando solicitado, continuar pelo
-              gov.br.
-            </div>
-
-          </div>
-
-        </div>
-      )}
-
-      {/* =================================================
-          CARD MANUAL
-          ================================================= */}
-
-      {filtroEmpregos === "manual" && (
-        <div className="bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 text-white p-5 rounded-3xl shadow-xl relative overflow-hidden space-y-3 border border-emerald-700/50">
-
-          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl pointer-events-none" />
-
-          <div className="flex items-start justify-between gap-3 relative z-10">
-
-            <div className="space-y-1.5">
-
-              <span className="inline-flex items-center gap-1 text-[10px] font-black bg-emerald-300 text-emerald-950 px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-sm">
-                👤 Anúncios manuais
-              </span>
-
-              <h3 className="font-extrabold text-base text-white leading-snug">
-                Vagas cadastradas no Sobradão 360
-              </h3>
-
-              <p className="text-xs text-emerald-100/90 leading-relaxed">
-                Estas oportunidades são cadastradas
-                diretamente no Sobradão 360 por
-                moradores, empresas ou anunciantes.
-              </p>
-
-            </div>
-
-          </div>
-
-          <div className="relative z-10 pt-1">
-
-            <div className="bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 text-[10px] text-emerald-100 leading-relaxed">
-              💡 As informações de contato podem
-              exigir login no Sobradão 360 para
-              proteger os dados do anunciante.
-            </div>
-
-          </div>
-
-        </div>
-      )}
-    </>
-  )}
-
-
-            
+                  {filtroEmpregos === "manual" && (
+                    <div className="bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 text-white p-5 rounded-3xl shadow-xl relative overflow-hidden space-y-3 border border-emerald-700/50">
+                      <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl pointer-events-none" />
+                      <div className="flex items-start justify-between gap-3 relative z-10">
+                        <div className="space-y-1.5">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-black bg-emerald-300 text-emerald-950 px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-sm">
+                            👤 Anúncios manuais
+                          </span>
+                          <h3 className="font-extrabold text-base text-white leading-snug">
+                            Vagas cadastradas no Sobradão 360
+                          </h3>
+                          <p className="text-xs text-emerald-100/90 leading-relaxed">
+                            Estas oportunidades são cadastradas
+                            diretamente no Sobradão 360 por
+                            moradores, empresas ou anunciantes.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="relative z-10 pt-1">
+                        <div className="bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 text-[10px] text-emerald-100 leading-relaxed">
+                          💡 As informações de contato podem
+                          exigir login no Sobradão 360 para
+                          proteger os dados do anunciante.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
 
             {/* =================================================
                 CURRÍCULOS
@@ -2616,12 +2573,12 @@ function ClassificadosConteudo() {
                                 </p>
 
                                 <button
-  type="button"
-  onClick={() => loginWithGoogle()}
-  className="inline-block mt-2 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-[10px] px-4 py-2 rounded-xl"
->
-  Entrar / Cadastrar
-</button>
+                                  type="button"
+                                  onClick={() => loginWithGoogle()}
+                                  className="inline-block mt-2 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-[10px] px-4 py-2 rounded-xl"
+                                >
+                                  Entrar / Cadastrar
+                                </button>
 
                               </div>
                             )}
@@ -2633,66 +2590,57 @@ function ClassificadosConteudo() {
                           BOTÃO TRAMPOLIM
                           ================================================= */}
 
-                      {/* =================================================
-    BOTÃO TRAMPOLIM
-    ================================================= */}
+                      {isTrampolim &&
+                        item.urlTrampolim && (
+                          <div className="border-t border-slate-100 pt-3 space-y-2">
 
-{isTrampolim &&
-  item.urlTrampolim && (
-    <div className="border-t border-slate-100 pt-3 space-y-2">
+                            {user ? (
+                              <>
+                                <a
+                                  href={item.urlTrampolim}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
+                                >
+                                  🌐 Candidatar-se no Trampolim
+                                </a>
 
-      {user ? (
-        <>
-          <a
-            href={item.urlTrampolim}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
-          >
-            🌐 Candidatar-se no Trampolim
-          </a>
+                                <p className="text-[9px] text-center text-slate-500 leading-relaxed">
+                                  Você está logado no Sobradão 360.
+                                  Clique acima para acessar a vaga
+                                  oficial no Trampolim e realizar sua
+                                  candidatura. Se solicitado, continue
+                                  pelo gov.br.
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => loginWithGoogle()}
+                                  className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
+                                >
+                                  🔐 Entrar / Cadastrar para continuar
+                                </button>
 
-          <p className="text-[9px] text-center text-slate-500 leading-relaxed">
-            Você está logado no Sobradão 360.
-            Clique acima para acessar a vaga
-            oficial no Trampolim e realizar sua
-            candidatura. Se solicitado, continue
-            pelo gov.br.
-          </p>
-        </>
-      ) : (
-        <>
-          <button
-            type="button"
-            onClick={() => loginWithGoogle()}
-            className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
-          >
-            🔐 Entrar / Cadastrar para continuar
-          </button>
+                                <p className="text-[9px] text-center text-slate-500 leading-relaxed">
+                                  Para acessar a candidatura no
+                                  Trampolim, primeiro entre ou cadastre-se
+                                  gratuitamente como morador no Sobradão 360.
+                                  Depois você poderá continuar para a vaga
+                                  oficial e, se solicitado, pelo gov.br.
+                                </p>
+                              </>
+                            )}
 
-          <p className="text-[9px] text-center text-slate-500 leading-relaxed">
-            Para acessar a candidatura no
-            Trampolim, primeiro entre ou cadastre-se
-            gratuitamente como morador no Sobradão 360.
-            Depois você poderá continuar para a vaga
-            oficial e, se solicitado, pelo gov.br.
-          </p>
-        </>
-      )}
-
-    </div>
-  )}
+                          </div>
+                        )}
 
                     </div>
                   );
                 }
               )
             )}
-
-
-
-
-            
 
             {/* =================================================
                 VER MAIS
