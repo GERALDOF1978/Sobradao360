@@ -211,7 +211,7 @@ const servicosRapidos = [
     titulo: "Notícias",
     icone: "📰",
     cor: "bg-teal-600",
-    link: "/classificados?categoria=Notícias",
+    link: "/noticias"
   },
   {
     titulo: "Utilidades",
