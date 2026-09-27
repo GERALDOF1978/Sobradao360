@@ -1653,257 +1653,175 @@ function ClassificadosConteudo() {
       {/* =================================================
           FORMULÁRIO DE PUBLICAÇÃO
           ================================================= */}
+{user &&
+  !filtroMeusAnuncios &&
+  !isBloqueado &&
+  categoria === "Anuncie" && ( // 👈 Exibe APENAS se a categoria ativa for "Anuncie"
+    <div className="space-y-3">
 
-      {user &&
-        !filtroMeusAnuncios &&
-        !isBloqueado && (
-          <div className="space-y-3">
+      <button
+        type="button"
+        onClick={() => setMostrarForm(!mostrarForm)}
+        className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-slate-950 font-black py-3 px-4 rounded-2xl text-xs shadow-md transition flex items-center justify-center gap-2"
+      >
+        {mostrarForm
+          ? "✕ Fechar Formulário"
+          : "➕ Publicar em Anuncie"}
+      </button>
 
-            <button
-              type="button"
-              onClick={() =>
-                setMostrarForm(
-                  !mostrarForm
-                )
-              }
-              className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-slate-950 font-black py-3 px-4 rounded-2xl text-xs shadow-md transition flex items-center justify-center gap-2"
-            >
-              {mostrarForm
-                ? "✕ Fechar Formulário"
-                : `➕ Publicar em ${
-                    categoria ===
-                    "Todos"
-                      ? "Anuncie"
-                      : categoria
-                  }`}
-            </button>
+      {mostrarForm && (
+        <form
+          onSubmit={handlePublicar}
+          className="bg-white border border-slate-200 p-4 rounded-2xl space-y-3 shadow-sm"
+        >
 
-            {mostrarForm && (
-              <form
-                onSubmit={
-                  handlePublicar
-                }
-                className="bg-white border border-slate-200 p-4 rounded-2xl space-y-3 shadow-sm"
-              >
+          <h2 className="text-xs font-bold uppercase tracking-wider text-amber-600">
+            Novo Anúncio
+          </h2>
 
-                <h2 className="text-xs font-bold uppercase tracking-wider text-amber-600">
-                  Novo Anúncio
-                </h2>
+          <input
+            type="text"
+            placeholder="Título principal"
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none"
+          />
 
-                <input
-                  type="text"
-                  placeholder="Título principal"
-                  value={titulo}
-                  onChange={(e) =>
-                    setTitulo(
-                      e.target.value
-                    )
-                  }
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none"
-                />
+          {categoria === "Compre & Venda" && (
+            <input
+              type="text"
+              placeholder="Preço (Ex: R$ 150,00)"
+              value={preco}
+              onChange={(e) => setPreco(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs"
+            />
+          )}
 
-                {categoria ===
-                  "Compre & Venda" && (
-                  <input
-                    type="text"
-                    placeholder="Preço (Ex: R$ 150,00)"
-                    value={preco}
-                    onChange={(e) =>
-                      setPreco(
-                        e.target.value
-                      )
-                    }
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs"
-                  />
-                )}
+          {categoria === "Empregos" && (
+            <input
+              type="text"
+              placeholder="Salário / Benefícios"
+              value={salario}
+              onChange={(e) => setSalario(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs"
+            />
+          )}
 
-                {categoria ===
-                  "Empregos" && (
-                  <input
-                    type="text"
-                    placeholder="Salário / Benefícios"
-                    value={salario}
-                    onChange={(e) =>
-                      setSalario(
-                        e.target.value
-                      )
-                    }
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs"
-                  />
-                )}
+          <textarea
+            placeholder="Descreva os detalhes..."
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            rows={3}
+            className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs resize-none"
+          />
 
-                <textarea
-                  placeholder="Descreva os detalhes..."
-                  value={descricao}
-                  onChange={(e) =>
-                    setDescricao(
-                      e.target.value
-                    )
-                  }
-                  rows={3}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs resize-none"
-                />
+          {/* =================================================
+              CONTATO PRIVADO
+              ================================================= */}
 
-                {/* =================================================
-                    CONTATO PRIVADO
-                    ================================================= */}
+          <div className="border border-emerald-200 bg-emerald-50 rounded-2xl p-3 space-y-3">
 
-                <div className="border border-emerald-200 bg-emerald-50 rounded-2xl p-3 space-y-3">
+            <div>
+              <h3 className="text-xs font-black text-emerald-800">
+                📞 Dados para contato
+              </h3>
 
-                  <div>
-                    <h3 className="text-xs font-black text-emerald-800">
-                      📞 Dados para contato
-                    </h3>
+              <p className="text-[10px] text-emerald-700 mt-1 leading-relaxed">
+                🔒 Seus dados de contato não ficam públicos. Eles serão exibidos somente para moradores cadastrados e logados no Sobradão 360.
+              </p>
+            </div>
 
-                    <p className="text-[10px] text-emerald-700 mt-1 leading-relaxed">
-                      🔒 Seus dados de
-                      contato não ficam
-                      públicos. Eles serão
-                      exibidos somente para
-                      moradores cadastrados
-                      e logados no Sobradão
-                      360.
-                    </p>
-                  </div>
+            <input
+              type="text"
+              placeholder="Seu nome"
+              value={contatoNome}
+              onChange={(e) => setContatoNome(e.target.value)}
+              className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs text-slate-900"
+            />
 
-                  <input
-                    type="text"
-                    placeholder="Seu nome"
-                    value={
-                      contatoNome
-                    }
-                    onChange={(e) =>
-                      setContatoNome(
-                        e.target.value
-                      )
-                    }
-                    className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs text-slate-900"
-                  />
+            <input
+              type="tel"
+              placeholder="WhatsApp"
+              value={contatoWhatsapp}
+              onChange={(e) => setContatoWhatsapp(e.target.value)}
+              className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs text-slate-900"
+            />
 
-                  <input
-                    type="tel"
-                    placeholder="WhatsApp"
-                    value={
-                      contatoWhatsapp
-                    }
-                    onChange={(e) =>
-                      setContatoWhatsapp(
-                        e.target.value
-                      )
-                    }
-                    className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs text-slate-900"
-                  />
+            <input
+              type="tel"
+              placeholder="Telefone"
+              value={contatoTelefone}
+              onChange={(e) => setContatoTelefone(e.target.value)}
+              className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs text-slate-900"
+            />
 
-                  <input
-                    type="tel"
-                    placeholder="Telefone"
-                    value={
-                      contatoTelefone
-                    }
-                    onChange={(e) =>
-                      setContatoTelefone(
-                        e.target.value
-                      )
-                    }
-                    className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs text-slate-900"
-                  />
+            <input
+              type="email"
+              placeholder="E-mail"
+              value={contatoEmail}
+              onChange={(e) => setContatoEmail(e.target.value)}
+              className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs text-slate-900"
+            />
 
-                  <input
-                    type="email"
-                    placeholder="E-mail"
-                    value={
-                      contatoEmail
-                    }
-                    onChange={(e) =>
-                      setContatoEmail(
-                        e.target.value
-                      )
-                    }
-                    className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs text-slate-900"
-                  />
+            <input
+              type="text"
+              placeholder="Bairro"
+              value={contatoBairro}
+              onChange={(e) => setContatoBairro(e.target.value)}
+              className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs text-slate-900"
+            />
 
-                  <input
-                    type="text"
-                    placeholder="Bairro"
-                    value={
-                      contatoBairro
-                    }
-                    onChange={(e) =>
-                      setContatoBairro(
-                        e.target.value
-                      )
-                    }
-                    className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs text-slate-900"
-                  />
-
-                </div>
-
-                {/* IMAGEM */}
-
-                <input
-                  type="file"
-                  accept="image/jpeg, image/png, image/webp"
-                  onChange={(e) =>
-                    handleImageUpload(
-                      e,
-                      false
-                    )
-                  }
-                  disabled={
-                    uploading
-                  }
-                  className="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-200"
-                />
-
-                {uploading && (
-                  <p className="text-[10px] text-amber-600 animate-pulse">
-                    Enviando imagem...
-                  </p>
-                )}
-
-                {imagemUrl && (
-                  <div className="relative bg-slate-100 p-1 rounded-xl flex items-center justify-center">
-
-                    <img
-                      src={
-                        imagemUrl
-                      }
-                      alt="Preview"
-                      className="w-full h-auto max-h-[600px] object-contain rounded-lg"
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setImagemUrl(
-                          ""
-                        )
-                      }
-                      className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold"
-                    >
-                      ✕
-                    </button>
-
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={
-                    salvando ||
-                    uploading
-                  }
-                  className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl text-xs shadow-md"
-                >
-                  {salvando
-                    ? "Publicando..."
-                    : "Publicar"}
-                </button>
-
-              </form>
-            )}
           </div>
-        )}
+
+          {/* IMAGEM */}
+
+          <input
+            type="file"
+            accept="image/jpeg, image/png, image/webp"
+            onChange={(e) => handleImageUpload(e, false)}
+            disabled={uploading}
+            className="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-200"
+          />
+
+          {uploading && (
+            <p className="text-[10px] text-amber-600 animate-pulse">
+              Enviando imagem...
+            </p>
+          )}
+
+          {imagemUrl && (
+            <div className="relative bg-slate-100 p-1 rounded-xl flex items-center justify-center">
+
+              <img
+                src={imagemUrl}
+                alt="Preview"
+                className="w-full h-auto max-h-[600px] object-contain rounded-lg"
+              />
+
+              <button
+                type="button"
+                onClick={() => setImagemUrl("")}
+                className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold"
+              >
+                ✕
+              </button>
+
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={salvando || uploading}
+            className="w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl text-xs shadow-md"
+          >
+            {salvando ? "Publicando..." : "Publicar"}
+          </button>
+
+        </form>
+      )}
+    </div>
+  )}
+      
 
       {/* =================================================
           LISTA
