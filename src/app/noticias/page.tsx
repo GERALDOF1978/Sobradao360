@@ -458,7 +458,7 @@ export default function NoticiasPage() {
                         <img
                           src={publicacao.imagemUrl}
                           alt={publicacao.titulo}
-                          className="w-full max-h-[380px] object-cover"
+                          className="w-full h-auto object-contain"
                           loading="lazy"
                           onError={(e) => {
                             const img =
