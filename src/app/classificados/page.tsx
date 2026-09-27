@@ -266,6 +266,13 @@ function ClassificadosConteudo() {
     mostrarForm,
     setMostrarForm,
   ] = useState(false);
+  useEffect(() => {
+  const publicar = searchParams.get("publicar");
+
+  if (publicar === "1") {
+    setMostrarForm(true);
+  }
+}, [searchParams]);
 
   const [
     anuncioEmEdicao,
@@ -1682,7 +1689,17 @@ function ClassificadosConteudo() {
 {user &&
   !filtroMeusAnuncios &&
   !isBloqueado &&
-  categoria === "Anuncie" && (
+  [
+    "Anuncie",
+    "Compre & Venda",
+    "Alimentação",
+    "Reformas",
+    "Lazer",
+    "Automotivo",
+    "Zeladoria",
+    "Pet & Saúde",
+    "Eventos",
+  ].includes(categoria) && (
     <div className="space-y-3">
 
       <button
