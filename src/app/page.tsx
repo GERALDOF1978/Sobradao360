@@ -4,22 +4,20 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
-import { doc, setDoc, getDoc, collection, getDocs, query } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, getDocs, query, limit } from "firebase/firestore";
 
 interface ClimaData {
   temp: number;
   condicao: string;
 }
 
-interface Anuncio {
+interface DestaqueComercial {
   id: string;
   titulo: string;
-  descricao?: string;
-  categoria?: string;
+  subtitulo?: string;
   imagemUrl?: string;
-  autorNome?: string;
-  autorFoto?: string;
-  criadoEm?: any;
+  temLojaCriada: boolean;
+  linkLoja?: string;
 }
 
 export default function Home() {
@@ -42,7 +40,7 @@ export default function Home() {
 
   const [clima, setClima] = useState<ClimaData | null>(null);
   const [moradoresReais, setMoradoresReais] = useState<number>(0);
-  const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
+  const [destaquesVendas, setDestaquesVendas] = useState<DestaqueComercial[]>([]);
   const [loadingDados, setLoadingDados] = useState(true);
 
   const [uploading, setUploading] = useState(false);
@@ -92,21 +90,21 @@ export default function Home() {
       }
     }
 
-    async function carregarMoradoresEMultimidia() {
+    async function carregarDadosHome() {
       try {
         const snapUsuarios = await getDocs(collection(db, "usuarios"));
         setMoradoresReais(snapUsuarios.size);
 
-        const qAnuncios = query(collection(db, "anuncios"));
-        const snapAnuncios = await getDocs(qAnuncios);
+        // Buscando parceiros / lojas em destaque para os novos cards de venda
+        const qDestaques = query(collection(db, "lojas_parceiras"), limit(6));
+        const snapDestaques = await getDocs(qDestaques);
 
-        // Tipagem explícita 'any' para o doc do Firestore evitar conflito de namespaces no Vercel
-        const listaAnuncios: Anuncio[] = snapAnuncios.docs.map((docSnap: any) => ({
+        const listaDestaques: DestaqueComercial[] = snapDestaques.docs.map((docSnap: any) => ({
           id: docSnap.id,
           ...docSnap.data(),
         }));
 
-        setAnuncios(listaAnuncios);
+        setDestaquesVendas(listaDestaques);
       } catch (err) {
         console.error("Erro ao consultar Firestore:", err);
       } finally {
@@ -115,7 +113,7 @@ export default function Home() {
     }
 
     carregarClimaReal();
-    carregarMoradoresEMultimidia();
+    carregarDadosHome();
   }, []);
 
   useEffect(() => {
@@ -196,12 +194,31 @@ export default function Home() {
       setSalvando(false);
     }
   };
-
-  const servicosRapidos = [
-  { titulo: "Anuncie", icone: "📢", cor: "bg-emerald-600", link: "/anuncie" },
-  { titulo: "Empregos", icone: "💼", cor: "bg-indigo-600", link: "/classificados?categoria=Empregos" },
-  { titulo: "Notícias", icone: "📰", cor: "bg-teal-600", link: "/noticias" },
-  { titulo: "Utilidades", icone: "📞", cor: "bg-slate-700", link: "/classificados?categoria=Utilidades" },
+const servicosRapidos = [
+  {
+    titulo: "Anuncie",
+    icone: "📢",
+    cor: "bg-emerald-600",
+    link: "/anuncie",
+  },
+  {
+    titulo: "Empregos",
+    icone: "💼",
+    cor: "bg-indigo-600",
+    link: "/classificados?categoria=Empregos",
+  },
+  {
+    titulo: "Notícias",
+    icone: "📰",
+    cor: "bg-teal-600",
+    link: "/classificados?categoria=Notícias",
+  },
+  {
+    titulo: "Utilidades",
+    icone: "📞",
+    cor: "bg-slate-700",
+    link: "/classificados?categoria=Utilidades",
+  },
 ];
 
   return (
@@ -271,7 +288,6 @@ export default function Home() {
           </div>
         </section>
 
-        
         {/* BANNER PRINCIPAL */}
         <section className="bg-gradient-to-br from-blue-800 via-blue-900 to-indigo-950 text-white rounded-3xl shadow-xl overflow-hidden border border-blue-700/50 flex flex-col">
           <div className="w-full bg-slate-900 p-2 relative flex flex-col items-center">
@@ -280,7 +296,6 @@ export default function Home() {
               alt="Banner Sobradão 360"
               className="w-full h-auto object-contain rounded-2xl"
             />
-
             <div className="w-full mt-2 px-2 flex items-center justify-between gap-2">
               <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow shrink-0">
                 Portal Oficial
@@ -295,7 +310,6 @@ export default function Home() {
             <p className="text-xs text-blue-100 text-center font-medium leading-relaxed">
               Conectando comércios, avisos e moradores do nosso bairro.
             </p>
-
             <button
               onClick={user ? () => setIsModalOpen(true) : loginWithGoogle}
               className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 active:scale-95 text-slate-950 font-black py-3 px-4 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-2"
@@ -305,62 +319,54 @@ export default function Home() {
           </div>
         </section>
 
-        {/* FEED DE ANÚNCIOS (CARDS BRANCOS COM SOMBRA) */}
+        {/* SEÇÃO DE CARDS CHAMATIVOS DE VENDAS / LOJAS PARCEIRAS */}
         <section className="space-y-4 pt-2">
           <div className="flex justify-between items-center px-1">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Publicações Recentes</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Comércios & Vendas em Destaque</h3>
           </div>
 
           {loadingDados ? (
-            <p className="text-center text-xs text-slate-500 py-6">A carregar publicações...</p>
-          ) : anuncios.length === 0 ? (
-            <p className="text-center text-xs text-slate-500 py-6">Nenhuma publicação encontrada.</p>
+            <p className="text-center text-xs text-slate-500 py-4">Carregando destaques...</p>
           ) : (
-            <div className="space-y-4">
-              {anuncios.map((anuncio) => (
-                <div
-                  key={anuncio.id}
-                  className="bg-white border border-slate-200/80 rounded-3xl p-4 space-y-3 shadow-sm hover:shadow-md transition"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-200/80">
-                      {anuncio.categoria || "Anúncio"}
-                    </span>
-                    {anuncio.autorNome && (
-                      <div className="flex items-center gap-1.5">
-                        <img
-                          src={anuncio.autorFoto || "https://api.dicebear.com/7.x/thumbs/svg?seed=user"}
-                          alt={anuncio.autorNome}
-                          className="w-5 h-5 rounded-full object-cover border border-slate-300"
-                        />
-                        <span className="text-[11px] font-semibold text-slate-600">{anuncio.autorNome}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {anuncio.imagemUrl && (
-                    <div className="w-full bg-slate-100 rounded-2xl border border-slate-200/70 overflow-hidden p-1 flex items-center justify-center">
-                      <img
-                        src={anuncio.imagemUrl}
-                        alt={anuncio.titulo || "Imagem da publicação"}
-                        className="w-full h-auto max-h-80 object-contain mx-auto rounded-xl"
-                      />
-                    </div>
-                  )}
-
-                  <div className="space-y-1">
-                    <h4 className="font-bold text-sm text-slate-900">{anuncio.titulo}</h4>
-                    {anuncio.descricao && (
-                      <p className="text-xs text-slate-600 leading-relaxed">{anuncio.descricao}</p>
-                    )}
-                  </div>
+            <div className="grid grid-cols-2 gap-3">
+              {/* Card Exemplo Chamativo para Lojas / Vendas */}
+              <Link 
+                href="/loja-explicativa?anunciante=novo" 
+                className="bg-gradient-to-br from-white to-slate-50 border-2 border-amber-400/80 rounded-3xl p-3.5 space-y-2 shadow-md hover:shadow-lg transition flex flex-col justify-between group"
+              >
+                <div className="w-full h-28 bg-blue-900 rounded-2xl flex items-center justify-center overflow-hidden relative shadow-inner">
+                  <span className="absolute top-2 right-2 bg-amber-400 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full shadow">Exclusivo</span>
+                  <span className="text-3xl">🛍️</span>
                 </div>
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-xs text-slate-900 group-hover:text-blue-700 transition">Sua Loja / Serviço Aqui</h4>
+                  <p className="text-[10px] text-slate-500 leading-tight">Tenha sua página exclusiva no Sobradão 360.</p>
+                </div>
+              </Link>
+
+              {destaquesVendas.map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.temLojaCriada ? item.linkLoja || `/loja/${item.id}` : `/loja-explicativa?id=${item.id}`}
+                  className="bg-white border border-slate-200/90 rounded-3xl p-3.5 space-y-2 shadow-sm hover:border-blue-600 transition flex flex-col justify-between"
+                >
+                  <div className="w-full h-28 bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden">
+                    {item.imagemUrl ? (
+                      <img src={item.imagemUrl} alt={item.titulo} className="w-full h-full object-cover rounded-xl" />
+                    ) : (
+                      <span className="text-2xl">🏪</span>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-xs text-slate-900 truncate">{item.titulo}</h4>
+                    <p className="text-[10px] text-slate-500 truncate">{item.subtitulo || "Clique para abrir a loja"}</p>
+                  </div>
+                </Link>
               ))}
             </div>
           )}
         </section>
 
-        
       </main>
 
       {/* MODAL CLARO */}
