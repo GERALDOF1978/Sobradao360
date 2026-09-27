@@ -110,11 +110,22 @@ async function buscarPublicacoes(): Promise<Publicacao[]> {
 
   const lista: Publicacao[] = [];
 
-  snapshot.forEach(
-    (docSnap: any) => {
-      lista.push(transformarPublicacao(docSnap));
+  snapshot.forEach((docSnap: any) => {
+    const dados = docSnap.data();
+
+    // Notícias mostra somente posts da comunidade.
+    // O Anuncie grava esses posts como:
+    // categoria: "Notícias"
+    // tipoPublicacao: "post"
+    if (
+      dados.tipoPublicacao !== "post" ||
+      dados.categoria !== "Notícias"
+    ) {
+      return;
     }
-  );
+
+    lista.push(transformarPublicacao(docSnap));
+  });
 
   return lista;
 }
