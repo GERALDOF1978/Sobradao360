@@ -196,11 +196,11 @@ export default function Home() {
   };
 
   const servicosRapidos = [
-    { titulo: "Anuncie", icone: "📢", cor: "bg-emerald-600", link: "/classificados?aba=anuncie" },
-    { titulo: "Empregos", icone: "💼", cor: "bg-indigo-600", link: "/classificados?categoria=Empregos" },
-    { titulo: "Notícias", icone: "📰", cor: "bg-teal-600", link: "/classificados?aba=noticias" },
-    { titulo: "Utilidades", icone: "📞", cor: "bg-slate-700", link: "/classificados?categoria=Utilidades" },
-  ];
+  { titulo: "Anuncie", icone: "📢", cor: "bg-emerald-600", link: "/classificados?categoria=Anuncie" },
+  { titulo: "Empregos", icone: "💼", cor: "bg-indigo-600", link: "/classificados?categoria=Empregos" },
+  { titulo: "Notícias", icone: "📰", cor: "bg-teal-600", link: "/classificados?categoria=Notícias" },
+  { titulo: "Utilidades", icone: "📞", cor: "bg-slate-700", link: "/classificados?categoria=Utilidades" },
+];
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-16 font-sans">
