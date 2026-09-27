@@ -205,7 +205,7 @@ const servicosRapidos = [
     titulo: "Empregos",
     icone: "💼",
     cor: "bg-indigo-600",
-    link: "/classificados?categoria=Empregos",
+    link: "/empregos",
   },
   {
     titulo: "Notícias",
@@ -217,7 +217,7 @@ const servicosRapidos = [
     titulo: "Utilidades",
     icone: "📞",
     cor: "bg-slate-700",
-    link: "/classificados?categoria=Utilidades",
+    link: "/utilidades",
   },
 ];
 
