@@ -380,13 +380,39 @@ function ClassificadosConteudo() {
   // =====================================================
 
   useEffect(() => {
-    const cat = searchParams.get("categoria");
+  const catParam = searchParams.get("categoria") || searchParams.get("cat");
 
-    if (cat) {
-      setCategoria(cat);
-      setLimiteVisivel(15);
-    }
-  }, [searchParams]);
+  if (!catParam) {
+    setCategoria("Todos");
+    return;
+  }
+
+  // Adicionado o tipo ": string" no parâmetro str
+  const sanitizar = (str: string) =>
+    str
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/&/g, "e")               
+      .replace(/[^a-z0-9]/g, "");       
+
+  const categoriasValidas = [
+    "Todos",
+    "Empregos",
+    "Compre & Venda",
+    "Utilidades",
+    "Anuncie",
+    "Notícias",
+  ];
+
+  const catParamSanitizado = sanitizar(catParam);
+
+  const encontrada = categoriasValidas.find(
+    (cat) => sanitizar(cat) === catParamSanitizado
+  );
+
+  setCategoria(encontrada || "Todos");
+}, [searchParams]);
 
   // =====================================================
   // VERIFICAR USUÁRIO
