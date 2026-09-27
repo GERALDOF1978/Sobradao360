@@ -194,12 +194,31 @@ export default function Home() {
       setSalvando(false);
     }
   };
-
-  const servicosRapidos = [
-  { titulo: "Anuncie", icone: "📢", cor: "bg-emerald-600", link: "/classificados?categoria=Anuncie" },
-  { titulo: "Empregos", icone: "💼", cor: "bg-indigo-600", link: "/classificados?categoria=Empregos" },
-  { titulo: "Notícias", icone: "📰", cor: "bg-teal-600", link: "/classificados?categoria=Notícias" },
-  { titulo: "Utilidades", icone: "📞", cor: "bg-slate-700", link: "/classificados?categoria=Utilidades" },
+const servicosRapidos = [
+  {
+    titulo: "Anuncie",
+    icone: "📢",
+    cor: "bg-emerald-600",
+    link: "/anuncie",
+  },
+  {
+    titulo: "Empregos",
+    icone: "💼",
+    cor: "bg-indigo-600",
+    link: "/classificados?categoria=Empregos",
+  },
+  {
+    titulo: "Notícias",
+    icone: "📰",
+    cor: "bg-teal-600",
+    link: "/classificados?categoria=Notícias",
+  },
+  {
+    titulo: "Utilidades",
+    icone: "📞",
+    cor: "bg-slate-700",
+    link: "/classificados?categoria=Utilidades",
+  },
 ];
 
   return (
