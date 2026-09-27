@@ -273,6 +273,40 @@ export default function Home() {
           </div>
         </section>
 
+        
+        {/* BANNER PRINCIPAL */}
+        <section className="bg-gradient-to-br from-blue-800 via-blue-900 to-indigo-950 text-white rounded-3xl shadow-xl overflow-hidden border border-blue-700/50 flex flex-col">
+          <div className="w-full bg-slate-900 p-2 relative flex flex-col items-center">
+            <img
+              src="https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp"
+              alt="Banner Sobradão 360"
+              className="w-full h-auto object-contain rounded-2xl"
+            />
+
+            <div className="w-full mt-2 px-2 flex items-center justify-between gap-2">
+              <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow shrink-0">
+                Portal Oficial
+              </span>
+              <span className="text-[10px] font-bold text-emerald-400 bg-slate-950 px-2.5 py-1 rounded-full border border-emerald-500/30 shadow shrink-0">
+                ● {loadingDados ? "..." : `${moradoresReais} moradores ativos`}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 space-y-3">
+            <p className="text-xs text-blue-100 text-center font-medium leading-relaxed">
+              Conectando comércios, avisos e moradores do nosso bairro.
+            </p>
+
+            <button
+              onClick={user ? () => setIsModalOpen(true) : loginWithGoogle}
+              className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 active:scale-95 text-slate-950 font-black py-3 px-4 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-2"
+            >
+              {user ? "🚀 Meu Perfil & Avisos" : "🚀 Participe da Comunidade!"}
+            </button>
+          </div>
+        </section>
+
         {/* FEED DE ANÚNCIOS (CARDS BRANCOS COM SOMBRA) */}
         <section className="space-y-4 pt-2">
           <div className="flex justify-between items-center px-1">
@@ -326,38 +360,6 @@ export default function Home() {
               ))}
             </div>
           )}
-        </section>
-        {/* BANNER PRINCIPAL */}
-        <section className="bg-gradient-to-br from-blue-800 via-blue-900 to-indigo-950 text-white rounded-3xl shadow-xl overflow-hidden border border-blue-700/50 flex flex-col">
-          <div className="w-full bg-slate-900 p-2 relative flex flex-col items-center">
-            <img
-              src="https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp"
-              alt="Banner Sobradão 360"
-              className="w-full h-auto object-contain rounded-2xl"
-            />
-
-            <div className="w-full mt-2 px-2 flex items-center justify-between gap-2">
-              <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow shrink-0">
-                Portal Oficial
-              </span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-slate-950 px-2.5 py-1 rounded-full border border-emerald-500/30 shadow shrink-0">
-                ● {loadingDados ? "..." : `${moradoresReais} moradores ativos`}
-              </span>
-            </div>
-          </div>
-
-          <div className="p-4 space-y-3">
-            <p className="text-xs text-blue-100 text-center font-medium leading-relaxed">
-              Conectando comércios, avisos e moradores do nosso bairro.
-            </p>
-
-            <button
-              onClick={user ? () => setIsModalOpen(true) : loginWithGoogle}
-              className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 active:scale-95 text-slate-950 font-black py-3 px-4 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-2"
-            >
-              {user ? "🚀 Meu Perfil & Avisos" : "🚀 Participe da Comunidade!"}
-            </button>
-          </div>
         </section>
 
         
