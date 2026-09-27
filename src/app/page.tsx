@@ -81,9 +81,9 @@ export default function HomePage() {
   const [anunciantesPagos, setAnunciantesPagos] = useState<AnunciantePago[]>([]);
   const [loadingAnuncios, setLoadingAnuncios] = useState(true);
 
-  // 'currentUser' é inferido automaticamente pelo Firebase
+  // Solução: Utilizar 'any' explícito para evitar conflito de namespace e satisfazer o noImplicitAny
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser: any) => {
       if (currentUser) {
         setUser({
           uid: currentUser.uid,
@@ -125,7 +125,7 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [avisos]);
 
-  // 'doc' é inferido automaticamente pelo Firestore
+  // Solução: Utilizar 'any' explícito no doc do Firestore
   useEffect(() => {
     async function fetchAnunciantes() {
       try {
@@ -136,7 +136,7 @@ export default function HomePage() {
         );
         const querySnapshot = await getDocs(q);
         const lista: AnunciantePago[] = [];
-        querySnapshot.forEach((doc) => {
+        querySnapshot.forEach((doc: any) => {
           lista.push({ id: doc.id, ...doc.data() } as AnunciantePago);
         });
         setAnunciantesPagos(lista);

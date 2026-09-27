@@ -49,9 +49,9 @@ export default function NoticiasPage() {
   const [conteudo, setConteudo] = useState("");
   const [enviando, setEnviando] = useState(false);
 
-  // 'currentUser' é inferido automaticamente
+  // Solução: Utilizar 'any' explícito
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser: any) => {
       if (currentUser) {
         setUser({
           uid: currentUser.uid,
@@ -65,12 +65,12 @@ export default function NoticiasPage() {
     return () => unsubscribe();
   }, []);
 
-  // 'snapshot' e 'doc' são inferidos automaticamente
+  // Solução: Utilizar 'any' explícito
   useEffect(() => {
     const q = query(collection(db, "noticias"), orderBy("criadoEm", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = onSnapshot(q, (snapshot: any) => {
       const docs: Noticia[] = [];
-      snapshot.forEach((doc) => {
+      snapshot.forEach((doc: any) => {
         docs.push({ id: doc.id, ...doc.data() } as Noticia);
       });
       setNoticias(docs);
@@ -115,7 +115,7 @@ export default function NoticiasPage() {
     } catch (err) {
       console.error("Erro ao guardar notícia:", err);
       alert("Ocorreu um erro ao publicar a notícia.");
-    } Finally {
+    } finally {
       setEnviando(false);
     }
   };
