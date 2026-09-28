@@ -15,6 +15,12 @@ import { getAuth } from "firebase/auth";
 
 import { db } from "@/lib/firebase";
 
+type UsuarioFirebase = {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+};
+
 interface LojaParceira {
   id: string;
 
@@ -154,9 +160,7 @@ export default function AdminMasterPage() {
     const auth = getAuth();
 
     const cancelar = auth.onAuthStateChanged(
-  async (
-    usuario: import("firebase/auth").User | null
-  ) => {
+  async (usuario: UsuarioFirebase | null) => {
       if (!usuario) {
         setUser(null);
         setAutorizado(false);
