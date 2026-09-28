@@ -4,7 +4,17 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
-import { doc, setDoc, getDoc, collection, getDocs, query, limit } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, getDocs, query, where, limit } from "firebase/firestore";
+
+  
+  
+ 
+ 
+ 
+ 
+
+
+
 
 interface ClimaData {
   temp: number;
@@ -91,26 +101,64 @@ export default function Home() {
     }
 
     async function carregarDadosHome() {
-      try {
-        const snapUsuarios = await getDocs(collection(db, "usuarios"));
-        setMoradoresReais(snapUsuarios.size);
+  try {
+    // =====================================================
+    // ESTATÍSTICAS DA COMUNIDADE
+    // Não precisamos mais ler todos os usuários.
+    // =====================================================
+    const estatisticasRef = doc(
+      db,
+      "estatisticas",
+      "comunidade"
+    );
 
-        // Buscando parceiros / lojas em destaque para os novos cards de venda
-        const qDestaques = query(collection(db, "lojas_parceiras"), limit(6));
-        const snapDestaques = await getDocs(qDestaques);
+    const estatisticasSnap = await getDoc(estatisticasRef);
 
-        const listaDestaques: DestaqueComercial[] = snapDestaques.docs.map((docSnap: any) => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-        }));
+    if (estatisticasSnap.exists()) {
+      const dados = estatisticasSnap.data();
 
-        setDestaquesVendas(listaDestaques);
-      } catch (err) {
-        console.error("Erro ao consultar Firestore:", err);
-      } finally {
-        setLoadingDados(false);
-      }
+      setMoradoresReais(
+        Number(dados.moradores) || 0
+      );
+    } else {
+      setMoradoresReais(0);
     }
+
+
+    // =====================================================
+    // LOJAS PARCEIRAS
+    // Somente parceiros ativos aparecem na Home.
+    // =====================================================
+    const qDestaques = query(
+      collection(db, "lojas_parceiras"),
+      where("ativo", "==", true),
+      limit(6)
+    );
+
+    const snapDestaques = await getDocs(qDestaques);
+
+    const listaDestaques: DestaqueComercial[] =
+      snapDestaques.docs.map((docSnap: any) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+
+    setDestaquesVendas(listaDestaques);
+
+  } catch (err) {
+    console.error(
+      "Erro ao consultar dados públicos da Home:",
+      err
+    );
+
+    // Se houver algum problema, a Home continua funcionando.
+    setMoradoresReais(0);
+    setDestaquesVendas([]);
+
+  } finally {
+    setLoadingDados(false);
+  }
+}
 
     carregarClimaReal();
     carregarDadosHome();
