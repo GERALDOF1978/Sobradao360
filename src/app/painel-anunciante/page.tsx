@@ -14,16 +14,11 @@ import {
 import {
   onAuthStateChanged,
   signInWithPopup,
-  type UserCredential,
 } from "firebase/auth";
+import type { User as FirebaseUser } from "firebase/auth";
 
 import { auth, db, googleProvider } from "@/lib/firebase";
 import GerenciadorProdutos from "@/components/anunciante/GerenciadorProdutos";
-type UsuarioFirebase = {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-};
 
 type TipoNegocio =
   | "loja"
@@ -191,7 +186,10 @@ function tipoValido(valor: unknown): TipoNegocio {
     "outros",
   ];
 
-  if (typeof valor === "string" && tipos.includes(valor as TipoNegocio)) {
+  if (
+    typeof valor === "string" &&
+    tipos.includes(valor as TipoNegocio)
+  ) {
     return valor as TipoNegocio;
   }
 
@@ -233,7 +231,7 @@ function limparWhatsapp(numero: string): string {
 
 export default function PainelAnunciantePage() {
   const [usuario, setUsuario] =
-    useState<UsuarioFirebase | null>(null);
+    useState<FirebaseUser | null>(null);
 
   const [carregandoUsuario, setCarregandoUsuario] =
     useState(true);
@@ -285,7 +283,7 @@ export default function PainelAnunciantePage() {
   useEffect(() => {
     const cancelar = onAuthStateChanged(
       auth,
-      (usuarioAtual: UsuarioFirebase | null) => {
+      (usuarioAtual) => {
         setUsuario(usuarioAtual);
         setCarregandoUsuario(false);
       }
@@ -325,38 +323,56 @@ export default function PainelAnunciantePage() {
           id: documento.id,
 
           uidDono: texto(dados.uidDono),
+
           nomeResponsavel:
             texto(dados.nomeResponsavel) ||
             usuario.displayName ||
             "",
+
           emailDono:
             texto(dados.emailDono) ||
             usuario.email ||
             "",
 
           nome: texto(dados.nome),
-          titulo: texto(dados.titulo),
-          subtitulo: texto(dados.subtitulo),
-          descricao: texto(dados.descricao),
 
-          tipo: tipoValido(dados.tipo),
+          titulo:
+            texto(dados.titulo),
 
-          telefone: texto(dados.telefone),
-          whatsapp: texto(dados.whatsapp),
+          subtitulo:
+            texto(dados.subtitulo),
+
+          descricao:
+            texto(dados.descricao),
+
+          tipo:
+            tipoValido(dados.tipo),
+
+          telefone:
+            texto(dados.telefone),
+
+          whatsapp:
+            texto(dados.whatsapp),
 
           tipoPresenca:
-            presencaValida(dados.tipoPresenca),
+            presencaValida(
+              dados.tipoPresenca
+            ),
 
           destinoDescricao:
             texto(dados.destinoDescricao),
 
-          siteUrl: texto(dados.siteUrl),
+          siteUrl:
+            texto(dados.siteUrl),
 
-          imagemUrl: texto(dados.imagemUrl),
+          imagemUrl:
+            texto(dados.imagemUrl),
 
-          ativo: booleano(dados.ativo),
+          ativo:
+            booleano(dados.ativo),
 
-          status: statusValido(dados.status),
+          status:
+            statusValido(dados.status),
 
           temLojaCriada:
             booleano(dados.temLojaCriada),
@@ -365,7 +381,8 @@ export default function PainelAnunciantePage() {
             texto(dados.linkLoja),
 
           plano:
-            texto(dados.plano) || "gratuito",
+            texto(dados.plano) ||
+            "gratuito",
 
           statusPagamento:
             texto(dados.statusPagamento) ||
@@ -432,10 +449,14 @@ export default function PainelAnunciantePage() {
     setTipo(negocio.tipo);
     setTelefone(negocio.telefone);
     setWhatsapp(negocio.whatsapp);
-    setTipoPresenca(negocio.tipoPresenca);
+    setTipoPresenca(
+      negocio.tipoPresenca
+    );
+
     setDestinoDescricao(
       negocio.destinoDescricao
     );
+
     setSiteUrl(negocio.siteUrl);
 
     setNegocioEditando(negocio.id);
@@ -456,22 +477,29 @@ export default function PainelAnunciantePage() {
     evento.preventDefault();
 
     if (!usuario) {
-      setErro("Faça login para continuar.");
+      setErro(
+        "Faça login para continuar."
+      );
       return;
     }
 
     if (!nome.trim()) {
-      setErro("Informe o nome do negócio.");
+      setErro(
+        "Informe o nome do negócio."
+      );
       return;
     }
 
     if (!descricao.trim()) {
-      setErro("Informe uma descrição do negócio.");
+      setErro(
+        "Informe uma descrição do negócio."
+      );
       return;
     }
 
     if (
-      tipoPresenca === "site_externo" &&
+      tipoPresenca ===
+        "site_externo" &&
       !siteUrl.trim()
     ) {
       setErro(
@@ -481,7 +509,8 @@ export default function PainelAnunciantePage() {
     }
 
     if (
-      tipoPresenca === "whatsapp" &&
+      tipoPresenca ===
+        "whatsapp" &&
       !whatsapp.trim()
     ) {
       setErro(
@@ -497,11 +526,13 @@ export default function PainelAnunciantePage() {
 
       const tipoSelecionado =
         TIPOS.find(
-          (item) => item.value === tipo
+          (item) =>
+            item.value === tipo
         ) || TIPOS[0];
 
       const dados = {
-        uidDono: usuario.uid,
+        uidDono:
+          usuario.uid,
 
         nomeResponsavel:
           usuario.displayName || "",
@@ -509,10 +540,12 @@ export default function PainelAnunciantePage() {
         emailDono:
           usuario.email || "",
 
-        nome: nome.trim(),
+        nome:
+          nome.trim(),
 
         titulo:
-          titulo.trim() || nome.trim(),
+          titulo.trim() ||
+          nome.trim(),
 
         subtitulo:
           subtitulo.trim() ||
@@ -542,11 +575,12 @@ export default function PainelAnunciantePage() {
       };
 
       if (negocioEditando) {
-        const referencia = doc(
-          db,
-          "lojas_parceiras",
-          negocioEditando
-        );
+        const referencia =
+          doc(
+            db,
+            "lojas_parceiras",
+            negocioEditando
+          );
 
         await updateDoc(
           referencia,
@@ -585,6 +619,7 @@ export default function PainelAnunciantePage() {
   async function entrarComGoogle() {
     try {
       setErro("");
+
       await signInWithPopup(
         auth,
         googleProvider
@@ -620,7 +655,7 @@ export default function PainelAnunciantePage() {
 
     if (
       negocio.tipoPresenca ===
-        "whatsapp"
+      "whatsapp"
     ) {
       const numero =
         limparWhatsapp(
@@ -656,11 +691,17 @@ export default function PainelAnunciantePage() {
   function textoStatus(
     negocio: Negocio
   ): string {
-    if (negocio.status === "APROVADO") {
+    if (
+      negocio.status ===
+      "APROVADO"
+    ) {
       return "APROVADO";
     }
 
-    if (negocio.status === "SUSPENSO") {
+    if (
+      negocio.status ===
+      "SUSPENSO"
+    ) {
       return "SUSPENSO";
     }
 
@@ -670,21 +711,31 @@ export default function PainelAnunciantePage() {
   function classeStatus(
     negocio: Negocio
   ): string {
-    if (negocio.status === "APROVADO") {
+    if (
+      negocio.status ===
+      "APROVADO"
+    ) {
       return "bg-emerald-100 text-emerald-700";
     }
 
-    if (negocio.status === "SUSPENSO") {
+    if (
+      negocio.status ===
+      "SUSPENSO"
+    ) {
       return "bg-red-100 text-red-700";
     }
 
     return "bg-amber-100 text-amber-700";
   }
 
-  if (carregandoUsuario || carregando) {
+  if (
+    carregandoUsuario ||
+    carregando
+  ) {
     return (
       <main className="min-h-screen bg-slate-100 px-4 py-8">
         <div className="mx-auto max-w-5xl rounded-3xl bg-white p-10 text-center shadow-sm">
+
           <div className="text-4xl">
             🏪
           </div>
@@ -692,6 +743,7 @@ export default function PainelAnunciantePage() {
           <p className="mt-3 text-sm font-bold text-slate-600">
             Carregando painel...
           </p>
+
         </div>
       </main>
     );
@@ -700,6 +752,7 @@ export default function PainelAnunciantePage() {
   if (!usuario) {
     return (
       <main className="min-h-screen bg-slate-100 px-4 py-8">
+
         <div className="mx-auto max-w-xl overflow-hidden rounded-3xl bg-white shadow-sm">
 
           <div className="bg-gradient-to-r from-blue-950 to-blue-800 p-8 text-white">
@@ -740,7 +793,9 @@ export default function PainelAnunciantePage() {
 
               <button
                 type="button"
-                onClick={entrarComGoogle}
+                onClick={
+                  entrarComGoogle
+                }
                 className="mt-5 w-full rounded-xl bg-blue-900 px-5 py-3 text-sm font-black text-white hover:bg-blue-800"
               >
                 🔐 Entrar com Google
@@ -756,7 +811,9 @@ export default function PainelAnunciantePage() {
             </Link>
 
           </div>
+
         </div>
+
       </main>
     );
   }
@@ -765,8 +822,6 @@ export default function PainelAnunciantePage() {
     <main className="min-h-screen bg-slate-100 px-4 py-6 pb-12">
 
       <div className="mx-auto max-w-6xl space-y-5">
-
-        {/* CABEÇALHO */}
 
         <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
 
@@ -800,8 +855,6 @@ export default function PainelAnunciantePage() {
             </div>
 
           </div>
-
-          {/* DADOS DA CONTA */}
 
           <div className="grid gap-3 p-5 md:grid-cols-3">
 
@@ -847,8 +900,6 @@ export default function PainelAnunciantePage() {
 
         </section>
 
-        {/* MENSAGENS */}
-
         {mensagem && (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-800">
             {mensagem}
@@ -860,8 +911,6 @@ export default function PainelAnunciantePage() {
             {erro}
           </div>
         )}
-
-        {/* NEGÓCIOS */}
 
         <section className="rounded-3xl bg-white p-5 shadow-sm">
 
@@ -888,8 +937,6 @@ export default function PainelAnunciantePage() {
             </Link>
 
           </div>
-
-          {/* FORMULÁRIO DE EDIÇÃO */}
 
           {mostrarCadastro &&
             negocioEditando && (
@@ -922,7 +969,9 @@ export default function PainelAnunciantePage() {
                     <input
                       value={nome}
                       onChange={(e) =>
-                        setNome(e.target.value)
+                        setNome(
+                          e.target.value
+                        )
                       }
                       className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-700"
                     />
@@ -938,7 +987,9 @@ export default function PainelAnunciantePage() {
                     <input
                       value={titulo}
                       onChange={(e) =>
-                        setTitulo(e.target.value)
+                        setTitulo(
+                          e.target.value
+                        )
                       }
                       className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-700"
                     />
@@ -1163,7 +1214,9 @@ export default function PainelAnunciantePage() {
                   </label>
 
                   <input
-                    value={destinoDescricao}
+                    value={
+                      destinoDescricao
+                    }
                     onChange={(e) =>
                       setDestinoDescricao(
                         e.target.value
@@ -1204,8 +1257,6 @@ export default function PainelAnunciantePage() {
 
               </form>
             )}
-
-          {/* LISTA DOS NEGÓCIOS */}
 
           <div className="mt-5 space-y-4">
 
@@ -1304,6 +1355,7 @@ export default function PainelAnunciantePage() {
                           </p>
 
                           <p className="mt-1 text-xs font-black text-slate-700">
+
                             {negocio.tipoPresenca ===
                               "site_externo" &&
                               "🌐 Site externo"}
@@ -1315,6 +1367,7 @@ export default function PainelAnunciantePage() {
                             {negocio.tipoPresenca ===
                               "pagina_sobradao" &&
                               "🏠 Página Sobradão 360"}
+
                           </p>
 
                         </div>
@@ -1373,15 +1426,16 @@ export default function PainelAnunciantePage() {
                           >
                             👀 Ver minha página
                           </button>
-
-                          
                         )}
 
                       </div>
+
                       <GerenciadorProdutos
-  lojaId={negocio.id}
-  tipoNegocio={negocio.tipo}
-/>
+                        lojaId={negocio.id}
+                        tipoNegocio={
+                          negocio.tipo
+                        }
+                      />
 
                     </div>
                   );
@@ -1393,8 +1447,6 @@ export default function PainelAnunciantePage() {
           </div>
 
         </section>
-
-        {/* ÁREAS FUTURAS */}
 
         <section className="rounded-3xl border border-blue-100 bg-blue-50 p-5">
 
@@ -1410,51 +1462,67 @@ export default function PainelAnunciantePage() {
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
 
             <div className="rounded-2xl bg-white p-4">
+
               <div className="text-2xl">
                 📦
               </div>
+
               <p className="mt-2 text-xs font-black text-slate-800">
                 Produtos
               </p>
+
               <p className="mt-1 text-[10px] text-slate-500">
                 Produtos, preços e imagens.
               </p>
+
             </div>
 
             <div className="rounded-2xl bg-white p-4">
+
               <div className="text-2xl">
                 🔧
               </div>
+
               <p className="mt-2 text-xs font-black text-slate-800">
                 Serviços
               </p>
+
               <p className="mt-1 text-[10px] text-slate-500">
                 Serviços oferecidos pelo negócio.
               </p>
+
             </div>
 
             <div className="rounded-2xl bg-white p-4">
+
               <div className="text-2xl">
                 📸
               </div>
+
               <p className="mt-2 text-xs font-black text-slate-800">
                 Fotos
               </p>
+
               <p className="mt-1 text-[10px] text-slate-500">
                 Fotos da empresa e produtos.
               </p>
+
             </div>
 
             <div className="rounded-2xl bg-white p-4">
+
               <div className="text-2xl">
                 📢
               </div>
+
               <p className="mt-2 text-xs font-black text-slate-800">
                 Divulgação
               </p>
+
               <p className="mt-1 text-[10px] text-slate-500">
                 Cards, banners e destaque.
               </p>
+
             </div>
 
           </div>

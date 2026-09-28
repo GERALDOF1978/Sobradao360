@@ -1,130 +1,192 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
+
 import { useRouter } from "next/navigation";
+
 import { db } from "@/lib/firebase";
 
 type Negocio = {
   id: string;
+
   nome?: string;
   titulo?: string;
   subtitulo?: string;
-  descricao?: string;
+  slogan?: string;
+
   tipo?: string;
-  telefone?: string;
+
   whatsapp?: string;
   imagemUrl?: string;
+  bannerUrl?: string;
+  corMarca?: string;
+
   ativo?: boolean;
   status?: string;
+
+  mostrarMarquee?: boolean;
+
   tipoPresenca?: string;
-  destinoDescricao?: string;
   siteUrl?: string;
 };
 
 export default function NegociosMarquee() {
   const router = useRouter();
 
-  const [negocios, setNegocios] = useState<Negocio[]>([]);
-  const [carregando, setCarregando] = useState(true);
+  const [negocios, setNegocios] =
+    useState<Negocio[]>([]);
+
+  const [carregando, setCarregando] =
+    useState(true);
 
   useEffect(() => {
     let ativo = true;
 
     async function carregarNegocios() {
       try {
-        const referencia = collection(db, "lojas_parceiras");
+        const referencia =
+          collection(
+            db,
+            "lojas_parceiras"
+          );
 
-        const consulta = query(
-          referencia,
-          where("ativo", "==", true)
-        );
+        const consulta =
+          query(
+            referencia,
+            where(
+              "ativo",
+              "==",
+              true
+            )
+          );
 
-        const snapshot = await getDocs(consulta);
+        const snapshot =
+          await getDocs(
+            consulta
+          );
 
         const lista: Negocio[] = [];
 
-        /*
-         * Usamos for...of em vez de map() para evitar
-         * problemas de inferência de tipos do Firebase.
-         *
-         * Não usamos:
-         * QueryDocumentSnapshot
-         * DocumentData
-         * any
-         */
+        for (
+          const firestoreDoc
+          of snapshot.docs
+        ) {
+          const dados =
+            firestoreDoc.data() as Record<
+              string,
+              unknown
+            >;
 
-        for (const firestoreDoc of snapshot.docs) {
-          const dados = firestoreDoc.data() as Record<string, unknown>;
+          /*
+           * IMPORTANTE:
+           *
+           * Negócios antigos que ainda não
+           * possuem mostrarMarquee continuam
+           * aparecendo.
+           *
+           * Quando o anunciante salvar o
+           * painel, o campo passa a existir.
+           */
+
+          if (
+            dados.mostrarMarquee === false
+          ) {
+            continue;
+          }
 
           const negocio: Negocio = {
             id: firestoreDoc.id,
 
             nome:
-              typeof dados.nome === "string"
+              typeof dados.nome ===
+              "string"
                 ? dados.nome
                 : "",
 
             titulo:
-              typeof dados.titulo === "string"
+              typeof dados.titulo ===
+              "string"
                 ? dados.titulo
                 : "",
 
             subtitulo:
-              typeof dados.subtitulo === "string"
+              typeof dados.subtitulo ===
+              "string"
                 ? dados.subtitulo
                 : "",
 
-            descricao:
-              typeof dados.descricao === "string"
-                ? dados.descricao
+            slogan:
+              typeof dados.slogan ===
+              "string"
+                ? dados.slogan
                 : "",
 
             tipo:
-              typeof dados.tipo === "string"
+              typeof dados.tipo ===
+              "string"
                 ? dados.tipo
                 : "",
 
-            telefone:
-              typeof dados.telefone === "string"
-                ? dados.telefone
-                : "",
-
             whatsapp:
-              typeof dados.whatsapp === "string"
+              typeof dados.whatsapp ===
+              "string"
                 ? dados.whatsapp
                 : "",
 
             imagemUrl:
-              typeof dados.imagemUrl === "string"
+              typeof dados.imagemUrl ===
+              "string"
                 ? dados.imagemUrl
                 : "",
+
+            bannerUrl:
+              typeof dados.bannerUrl ===
+              "string"
+                ? dados.bannerUrl
+                : "",
+
+            corMarca:
+              typeof dados.corMarca ===
+              "string"
+                ? dados.corMarca
+                : "#0f172a",
 
             ativo:
               dados.ativo === true,
 
             status:
-              typeof dados.status === "string"
+              typeof dados.status ===
+              "string"
                 ? dados.status
                 : "",
 
+            mostrarMarquee:
+              dados.mostrarMarquee !==
+              false,
+
             tipoPresenca:
-              typeof dados.tipoPresenca === "string"
+              typeof dados.tipoPresenca ===
+              "string"
                 ? dados.tipoPresenca
                 : "",
 
-            destinoDescricao:
-              typeof dados.destinoDescricao === "string"
-                ? dados.destinoDescricao
-                : "",
-
             siteUrl:
-              typeof dados.siteUrl === "string"
+              typeof dados.siteUrl ===
+              "string"
                 ? dados.siteUrl
                 : "",
           };
 
-          lista.push(negocio);
+          lista.push(
+            negocio
+          );
         }
 
         if (ativo) {
@@ -146,20 +208,19 @@ export default function NegociosMarquee() {
       }
     }
 
-    carregarNegocios();
+    void carregarNegocios();
 
     return () => {
       ativo = false;
     };
   }, []);
 
-  function abrirNegocio(negocio: Negocio) {
-    /*
-     * Se o anunciante possui site externo,
-     * abrimos o endereço informado.
-     */
+  function abrirNegocio(
+    negocio: Negocio
+  ) {
     if (
-      negocio.tipoPresenca === "site_externo" &&
+      negocio.tipoPresenca ===
+        "site_externo" &&
       negocio.siteUrl
     ) {
       window.open(
@@ -171,20 +232,22 @@ export default function NegociosMarquee() {
       return;
     }
 
-    /*
-     * Se o anunciante escolheu WhatsApp,
-     * abrimos diretamente a conversa.
-     */
     if (
-      negocio.tipoPresenca === "whatsapp" &&
+      negocio.tipoPresenca ===
+        "whatsapp" &&
       negocio.whatsapp
     ) {
-      const numero = negocio.whatsapp.replace(/\D/g, "");
+      const numero =
+        negocio.whatsapp.replace(
+          /\D/g,
+          ""
+        );
 
       if (numero) {
-        const numeroBrasil = numero.startsWith("55")
-          ? numero
-          : `55${numero}`;
+        const numeroBrasil =
+          numero.startsWith("55")
+            ? numero
+            : `55${numero}`;
 
         window.open(
           `https://wa.me/${numeroBrasil}`,
@@ -196,11 +259,9 @@ export default function NegociosMarquee() {
       return;
     }
 
-    /*
-     * Caso padrão:
-     * página comercial dentro do Sobradão 360.
-     */
-    router.push(`/loja/${negocio.id}`);
+    router.push(
+      `/loja/${negocio.id}`
+    );
   }
 
   if (carregando) {
@@ -213,7 +274,9 @@ export default function NegociosMarquee() {
 
   return (
     <section className="w-full overflow-hidden">
+
       <div className="relative w-full overflow-hidden">
+
         <div
           className="
             flex
@@ -223,110 +286,166 @@ export default function NegociosMarquee() {
             py-2
           "
         >
+
           {[...negocios, ...negocios].map(
-            (negocio, indice) => (
-              <button
-                key={`${negocio.id}-${indice}`}
-                type="button"
-                onClick={() => abrirNegocio(negocio)}
-                className="
-                  flex
-                  min-w-[240px]
-                  max-w-[300px]
-                  items-center
-                  gap-3
-                  rounded-xl
-                  border
-                  border-gray-200
-                  bg-white
-                  px-4
-                  py-3
-                  text-left
-                  shadow-sm
-                  transition
-                  hover:shadow-md
-                  active:scale-[0.98]
-                "
-              >
-                {negocio.imagemUrl ? (
-                  <img
-                    src={negocio.imagemUrl}
-                    alt={negocio.nome || "Negócio"}
-                    className="
-                      h-12
-                      w-12
-                      shrink-0
-                      rounded-full
-                      object-cover
-                    "
-                  />
-                ) : (
+            (
+              negocio,
+              indice
+            ) => {
+
+              const cor =
+                negocio.corMarca ||
+                "#0f172a";
+
+              return (
+                <button
+                  key={`${negocio.id}-${indice}`}
+                  type="button"
+                  onClick={() =>
+                    abrirNegocio(
+                      negocio
+                    )
+                  }
+                  className="
+                    relative
+                    flex
+                    min-w-[270px]
+                    max-w-[320px]
+                    items-center
+                    gap-3
+                    overflow-hidden
+                    rounded-2xl
+                    border
+                    border-gray-200
+                    bg-white
+                    px-4
+                    py-3
+                    text-left
+                    shadow-sm
+                    transition
+                    hover:-translate-y-0.5
+                    hover:shadow-lg
+                    active:scale-[0.98]
+                  "
+                >
+
+                  {negocio.bannerUrl && (
+                    <div
+                      className="absolute inset-0 opacity-10"
+                      style={{
+                        backgroundImage:
+                          `url(${negocio.bannerUrl})`,
+                        backgroundSize:
+                          "cover",
+                        backgroundPosition:
+                          "center",
+                      }}
+                    />
+                  )}
+
                   <div
                     className="
+                      relative
                       flex
-                      h-12
-                      w-12
+                      h-14
+                      w-14
                       shrink-0
                       items-center
                       justify-center
-                      rounded-full
+                      overflow-hidden
+                      rounded-xl
                       bg-gray-100
-                      text-xl
                     "
+                    style={{
+                      border:
+                        `2px solid ${cor}`,
+                    }}
                   >
-                    🏪
-                  </div>
-                )}
 
-                <div className="min-w-0">
-                  <div
-                    className="
-                      truncate
-                      text-sm
-                      font-bold
-                      text-gray-900
-                    "
-                  >
-                    {negocio.nome || "Comércio parceiro"}
+                    {negocio.imagemUrl ? (
+                      <img
+                        src={
+                          negocio.imagemUrl
+                        }
+                        alt={
+                          negocio.nome ||
+                          "Negócio"
+                        }
+                        className="
+                          h-full
+                          w-full
+                          object-contain
+                          bg-white
+                        "
+                      />
+                    ) : (
+                      <span className="text-xl">
+                        🏪
+                      </span>
+                    )}
+
                   </div>
 
-                  {negocio.subtitulo ? (
+                  <div className="relative min-w-0">
+
                     <div
                       className="
                         truncate
-                        text-xs
-                        text-gray-600
+                        text-sm
+                        font-black
+                        text-gray-900
                       "
                     >
-                      {negocio.subtitulo}
+                      {negocio.nome ||
+                        "Comércio parceiro"}
                     </div>
-                  ) : negocio.titulo ? (
-                    <div
-                      className="
-                        truncate
-                        text-xs
-                        text-gray-600
-                      "
-                    >
-                      {negocio.titulo}
-                    </div>
-                  ) : (
-                    <div
-                      className="
-                        truncate
-                        text-xs
-                        text-gray-500
-                      "
-                    >
-                      Conheça este parceiro
-                    </div>
-                  )}
-                </div>
-              </button>
-            )
+
+                    {negocio.slogan ? (
+                      <div
+                        className="
+                          truncate
+                          text-xs
+                          font-semibold
+                        "
+                        style={{
+                          color: cor,
+                        }}
+                      >
+                        {negocio.slogan}
+                      </div>
+                    ) : negocio.subtitulo ? (
+                      <div
+                        className="
+                          truncate
+                          text-xs
+                          text-gray-600
+                        "
+                      >
+                        {negocio.subtitulo}
+                      </div>
+                    ) : (
+                      <div
+                        className="
+                          truncate
+                          text-xs
+                          text-gray-500
+                        "
+                      >
+                        Conheça este parceiro
+                      </div>
+                    )}
+
+                  </div>
+
+                </button>
+              );
+            }
           )}
+
         </div>
+
       </div>
+
     </section>
   );
 }

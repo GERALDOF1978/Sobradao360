@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import Link from "next/link";
+
 import {
   collection,
   doc,
@@ -25,24 +27,36 @@ type TipoNegocio =
 
 interface Negocio {
   id: string;
+
   nome: string;
   titulo: string;
   subtitulo: string;
   descricao: string;
+
   tipo: TipoNegocio;
+
   telefone: string;
   whatsapp: string;
+
   imagemUrl: string;
+  bannerUrl: string;
+  slogan: string;
+  corMarca: string;
+
   ativo: boolean;
+
+  mostrarBanner: boolean;
 }
 
 interface Produto {
   id: string;
   lojaId: string;
+
   nome: string;
   descricao: string;
   preco: number;
   imagemUrl: string;
+
   ativo: boolean;
 }
 
@@ -53,86 +67,122 @@ const TIPOS: Record<
     nome: string;
     titulo: string;
     descricao: string;
+    botao: string;
   }
 > = {
   loja: {
     icon: "🛒",
     nome: "Loja",
     titulo: "Produtos",
-    descricao: "Confira os produtos e preços disponíveis.",
+    descricao:
+      "Confira os produtos e preços disponíveis.",
+    botao: "Consultar",
   },
 
   oficina: {
     icon: "🔧",
     nome: "Oficina",
     titulo: "Serviços",
-    descricao: "Conheça os serviços oferecidos e solicite um orçamento.",
+    descricao:
+      "Conheça os serviços oferecidos e solicite um orçamento.",
+    botao: "Solicitar orçamento",
   },
 
   profissional: {
     icon: "👷",
     nome: "Profissional",
     titulo: "Serviços",
-    descricao: "Conheça os serviços disponíveis.",
+    descricao:
+      "Conheça os serviços disponíveis.",
+    botao: "Solicitar orçamento",
   },
 
   alimentacao: {
     icon: "🍰",
     nome: "Alimentação",
     titulo: "Produtos e encomendas",
-    descricao: "Confira produtos, opções e formas de encomenda.",
+    descricao:
+      "Confira produtos, opções e formas de encomenda.",
+    botao: "Fazer pedido",
   },
 
   eventos: {
     icon: "🎉",
     nome: "Eventos",
     titulo: "Serviços para eventos",
-    descricao: "Conheça as opções oferecidas para seu evento.",
+    descricao:
+      "Conheça as opções oferecidas para seu evento.",
+    botao: "Consultar",
   },
 
   empresa: {
     icon: "🏢",
     nome: "Empresa",
     titulo: "Produtos e serviços",
-    descricao: "Conheça os produtos e serviços desta empresa.",
+    descricao:
+      "Conheça os produtos e serviços desta empresa.",
+    botao: "Consultar",
   },
 
   tecnologia: {
     icon: "💻",
     nome: "Tecnologia",
     titulo: "Produtos e serviços",
-    descricao: "Confira os produtos e serviços disponíveis.",
+    descricao:
+      "Confira os produtos e serviços disponíveis.",
+    botao: "Consultar",
   },
 
   outros: {
     icon: "📌",
     nome: "Outros",
     titulo: "Produtos e serviços",
-    descricao: "Confira o que este anunciante oferece.",
+    descricao:
+      "Confira o que este anunciante oferece.",
+    botao: "Consultar",
   },
 };
 
-function formatarPreco(valor: number) {
-  return valor.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
+function formatarPreco(
+  valor: number
+) {
+  return valor.toLocaleString(
+    "pt-BR",
+    {
+      style: "currency",
+      currency: "BRL",
+    }
+  );
 }
 
 export default function LojaPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{
+    id: string;
+  }>;
 }) {
-  const [negocio, setNegocio] = useState<Negocio | null>(null);
+  const [negocio, setNegocio] =
+    useState<Negocio | null>(
+      null
+    );
 
-  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [produtos, setProdutos] =
+    useState<Produto[]>([]);
 
-  const [carregando, setCarregando] = useState(true);
-  const [carregandoProdutos, setCarregandoProdutos] = useState(true);
+  const [carregando, setCarregando] =
+    useState(true);
 
-  const [erro, setErro] = useState("");
-  const [erroProdutos, setErroProdutos] = useState("");
+  const [
+    carregandoProdutos,
+    setCarregandoProdutos,
+  ] = useState(true);
+
+  const [erro, setErro] =
+    useState("");
+
+  const [erroProdutos, setErroProdutos] =
+    useState("");
 
   useEffect(() => {
     async function carregar() {
@@ -140,28 +190,32 @@ export default function LojaPage({
         setCarregando(true);
         setErro("");
 
-        const { id } = await params;
+        const { id } =
+          await params;
 
         if (!id) {
-          setErro("Negócio não encontrado.");
+          setErro(
+            "Negócio não encontrado."
+          );
           return;
         }
 
-        /*
-         * CARREGA O NEGÓCIO
-         */
-        const referencia = doc(
-          db,
-          "lojas_parceiras",
-          id
-        );
+        const referencia =
+          doc(
+            db,
+            "lojas_parceiras",
+            id
+          );
 
-        const snapshot = await getDoc(
-          referencia
-        );
+        const snapshot =
+          await getDoc(
+            referencia
+          );
 
         if (!snapshot.exists()) {
-          setErro("Este negócio não existe.");
+          setErro(
+            "Este negócio não existe."
+          );
           return;
         }
 
@@ -171,7 +225,9 @@ export default function LojaPage({
             unknown
           >;
 
-        if (data.ativo !== true) {
+        if (
+          data.ativo !== true
+        ) {
           setErro(
             "Este negócio ainda não está disponível publicamente."
           );
@@ -179,11 +235,12 @@ export default function LojaPage({
         }
 
         const tipo =
-          typeof data.tipo === "string"
+          typeof data.tipo ===
+          "string"
             ? data.tipo
             : "empresa";
 
-        const tipoValido: TipoNegocio =
+        const tiposValidos: TipoNegocio[] =
           [
             "loja",
             "oficina",
@@ -193,7 +250,12 @@ export default function LojaPage({
             "empresa",
             "tecnologia",
             "outros",
-          ].includes(tipo)
+          ];
+
+        const tipoValido =
+          tiposValidos.includes(
+            tipo as TipoNegocio
+          )
             ? (tipo as TipoNegocio)
             : "empresa";
 
@@ -201,121 +263,171 @@ export default function LojaPage({
           id: snapshot.id,
 
           nome:
-            typeof data.nome === "string"
+            typeof data.nome ===
+            "string"
               ? data.nome
-              : typeof data.titulo === "string"
-              ? data.titulo
               : "Negócio",
 
           titulo:
-            typeof data.titulo === "string"
+            typeof data.titulo ===
+            "string"
               ? data.titulo
-              : typeof data.nome === "string"
+              : typeof data.nome ===
+                "string"
               ? data.nome
               : "Negócio",
 
           subtitulo:
-            typeof data.subtitulo === "string"
+            typeof data.subtitulo ===
+            "string"
               ? data.subtitulo
               : "",
 
           descricao:
-            typeof data.descricao === "string"
+            typeof data.descricao ===
+            "string"
               ? data.descricao
               : "",
 
-          tipo: tipoValido,
+          tipo:
+            tipoValido,
 
           telefone:
-            typeof data.telefone === "string"
+            typeof data.telefone ===
+            "string"
               ? data.telefone
               : "",
 
           whatsapp:
-            typeof data.whatsapp === "string"
+            typeof data.whatsapp ===
+            "string"
               ? data.whatsapp
               : "",
 
           imagemUrl:
-            typeof data.imagemUrl === "string"
+            typeof data.imagemUrl ===
+            "string"
               ? data.imagemUrl
               : "",
 
+          bannerUrl:
+            typeof data.bannerUrl ===
+            "string"
+              ? data.bannerUrl
+              : "",
+
+          slogan:
+            typeof data.slogan ===
+            "string"
+              ? data.slogan
+              : "",
+
+          corMarca:
+            typeof data.corMarca ===
+            "string"
+              ? data.corMarca
+              : "#0f172a",
+
           ativo: true,
+
+          mostrarBanner:
+            data.mostrarBanner !==
+            false,
         });
 
-        /*
-         * CARREGA OS PRODUTOS DA LOJA
-         */
         try {
           setCarregandoProdutos(true);
           setErroProdutos("");
 
           const produtosRef =
-            collection(db, "produtos");
+            collection(
+              db,
+              "produtos"
+            );
 
           const consultaProdutos =
             query(
               produtosRef,
-              where("lojaId", "==", id),
-              where("ativo", "==", true)
+              where(
+                "lojaId",
+                "==",
+                id
+              )
             );
 
-          const produtosSnapshot =
+          const snapshotProdutos =
             await getDocs(
               consultaProdutos
             );
 
-          const lista: Produto[] = [];
+          const lista:
+            Produto[] = [];
 
-          for (const documento of produtosSnapshot.docs) {
+          for (
+            const produtoDoc
+            of snapshotProdutos.docs
+          ) {
             const dados =
-              documento.data() as Record<
+              produtoDoc.data() as Record<
                 string,
                 unknown
               >;
 
+            if (
+              dados.ativo !== true
+            ) {
+              continue;
+            }
+
             lista.push({
-              id: documento.id,
+              id:
+                produtoDoc.id,
 
               lojaId:
-                typeof dados.lojaId === "string"
+                typeof dados.lojaId ===
+                "string"
                   ? dados.lojaId
                   : id,
 
               nome:
-                typeof dados.nome === "string"
+                typeof dados.nome ===
+                "string"
                   ? dados.nome
                   : "",
 
               descricao:
-                typeof dados.descricao === "string"
+                typeof dados.descricao ===
+                "string"
                   ? dados.descricao
                   : "",
 
               preco:
-                typeof dados.preco === "number"
+                typeof dados.preco ===
+                "number"
                   ? dados.preco
                   : 0,
 
               imagemUrl:
-                typeof dados.imagemUrl === "string"
+                typeof dados.imagemUrl ===
+                "string"
                   ? dados.imagemUrl
                   : "",
 
-              ativo:
-                dados.ativo === true,
+              ativo: true,
             });
           }
 
-          lista.sort((a, b) =>
-            a.nome.localeCompare(
-              b.nome,
-              "pt-BR"
-            )
+          lista.sort(
+            (a, b) =>
+              a.nome.localeCompare(
+                b.nome,
+                "pt-BR"
+              )
           );
 
-          setProdutos(lista);
+          setProdutos(
+            lista
+          );
         } catch (error) {
           console.error(
             "Erro ao carregar produtos:",
@@ -323,10 +435,12 @@ export default function LojaPage({
           );
 
           setErroProdutos(
-            "Não foi possível carregar os produtos desta loja."
+            "Não foi possível carregar os produtos ou serviços."
           );
         } finally {
-          setCarregandoProdutos(false);
+          setCarregandoProdutos(
+            false
+          );
         }
       } catch (error) {
         console.error(
@@ -338,7 +452,9 @@ export default function LojaPage({
           "Não foi possível carregar este negócio."
         );
       } finally {
-        setCarregando(false);
+        setCarregando(
+          false
+        );
       }
     }
 
@@ -348,7 +464,40 @@ export default function LojaPage({
   function limparWhatsApp(
     numero: string
   ) {
-    return numero.replace(/\D/g, "");
+    return numero.replace(
+      /\D/g,
+      ""
+    );
+  }
+
+  function abrirWhatsApp(
+    mensagem: string
+  ) {
+    if (!negocio) {
+      return;
+    }
+
+    const numero =
+      limparWhatsApp(
+        negocio.whatsapp
+      );
+
+    if (!numero) {
+      return;
+    }
+
+    const numeroBrasil =
+      numero.startsWith("55")
+        ? numero
+        : `55${numero}`;
+
+    window.open(
+      `https://wa.me/${numeroBrasil}?text=${encodeURIComponent(
+        mensagem
+      )}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
   }
 
   if (carregando) {
@@ -369,7 +518,10 @@ export default function LojaPage({
     );
   }
 
-  if (erro || !negocio) {
+  if (
+    erro ||
+    !negocio
+  ) {
     return (
       <main className="min-h-screen bg-slate-100 px-4 py-8">
 
@@ -402,8 +554,9 @@ export default function LojaPage({
   }
 
   const tipoInfo =
-    TIPOS[negocio.tipo] ||
-    TIPOS.empresa;
+    TIPOS[
+      negocio.tipo
+    ] || TIPOS.empresa;
 
   const whatsappNumero =
     limparWhatsApp(
@@ -415,58 +568,109 @@ export default function LojaPage({
       negocio.telefone
     );
 
+  const cor =
+    negocio.corMarca ||
+    "#0f172a";
+
   return (
     <main className="min-h-screen bg-slate-100 pb-12">
 
-      {/* TOPO DA PÁGINA */}
-      <section className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-800 text-white">
+      {/* BANNER / IDENTIDADE DO ANUNCIANTE */}
 
-        <div className="mx-auto max-w-5xl px-4 py-5">
+      <section
+        className="relative overflow-hidden text-white"
+        style={{
+          backgroundColor: cor,
+        }}
+      >
+
+        {negocio.mostrarBanner &&
+          negocio.bannerUrl && (
+            <div className="absolute inset-0">
+
+              <img
+                src={negocio.bannerUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+
+              <div className="absolute inset-0 bg-black/55" />
+
+            </div>
+          )}
+
+        <div className="relative mx-auto max-w-5xl px-4 py-5">
 
           <Link
             href="/"
-            className="inline-flex text-xs font-bold text-blue-100 hover:text-white"
+            className="inline-flex text-xs font-bold text-white/80 hover:text-white"
           >
             ← Sobradão 360
           </Link>
 
-          <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-center">
+          <div className="mt-8 flex flex-col gap-5 sm:flex-row sm:items-center">
 
-            {/* IMAGEM PRINCIPAL */}
-            <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-white/20 bg-white shadow-lg">
+            <div
+              className="
+                flex
+                h-28
+                w-28
+                shrink-0
+                items-center
+                justify-center
+                overflow-hidden
+                rounded-3xl
+                border-4
+                border-white/30
+                bg-white
+                shadow-xl
+              "
+            >
 
               {negocio.imagemUrl ? (
                 <img
                   src={negocio.imagemUrl}
                   alt={negocio.nome}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain p-2"
                 />
               ) : (
-                <span className="text-4xl">
+                <span className="text-5xl">
                   {tipoInfo.icon}
                 </span>
               )}
 
             </div>
 
-            {/* INFORMAÇÕES */}
-            <div>
+            <div className="min-w-0">
 
               <div className="flex flex-wrap items-center gap-2">
 
-                <span className="rounded-full bg-amber-400 px-3 py-1 text-[10px] font-black uppercase text-blue-950">
+                <span
+                  className="rounded-full px-3 py-1 text-[10px] font-black uppercase"
+                  style={{
+                    backgroundColor:
+                      "rgba(255,255,255,.9)",
+                    color: cor,
+                  }}
+                >
                   {tipoInfo.icon}{" "}
                   {tipoInfo.nome}
                 </span>
 
               </div>
 
-              <h1 className="mt-2 text-3xl font-black">
+              <h1 className="mt-3 text-3xl font-black md:text-4xl">
                 {negocio.titulo}
               </h1>
 
+              {negocio.slogan && (
+                <p className="mt-2 text-base font-bold text-white">
+                  {negocio.slogan}
+                </p>
+              )}
+
               {negocio.subtitulo && (
-                <p className="mt-1 text-sm text-blue-100">
+                <p className="mt-1 text-sm text-white/80">
                   {negocio.subtitulo}
                 </p>
               )}
@@ -482,6 +686,7 @@ export default function LojaPage({
       <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
 
         {/* SOBRE */}
+
         <section className="rounded-3xl bg-white p-5 shadow-sm">
 
           <h2 className="text-sm font-black text-slate-900">
@@ -501,6 +706,7 @@ export default function LojaPage({
         </section>
 
         {/* CONTATO */}
+
         <section className="rounded-3xl bg-white p-5 shadow-sm">
 
           <h2 className="text-sm font-black text-slate-900">
@@ -533,11 +739,14 @@ export default function LojaPage({
             )}
 
             {whatsappNumero && (
-              <a
-                href={`https://wa.me/55${whatsappNumero}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-emerald-300 hover:bg-emerald-50"
+              <button
+                type="button"
+                onClick={() =>
+                  abrirWhatsApp(
+                    `Olá! Vi a página de ${negocio.nome} no Sobradão 360 e gostaria de mais informações.`
+                  )
+                }
+                className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left transition hover:bg-emerald-100"
               >
 
                 <span className="text-2xl">
@@ -545,7 +754,7 @@ export default function LojaPage({
                 </span>
 
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-slate-400">
+                  <p className="text-[10px] font-bold uppercase text-emerald-600">
                     WhatsApp
                   </p>
 
@@ -554,30 +763,31 @@ export default function LojaPage({
                   </p>
                 </div>
 
-              </a>
+              </button>
             )}
 
           </div>
 
-          {!telefoneNumero &&
-            !whatsappNumero && (
-              <p className="mt-3 text-xs text-slate-400">
-                Os contatos ainda não foram cadastrados.
-              </p>
-            )}
-
         </section>
 
         {/* PRODUTOS / SERVIÇOS */}
+
         <section className="rounded-3xl bg-white p-5 shadow-sm">
 
           <div className="flex items-center gap-3">
 
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-2xl">
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl"
+              style={{
+                backgroundColor:
+                  `${cor}15`,
+              }}
+            >
               {tipoInfo.icon}
             </div>
 
             <div>
+
               <h2 className="text-lg font-black text-slate-900">
                 {tipoInfo.titulo}
               </h2>
@@ -585,18 +795,17 @@ export default function LojaPage({
               <p className="text-xs text-slate-500">
                 {tipoInfo.descricao}
               </p>
+
             </div>
 
           </div>
 
-          {/* ERRO DOS PRODUTOS */}
           {erroProdutos && (
             <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-bold text-red-700">
               {erroProdutos}
             </div>
           )}
 
-          {/* CARREGANDO */}
           {carregandoProdutos ? (
 
             <div className="mt-5 rounded-2xl bg-slate-50 p-8 text-center">
@@ -606,14 +815,13 @@ export default function LojaPage({
               </div>
 
               <p className="mt-2 text-xs font-bold text-slate-500">
-                Carregando produtos...
+                Carregando produtos e serviços...
               </p>
 
             </div>
 
           ) : produtos.length === 0 ? (
 
-            /* NENHUM PRODUTO */
             <div className="mt-5 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-8 text-center">
 
               <div className="text-4xl">
@@ -634,39 +842,31 @@ export default function LojaPage({
 
           ) : (
 
-            /* LISTA DE PRODUTOS */
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
               {produtos.map(
                 (produto) => (
-
                   <article
                     key={produto.id}
                     className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                   >
 
-                    {/* IMAGEM */}
                     <div className="h-48 bg-slate-100">
 
                       {produto.imagemUrl ? (
-
                         <img
                           src={produto.imagemUrl}
                           alt={produto.nome}
                           className="h-full w-full object-cover"
                         />
-
                       ) : (
-
                         <div className="flex h-full items-center justify-center text-5xl">
                           {tipoInfo.icon}
                         </div>
-
                       )}
 
                     </div>
 
-                    {/* INFORMAÇÕES */}
                     <div className="p-4">
 
                       <h3 className="text-base font-black text-slate-900">
@@ -681,23 +881,34 @@ export default function LojaPage({
 
                       <div className="mt-4 flex items-center justify-between gap-3">
 
-                        <p className="text-lg font-black text-blue-900">
+                        <p
+                          className="text-lg font-black"
+                          style={{
+                            color: cor,
+                          }}
+                        >
                           {formatarPreco(
                             produto.preco
                           )}
                         </p>
 
                         {whatsappNumero && (
-                          <a
-                            href={`https://wa.me/55${whatsappNumero}?text=${encodeURIComponent(
-                              `Olá! Vi o item "${produto.nome}" no Sobradão 360 e gostaria de mais informações.`
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="rounded-xl bg-emerald-600 px-3 py-2 text-[10px] font-black text-white hover:bg-emerald-700"
+                          <button
+                            type="button"
+                            onClick={() =>
+                              abrirWhatsApp(
+                                `Olá! Vi o item "${produto.nome}" no Sobradão 360 e gostaria de mais informações.`
+                              )
+                            }
+                            className="rounded-xl px-3 py-2 text-[10px] font-black text-white hover:opacity-90"
+                            style={{
+                              backgroundColor:
+                                cor,
+                            }}
                           >
-                            📱 Consultar
-                          </a>
+                            📱{" "}
+                            {tipoInfo.botao}
+                          </button>
                         )}
 
                       </div>
@@ -705,7 +916,6 @@ export default function LojaPage({
                     </div>
 
                   </article>
-
                 )
               )}
 
@@ -715,42 +925,23 @@ export default function LojaPage({
 
         </section>
 
-        {/* PUBLICIDADE */}
-        <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5">
+        {/* BANNER SECUNDÁRIO */}
 
-          <div className="flex items-center gap-3">
+        {negocio.mostrarBanner &&
+          negocio.bannerUrl && (
+            <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
 
-            <div className="text-2xl">
-              📢
-            </div>
+              <img
+                src={negocio.bannerUrl}
+                alt={`Banner ${negocio.nome}`}
+                className="max-h-[350px] w-full object-cover"
+              />
 
-            <div>
-              <h2 className="text-sm font-black text-blue-950">
-                Publicidade
-              </h2>
-
-              <p className="text-[11px] text-slate-600">
-                Espaço para banners deste anunciante.
-              </p>
-            </div>
-
-          </div>
-
-          <div className="mt-4 rounded-2xl border-2 border-dashed border-amber-300 bg-white p-6 text-center">
-
-            <p className="text-xs font-black text-slate-700">
-              Banner do anunciante
-            </p>
-
-            <p className="mt-1 text-[10px] text-slate-400">
-              Será gerenciado pelo painel do anunciante.
-            </p>
-
-          </div>
-
-        </section>
+            </section>
+          )}
 
         {/* RODAPÉ */}
+
         <div className="text-center">
 
           <Link

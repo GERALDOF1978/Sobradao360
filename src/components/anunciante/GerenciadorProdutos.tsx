@@ -49,9 +49,7 @@ function converterPreco(valor: string): number {
     .replace(/\./g, "")
     .replace(",", ".");
 
-  const numero = Number(limpo);
-
-  return numero;
+  return Number(limpo);
 }
 
 function formatarPreco(valor: number): string {
@@ -61,15 +59,148 @@ function formatarPreco(valor: number): string {
   });
 }
 
+/**
+ * Define como o painel deve chamar o item
+ * conforme o tipo do anunciante.
+ */
 function nomeTipo(tipo: string): string {
-  if (tipo === "loja") return "produto";
-  if (tipo === "alimentacao") return "produto";
-  if (tipo === "oficina") return "serviço";
-  if (tipo === "profissional") return "serviço";
-  if (tipo === "eventos") return "serviço";
-  if (tipo === "tecnologia") return "produto ou serviço";
+  switch (tipo) {
+    case "loja":
+      return "produto";
 
-  return "produto ou serviço";
+    case "alimentacao":
+      return "produto";
+
+    case "oficina":
+      return "serviço";
+
+    case "profissional":
+      return "serviço";
+
+    case "eventos":
+      return "serviço";
+
+    case "tecnologia":
+      return "produto ou serviço";
+
+    case "empresa":
+      return "produto ou serviço";
+
+    case "outros":
+      return "produto ou serviço";
+
+    default:
+      return "produto ou serviço";
+  }
+}
+
+/**
+ * Título principal da área.
+ */
+function tituloCatalogo(tipo: string): string {
+  switch (tipo) {
+    case "loja":
+      return "🛍️ Meus produtos";
+
+    case "alimentacao":
+      return "🍰 Meu cardápio";
+
+    case "oficina":
+      return "🔧 Meus serviços";
+
+    case "profissional":
+      return "👷 Meus serviços";
+
+    case "eventos":
+      return "🎉 Meus serviços e pacotes";
+
+    case "tecnologia":
+      return "💻 Produtos e serviços";
+
+    case "empresa":
+      return "🏢 Produtos e serviços";
+
+    default:
+      return "📦 Produtos e serviços";
+  }
+}
+
+/**
+ * Texto explicativo conforme o tipo.
+ */
+function descricaoCatalogo(tipo: string): string {
+  switch (tipo) {
+    case "loja":
+      return "Cadastre os produtos da sua loja com foto, descrição e preço.";
+
+    case "alimentacao":
+      return "Cadastre os itens do seu cardápio, como lanches, bolos, salgados e refeições.";
+
+    case "oficina":
+      return "Cadastre os serviços realizados pela oficina. Depois podemos acrescentar peças e produtos.";
+
+    case "profissional":
+      return "Cadastre os serviços que você oferece e informe o valor ou preço inicial.";
+
+    case "eventos":
+      return "Cadastre serviços, pacotes, estruturas e opções para eventos.";
+
+    case "tecnologia":
+      return "Cadastre produtos, equipamentos, serviços ou soluções de tecnologia.";
+
+    default:
+      return "Cadastre o que sua empresa oferece aos moradores.";
+  }
+}
+
+/**
+ * Placeholder do nome.
+ */
+function placeholderNome(tipo: string): string {
+  switch (tipo) {
+    case "loja":
+      return "Ex.: Camiseta masculina";
+
+    case "alimentacao":
+      return "Ex.: Bolo de chocolate";
+
+    case "oficina":
+      return "Ex.: Troca de óleo";
+
+    case "profissional":
+      return "Ex.: Instalação de piso";
+
+    case "eventos":
+      return "Ex.: Decoração para aniversário";
+
+    case "tecnologia":
+      return "Ex.: Manutenção de computador";
+
+    case "empresa":
+      return "Ex.: Produto ou serviço";
+
+    default:
+      return "Ex.: Produto ou serviço";
+  }
+}
+
+/**
+ * Texto do preço conforme o tipo.
+ */
+function textoPreco(tipo: string): string {
+  switch (tipo) {
+    case "oficina":
+      return "Para serviços, informe o valor ou preço inicial.";
+
+    case "profissional":
+      return "Pode ser um preço inicial. O cliente poderá solicitar orçamento.";
+
+    case "eventos":
+      return "Pode ser o preço inicial do pacote ou serviço.";
+
+    default:
+      return "Informe o preço que será exibido para os moradores.";
+  }
 }
 
 export default function GerenciadorProdutos({
@@ -77,43 +208,70 @@ export default function GerenciadorProdutos({
   tipoNegocio,
 }: GerenciadorProdutosProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [carregando, setCarregando] = useState(true);
-  const [salvando, setSalvando] = useState(false);
 
-  const [erro, setErro] = useState("");
-  const [mensagem, setMensagem] = useState("");
+  const [carregando, setCarregando] =
+    useState(true);
 
-  const [mostrarFormulario, setMostrarFormulario] = useState(false);
-  const [produtoEditando, setProdutoEditando] = useState<string | null>(null);
+  const [salvando, setSalvando] =
+    useState(false);
 
-  const [nome, setNome] = useState("");
-  const [descricao, setDescricao] = useState("");
-  const [preco, setPreco] = useState("");
+  const [erro, setErro] =
+    useState("");
 
-  const [imagemUrl, setImagemUrl] = useState("");
-  const [arquivoImagem, setArquivoImagem] = useState<File | null>(null);
-  const [previewImagem, setPreviewImagem] = useState("");
+  const [mensagem, setMensagem] =
+    useState("");
 
-  const [ativo, setAtivo] = useState(true);
+  const [mostrarFormulario, setMostrarFormulario] =
+    useState(false);
+
+  const [produtoEditando, setProdutoEditando] =
+    useState<string | null>(null);
+
+  const [nome, setNome] =
+    useState("");
+
+  const [descricao, setDescricao] =
+    useState("");
+
+  const [preco, setPreco] =
+    useState("");
+
+  const [imagemUrl, setImagemUrl] =
+    useState("");
+
+  const [arquivoImagem, setArquivoImagem] =
+    useState<File | null>(null);
+
+  const [previewImagem, setPreviewImagem] =
+    useState("");
+
+  const [ativo, setAtivo] =
+    useState(true);
 
   async function carregarProdutos() {
     try {
       setCarregando(true);
       setErro("");
 
-      const referencia = collection(db, "produtos");
+      const referencia =
+        collection(db, "produtos");
 
       const consulta = query(
         referencia,
         where("lojaId", "==", lojaId)
       );
 
-      const snapshot = await getDocs(consulta);
+      const snapshot =
+        await getDocs(consulta);
 
       const lista: Produto[] = [];
 
       for (const documento of snapshot.docs) {
-        const dados = documento.data() as Record<string, unknown>;
+        const dados =
+          documento.data() as Record<
+            string,
+            unknown
+          >;
 
         lista.push({
           id: documento.id,
@@ -143,12 +301,16 @@ export default function GerenciadorProdutos({
               ? dados.imagemUrl
               : "",
 
-          ativo: dados.ativo === true,
+          ativo:
+            dados.ativo === true,
         });
       }
 
       lista.sort((a, b) =>
-        a.nome.localeCompare(b.nome, "pt-BR")
+        a.nome.localeCompare(
+          b.nome,
+          "pt-BR"
+        )
       );
 
       setProdutos(lista);
@@ -186,14 +348,22 @@ export default function GerenciadorProdutos({
 
     setErro("");
     setMensagem("");
+
     setMostrarFormulario(true);
   }
 
-  function editarProduto(produto: Produto) {
-    setProdutoEditando(produto.id);
+  function editarProduto(
+    produto: Produto
+  ) {
+    setProdutoEditando(
+      produto.id
+    );
 
     setNome(produto.nome);
-    setDescricao(produto.descricao);
+
+    setDescricao(
+      produto.descricao
+    );
 
     setPreco(
       produto.preco
@@ -201,11 +371,19 @@ export default function GerenciadorProdutos({
         .replace(".", ",")
     );
 
-    setImagemUrl(produto.imagemUrl);
-    setPreviewImagem(produto.imagemUrl);
+    setImagemUrl(
+      produto.imagemUrl
+    );
+
+    setPreviewImagem(
+      produto.imagemUrl
+    );
 
     setArquivoImagem(null);
-    setAtivo(produto.ativo);
+
+    setAtivo(
+      produto.ativo
+    );
 
     setErro("");
     setMensagem("");
@@ -228,7 +406,11 @@ export default function GerenciadorProdutos({
       return;
     }
 
-    if (!arquivo.type.startsWith("image/")) {
+    if (
+      !arquivo.type.startsWith(
+        "image/"
+      )
+    ) {
       setErro(
         "Escolha um arquivo de imagem."
       );
@@ -236,11 +418,13 @@ export default function GerenciadorProdutos({
       return;
     }
 
-    // A API aceita até 10 MB.
     const tamanhoMaximo =
       10 * 1024 * 1024;
 
-    if (arquivo.size > tamanhoMaximo) {
+    if (
+      arquivo.size >
+      tamanhoMaximo
+    ) {
       setErro(
         "A imagem deve ter no máximo 10 MB."
       );
@@ -248,10 +432,14 @@ export default function GerenciadorProdutos({
       return;
     }
 
-    setArquivoImagem(arquivo);
+    setArquivoImagem(
+      arquivo
+    );
 
     const url =
-      URL.createObjectURL(arquivo);
+      URL.createObjectURL(
+        arquivo
+      );
 
     setPreviewImagem(url);
 
@@ -261,19 +449,25 @@ export default function GerenciadorProdutos({
   async function enviarImagem(
     arquivo: File
   ): Promise<string> {
-    const dados = new FormData();
+    const dados =
+      new FormData();
 
-    dados.append("file", arquivo);
-
-    const resposta = await fetch(
-      "/api/upload-image",
-      {
-        method: "POST",
-        body: dados,
-      }
+    dados.append(
+      "file",
+      arquivo
     );
 
-    let resultado: ResultadoUpload;
+    const resposta =
+      await fetch(
+        "/api/upload-image",
+        {
+          method: "POST",
+          body: dados,
+        }
+      );
+
+    let resultado:
+      ResultadoUpload;
 
     try {
       resultado =
@@ -310,7 +504,9 @@ export default function GerenciadorProdutos({
     }
 
     if (!preco.trim()) {
-      setErro("Informe o preço.");
+      setErro(
+        "Informe o preço."
+      );
 
       return;
     }
@@ -337,23 +533,6 @@ export default function GerenciadorProdutos({
       let imagemFinal =
         imagemUrl.trim();
 
-      /*
-       * Se o comerciante escolheu uma nova imagem,
-       * ela passa pela API:
-       *
-       * imagem
-       * ↓
-       * /api/upload-image
-       * ↓
-       * Sharp
-       * ↓
-       * WebP
-       * ↓
-       * ImgBB
-       * ↓
-       * URL
-       */
-
       if (arquivoImagem) {
         imagemFinal =
           await enviarImagem(
@@ -364,12 +543,14 @@ export default function GerenciadorProdutos({
       const dados = {
         lojaId,
 
-        nome: nome.trim(),
+        nome:
+          nome.trim(),
 
         descricao:
           descricao.trim(),
 
-        preco: valor,
+        preco:
+          valor,
 
         imagemUrl:
           imagemFinal,
@@ -381,11 +562,12 @@ export default function GerenciadorProdutos({
       };
 
       if (produtoEditando) {
-        const referencia = doc(
-          db,
-          "produtos",
-          produtoEditando
-        );
+        const referencia =
+          doc(
+            db,
+            "produtos",
+            produtoEditando
+          );
 
         await updateDoc(
           referencia,
@@ -393,26 +575,36 @@ export default function GerenciadorProdutos({
         );
 
         setMensagem(
-          "Produto atualizado com sucesso."
+          `${nomeTipo(
+            tipoNegocio
+          )} atualizado com sucesso.`
         );
       } else {
         await addDoc(
-          collection(db, "produtos"),
+          collection(
+            db,
+            "produtos"
+          ),
           {
             ...dados,
+
             criadoEm:
               serverTimestamp(),
           }
         );
 
         setMensagem(
-          "Produto cadastrado com sucesso."
+          `${nomeTipo(
+            tipoNegocio
+          )} cadastrado com sucesso.`
         );
       }
 
       limparFormulario();
 
-      setMostrarFormulario(false);
+      setMostrarFormulario(
+        false
+      );
 
       await carregarProdutos();
     } catch (error) {
@@ -427,7 +619,7 @@ export default function GerenciadorProdutos({
           : "Erro desconhecido.";
 
       setErro(
-        `Não foi possível salvar o produto. ${mensagemErro}`
+        `Não foi possível salvar. ${mensagemErro}`
       );
     } finally {
       setSalvando(false);
@@ -459,7 +651,9 @@ export default function GerenciadorProdutos({
       );
 
       setMensagem(
-        "Produto excluído com sucesso."
+        `${nomeTipo(
+          tipoNegocio
+        )} excluído com sucesso.`
       );
 
       await carregarProdutos();
@@ -470,7 +664,7 @@ export default function GerenciadorProdutos({
       );
 
       setErro(
-        "Não foi possível excluir o produto."
+        "Não foi possível excluir o item."
       );
     }
   }
@@ -489,7 +683,9 @@ export default function GerenciadorProdutos({
           produto.id
         ),
         {
-          ativo: !produto.ativo,
+          ativo:
+            !produto.ativo,
+
           atualizadoEm:
             serverTimestamp(),
         }
@@ -497,8 +693,8 @@ export default function GerenciadorProdutos({
 
       setMensagem(
         produto.ativo
-          ? "Produto ocultado."
-          : "Produto publicado."
+          ? "Item ocultado."
+          : "Item publicado."
       );
 
       await carregarProdutos();
@@ -517,31 +713,42 @@ export default function GerenciadorProdutos({
   return (
     <section className="rounded-3xl bg-white p-5 shadow-sm">
 
+      {/* CABEÇALHO */}
+
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 
         <div>
+
           <h2 className="text-lg font-black text-slate-900">
-            📦 Meus produtos e serviços
+            {tituloCatalogo(
+              tipoNegocio
+            )}
           </h2>
 
-          <p className="mt-1 text-xs leading-5 text-slate-500">
-            Cadastre o que você oferece.
-            Depois os moradores poderão
-            montar um carrinho e enviar o
-            pedido para você.
+          <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
+            {descricaoCatalogo(
+              tipoNegocio
+            )}
           </p>
+
         </div>
 
         <button
           type="button"
-          onClick={abrirNovoProduto}
+          onClick={
+            abrirNovoProduto
+          }
           className="rounded-xl bg-blue-900 px-4 py-3 text-xs font-black text-white hover:bg-blue-800"
         >
           + Adicionar{" "}
-          {nomeTipo(tipoNegocio)}
+          {nomeTipo(
+            tipoNegocio
+          )}
         </button>
 
       </div>
+
+      {/* MENSAGEM */}
 
       {mensagem && (
         <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-bold text-emerald-700">
@@ -549,11 +756,15 @@ export default function GerenciadorProdutos({
         </div>
       )}
 
+      {/* ERRO */}
+
       {erro && (
         <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-bold text-red-700">
           {erro}
         </div>
       )}
+
+      {/* FORMULÁRIO */}
 
       {mostrarFormulario && (
         <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-5">
@@ -561,24 +772,33 @@ export default function GerenciadorProdutos({
           <div className="flex items-center justify-between">
 
             <div>
+
               <h3 className="text-base font-black text-blue-950">
+
                 {produtoEditando
                   ? "✏️ Editar"
                   : "➕ Novo"}{" "}
-                {nomeTipo(tipoNegocio)}
+
+                {nomeTipo(
+                  tipoNegocio
+                )}
+
               </h3>
 
               <p className="mt-1 text-xs text-blue-700">
                 Essas informações aparecerão
-                na página pública da sua empresa.
+                na página pública do anunciante.
               </p>
+
             </div>
 
             <button
               type="button"
               onClick={() => {
                 limparFormulario();
-                setMostrarFormulario(false);
+                setMostrarFormulario(
+                  false
+                );
               }}
               className="rounded-lg px-3 py-2 text-xs font-black text-slate-500 hover:bg-white"
             >
@@ -589,9 +809,12 @@ export default function GerenciadorProdutos({
 
           <div className="mt-5 grid gap-5 md:grid-cols-2">
 
+            {/* DADOS */}
+
             <div className="space-y-4">
 
               <div>
+
                 <label className="text-xs font-black text-slate-700">
                   Nome *
                 </label>
@@ -603,17 +826,16 @@ export default function GerenciadorProdutos({
                       evento.target.value
                     )
                   }
-                  placeholder={
-                    tipoNegocio === "oficina" ||
-                    tipoNegocio === "profissional"
-                      ? "Ex.: Troca de óleo"
-                      : "Ex.: Camiseta masculina"
-                  }
+                  placeholder={placeholderNome(
+                    tipoNegocio
+                  )}
                   className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500"
                 />
+
               </div>
 
               <div>
+
                 <label className="text-xs font-black text-slate-700">
                   Descrição
                 </label>
@@ -626,12 +848,22 @@ export default function GerenciadorProdutos({
                     )
                   }
                   rows={4}
-                  placeholder="Descreva o produto ou serviço..."
+                  placeholder={
+                    tipoNegocio ===
+                    "alimentacao"
+                      ? "Ingredientes, tamanho, sabores, detalhes..."
+                      : tipoNegocio ===
+                        "oficina"
+                      ? "Explique o serviço realizado..."
+                      : "Descreva o produto ou serviço..."
+                  }
                   className="mt-1 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500"
                 />
+
               </div>
 
               <div>
+
                 <label className="text-xs font-black text-slate-700">
                   Preço *
                 </label>
@@ -649,10 +881,11 @@ export default function GerenciadorProdutos({
                 />
 
                 <p className="mt-1 text-[10px] text-slate-400">
-                  Para serviços, pode ser o
-                  preço inicial ou valor de
-                  referência.
+                  {textoPreco(
+                    tipoNegocio
+                  )}
                 </p>
+
               </div>
 
               <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-white p-4">
@@ -669,19 +902,23 @@ export default function GerenciadorProdutos({
                 />
 
                 <span>
+
                   <span className="block text-xs font-black text-slate-800">
-                    Publicar produto
+                    Publicar
                   </span>
 
                   <span className="block text-[10px] text-slate-500">
-                    Se desmarcado, ficará
+                    Se desmarcado, o item ficará
                     oculto para os moradores.
                   </span>
+
                 </span>
 
               </label>
 
             </div>
+
+            {/* IMAGEM */}
 
             <div>
 
@@ -692,6 +929,7 @@ export default function GerenciadorProdutos({
               <div className="mt-1 rounded-2xl border-2 border-dashed border-slate-300 bg-white p-4">
 
                 {previewImagem ? (
+
                   <div className="overflow-hidden rounded-xl">
 
                     <img
@@ -701,7 +939,9 @@ export default function GerenciadorProdutos({
                     />
 
                   </div>
+
                 ) : (
+
                   <div className="flex h-56 items-center justify-center rounded-xl bg-slate-50">
 
                     <div className="text-center">
@@ -715,13 +955,14 @@ export default function GerenciadorProdutos({
                       </p>
 
                       <p className="mt-1 text-[10px] text-slate-400">
-                        Você pode enviar uma arte
-                        pronta do seu produto.
+                        Você pode enviar uma
+                        foto ou arte do item.
                       </p>
 
                     </div>
 
                   </div>
+
                 )}
 
                 <label className="mt-4 block cursor-pointer rounded-xl bg-blue-900 px-4 py-3 text-center text-xs font-black text-white hover:bg-blue-800">
@@ -731,7 +972,9 @@ export default function GerenciadorProdutos({
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={selecionarImagem}
+                    onChange={
+                      selecionarImagem
+                    }
                     className="hidden"
                   />
 
@@ -752,6 +995,8 @@ export default function GerenciadorProdutos({
             </div>
 
           </div>
+
+          {/* BOTÕES */}
 
           <div className="mt-5 flex flex-col gap-2 sm:flex-row">
 
@@ -774,7 +1019,9 @@ export default function GerenciadorProdutos({
               type="button"
               onClick={() => {
                 limparFormulario();
-                setMostrarFormulario(false);
+                setMostrarFormulario(
+                  false
+                );
               }}
               className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-black text-slate-600"
             >
@@ -785,6 +1032,8 @@ export default function GerenciadorProdutos({
 
         </div>
       )}
+
+      {/* LISTAGEM */}
 
       <div className="mt-5">
 
@@ -797,7 +1046,7 @@ export default function GerenciadorProdutos({
             </div>
 
             <p className="mt-2 text-xs font-bold text-slate-500">
-              Carregando produtos...
+              Carregando...
             </p>
 
           </div>
@@ -807,19 +1056,31 @@ export default function GerenciadorProdutos({
           <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-8 text-center">
 
             <div className="text-4xl">
-              📦
+              {tipoNegocio ===
+              "alimentacao"
+                ? "🍰"
+                : tipoNegocio ===
+                  "oficina"
+                ? "🔧"
+                : tipoNegocio ===
+                  "profissional"
+                ? "👷"
+                : tipoNegocio ===
+                  "eventos"
+                ? "🎉"
+                : "📦"}
             </div>
 
             <p className="mt-3 text-sm font-black text-slate-800">
-              Você ainda não cadastrou
-              nenhum{" "}
-              {nomeTipo(tipoNegocio)}.
+              Você ainda não cadastrou nenhum{" "}
+              {nomeTipo(
+                tipoNegocio
+              )}.
             </p>
 
             <p className="mt-1 text-xs text-slate-500">
               Adicione seu primeiro item
-              para começar a montar seu
-              catálogo.
+              para começar seu catálogo.
             </p>
 
           </div>
@@ -828,118 +1089,152 @@ export default function GerenciadorProdutos({
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
-            {produtos.map((produto) => (
+            {produtos.map(
+              (produto) => (
 
-              <div
-                key={produto.id}
-                className={`overflow-hidden rounded-2xl border bg-white ${
-                  produto.ativo
-                    ? "border-slate-200"
-                    : "border-amber-200 opacity-70"
-                }`}
-              >
+                <div
+                  key={
+                    produto.id
+                  }
+                  className={`overflow-hidden rounded-2xl border bg-white ${
+                    produto.ativo
+                      ? "border-slate-200"
+                      : "border-amber-200 opacity-70"
+                  }`}
+                >
 
-                <div className="h-48 bg-slate-100">
+                  {/* IMAGEM */}
 
-                  {produto.imagemUrl ? (
+                  <div className="h-48 bg-slate-100">
 
-                    <img
-                      src={produto.imagemUrl}
-                      alt={produto.nome}
-                      className="h-full w-full object-cover"
-                    />
+                    {produto.imagemUrl ? (
 
-                  ) : (
+                      <img
+                        src={
+                          produto.imagemUrl
+                        }
+                        alt={
+                          produto.nome
+                        }
+                        className="h-full w-full object-cover"
+                      />
 
-                    <div className="flex h-full items-center justify-center text-5xl">
-                      📦
+                    ) : (
+
+                      <div className="flex h-full items-center justify-center text-5xl">
+
+                        {tipoNegocio ===
+                        "alimentacao"
+                          ? "🍰"
+                          : tipoNegocio ===
+                            "oficina"
+                          ? "🔧"
+                          : tipoNegocio ===
+                            "profissional"
+                          ? "👷"
+                          : tipoNegocio ===
+                            "eventos"
+                          ? "🎉"
+                          : "📦"}
+
+                      </div>
+
+                    )}
+
+                  </div>
+
+                  {/* INFORMAÇÕES */}
+
+                  <div className="p-4">
+
+                    <div className="flex items-start justify-between gap-2">
+
+                      <h3 className="text-sm font-black text-slate-900">
+                        {
+                          produto.nome
+                        }
+                      </h3>
+
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-black ${
+                          produto.ativo
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
+                        {produto.ativo
+                          ? "ATIVO"
+                          : "OCULTO"}
+                      </span>
+
                     </div>
 
-                  )}
+                    {produto.descricao && (
 
-                </div>
+                      <p className="mt-2 line-clamp-3 text-xs leading-5 text-slate-500">
+                        {
+                          produto.descricao
+                        }
+                      </p>
 
-                <div className="p-4">
-
-                  <div className="flex items-start justify-between gap-2">
-
-                    <h3 className="text-sm font-black text-slate-900">
-                      {produto.nome}
-                    </h3>
-
-                    <span
-                      className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-black ${
-                        produto.ativo
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-slate-100 text-slate-500"
-                      }`}
-                    >
-                      {produto.ativo
-                        ? "ATIVO"
-                        : "OCULTO"}
-                    </span>
-
-                  </div>
-
-                  {produto.descricao && (
-                    <p className="mt-2 line-clamp-3 text-xs leading-5 text-slate-500">
-                      {produto.descricao}
-                    </p>
-                  )}
-
-                  <p className="mt-3 text-lg font-black text-blue-900">
-                    {formatarPreco(
-                      produto.preco
                     )}
-                  </p>
 
-                  <div className="mt-4 grid grid-cols-3 gap-2">
+                    <p className="mt-3 text-lg font-black text-blue-900">
+                      {formatarPreco(
+                        produto.preco
+                      )}
+                    </p>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        editarProduto(
-                          produto
-                        )
-                      }
-                      className="rounded-lg bg-blue-50 px-2 py-2 text-[10px] font-black text-blue-800"
-                    >
-                      ✏️ Editar
-                    </button>
+                    {/* AÇÕES */}
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void alterarStatus(
-                          produto
-                        );
-                      }}
-                      className="rounded-lg bg-amber-50 px-2 py-2 text-[10px] font-black text-amber-800"
-                    >
-                      {produto.ativo
-                        ? "Ocultar"
-                        : "Publicar"}
-                    </button>
+                    <div className="mt-4 grid grid-cols-3 gap-2">
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void excluirProduto(
-                          produto
-                        );
-                      }}
-                      className="rounded-lg bg-red-50 px-2 py-2 text-[10px] font-black text-red-700"
-                    >
-                      🗑️ Excluir
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          editarProduto(
+                            produto
+                          )
+                        }
+                        className="rounded-lg bg-blue-50 px-2 py-2 text-[10px] font-black text-blue-800"
+                      >
+                        ✏️ Editar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void alterarStatus(
+                            produto
+                          );
+                        }}
+                        className="rounded-lg bg-amber-50 px-2 py-2 text-[10px] font-black text-amber-800"
+                      >
+                        {produto.ativo
+                          ? "Ocultar"
+                          : "Publicar"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void excluirProduto(
+                            produto
+                          );
+                        }}
+                        className="rounded-lg bg-red-50 px-2 py-2 text-[10px] font-black text-red-700"
+                      >
+                        🗑️ Excluir
+                      </button>
+
+                    </div>
 
                   </div>
 
                 </div>
 
-              </div>
-
-            ))}
+              )
+            )}
 
           </div>
 
