@@ -14,13 +14,7 @@ import {
   where,
 } from "firebase/firestore";
 
-import {
-  getDownloadURL,
-  ref,
-  uploadBytes,
-} from "firebase/storage";
-
-import { db, storage } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 
 type Produto = {
   id: string;
@@ -30,8 +24,6 @@ type Produto = {
   preco: number;
   imagemUrl: string;
   ativo: boolean;
-  criadoEm?: unknown;
-  atualizadoEm?: unknown;
 };
 
 type GerenciadorProdutosProps = {
@@ -39,17 +31,25 @@ type GerenciadorProdutosProps = {
   tipoNegocio: string;
 };
 
+type ResultadoUpload = {
+  success: boolean;
+  url?: string;
+  error?: string;
+};
+
 function converterPreco(valor: string): number {
-  const limpo = valor
+  const texto = valor.trim();
+
+  if (!texto) {
+    return NaN;
+  }
+
+  const limpo = texto
+    .replace(/[R$\s]/g, "")
     .replace(/\./g, "")
-    .replace(",", ".")
-    .replace(/[^\d.]/g, "");
+    .replace(",", ".");
 
   const numero = Number(limpo);
-
-  if (Number.isNaN(numero)) {
-    return 0;
-  }
 
   return numero;
 }
@@ -62,29 +62,12 @@ function formatarPreco(valor: number): string {
 }
 
 function nomeTipo(tipo: string): string {
-  if (tipo === "loja") {
-    return "produto";
-  }
-
-  if (tipo === "alimentacao") {
-    return "produto";
-  }
-
-  if (tipo === "oficina") {
-    return "serviço";
-  }
-
-  if (tipo === "profissional") {
-    return "serviço";
-  }
-
-  if (tipo === "eventos") {
-    return "serviço";
-  }
-
-  if (tipo === "tecnologia") {
-    return "produto ou serviço";
-  }
+  if (tipo === "loja") return "produto";
+  if (tipo === "alimentacao") return "produto";
+  if (tipo === "oficina") return "serviço";
+  if (tipo === "profissional") return "serviço";
+  if (tipo === "eventos") return "serviço";
+  if (tipo === "tecnologia") return "produto ou serviço";
 
   return "produto ou serviço";
 }
@@ -93,81 +76,44 @@ export default function GerenciadorProdutos({
   lojaId,
   tipoNegocio,
 }: GerenciadorProdutosProps) {
-  const [produtos, setProdutos] =
-    useState<Produto[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
 
-  const [carregando, setCarregando] =
-    useState(true);
+  const [erro, setErro] = useState("");
+  const [mensagem, setMensagem] = useState("");
 
-  const [salvando, setSalvando] =
-    useState(false);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [produtoEditando, setProdutoEditando] = useState<string | null>(null);
 
-  const [erro, setErro] =
-    useState("");
+  const [nome, setNome] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [preco, setPreco] = useState("");
 
-  const [mensagem, setMensagem] =
-    useState("");
+  const [imagemUrl, setImagemUrl] = useState("");
+  const [arquivoImagem, setArquivoImagem] = useState<File | null>(null);
+  const [previewImagem, setPreviewImagem] = useState("");
 
-  const [mostrarFormulario, setMostrarFormulario] =
-    useState(false);
-
-  const [produtoEditando, setProdutoEditando] =
-    useState<string | null>(null);
-
-  const [nome, setNome] =
-    useState("");
-
-  const [descricao, setDescricao] =
-    useState("");
-
-  const [preco, setPreco] =
-    useState("");
-
-  const [imagemUrl, setImagemUrl] =
-    useState("");
-
-  const [arquivoImagem, setArquivoImagem] =
-    useState<File | null>(null);
-
-  const [previewImagem, setPreviewImagem] =
-    useState("");
-
-  const [ativo, setAtivo] =
-    useState(true);
+  const [ativo, setAtivo] = useState(true);
 
   async function carregarProdutos() {
     try {
       setCarregando(true);
       setErro("");
 
-      const referencia =
-        collection(
-          db,
-          "produtos"
-        );
+      const referencia = collection(db, "produtos");
 
       const consulta = query(
         referencia,
-        where(
-          "lojaId",
-          "==",
-          lojaId
-        )
+        where("lojaId", "==", lojaId)
       );
 
-      const snapshot =
-        await getDocs(consulta);
+      const snapshot = await getDocs(consulta);
 
       const lista: Produto[] = [];
 
-      for (
-        const documento of snapshot.docs
-      ) {
-        const dados =
-          documento.data() as Record<
-            string,
-            unknown
-          >;
+      for (const documento of snapshot.docs) {
+        const dados = documento.data() as Record<string, unknown>;
 
         lista.push({
           id: documento.id,
@@ -197,16 +143,12 @@ export default function GerenciadorProdutos({
               ? dados.imagemUrl
               : "",
 
-          ativo:
-            dados.ativo === true,
+          ativo: dados.ativo === true,
         });
       }
 
       lista.sort((a, b) =>
-        a.nome.localeCompare(
-          b.nome,
-          "pt-BR"
-        )
+        a.nome.localeCompare(b.nome, "pt-BR")
       );
 
       setProdutos(lista);
@@ -244,24 +186,14 @@ export default function GerenciadorProdutos({
 
     setErro("");
     setMensagem("");
-
     setMostrarFormulario(true);
   }
 
-  function editarProduto(
-    produto: Produto
-  ) {
-    setProdutoEditando(
-      produto.id
-    );
+  function editarProduto(produto: Produto) {
+    setProdutoEditando(produto.id);
 
-    setNome(
-      produto.nome
-    );
-
-    setDescricao(
-      produto.descricao
-    );
+    setNome(produto.nome);
+    setDescricao(produto.descricao);
 
     setPreco(
       produto.preco
@@ -269,19 +201,11 @@ export default function GerenciadorProdutos({
         .replace(".", ",")
     );
 
-    setImagemUrl(
-      produto.imagemUrl
-    );
-
-    setPreviewImagem(
-      produto.imagemUrl
-    );
+    setImagemUrl(produto.imagemUrl);
+    setPreviewImagem(produto.imagemUrl);
 
     setArquivoImagem(null);
-
-    setAtivo(
-      produto.ativo
-    );
+    setAtivo(produto.ativo);
 
     setErro("");
     setMensagem("");
@@ -312,28 +236,22 @@ export default function GerenciadorProdutos({
       return;
     }
 
+    // A API aceita até 10 MB.
     const tamanhoMaximo =
-      5 * 1024 * 1024;
+      10 * 1024 * 1024;
 
-    if (
-      arquivo.size >
-      tamanhoMaximo
-    ) {
+    if (arquivo.size > tamanhoMaximo) {
       setErro(
-        "A imagem deve ter no máximo 5 MB."
+        "A imagem deve ter no máximo 10 MB."
       );
 
       return;
     }
 
-    setArquivoImagem(
-      arquivo
-    );
+    setArquivoImagem(arquivo);
 
     const url =
-      URL.createObjectURL(
-        arquivo
-      );
+      URL.createObjectURL(arquivo);
 
     setPreviewImagem(url);
 
@@ -343,31 +261,41 @@ export default function GerenciadorProdutos({
   async function enviarImagem(
     arquivo: File
   ): Promise<string> {
-    const nomeSeguro =
-      arquivo.name
-        .toLowerCase()
-        .replace(
-          /[^a-z0-9.-]/g,
-          "-"
-        );
+    const dados = new FormData();
 
-    const caminho =
-      `lojas/${lojaId}/produtos/${Date.now()}-${nomeSeguro}`;
+    dados.append("file", arquivo);
 
-    const referencia =
-      ref(
-        storage,
-        caminho
+    const resposta = await fetch(
+      "/api/upload-image",
+      {
+        method: "POST",
+        body: dados,
+      }
+    );
+
+    let resultado: ResultadoUpload;
+
+    try {
+      resultado =
+        (await resposta.json()) as ResultadoUpload;
+    } catch {
+      throw new Error(
+        "A API de imagens retornou uma resposta inválida."
       );
+    }
 
-    await uploadBytes(
-      referencia,
-      arquivo
-    );
+    if (
+      !resposta.ok ||
+      !resultado.success ||
+      !resultado.url
+    ) {
+      throw new Error(
+        resultado.error ||
+          "Não foi possível enviar a imagem."
+      );
+    }
 
-    return await getDownloadURL(
-      referencia
-    );
+    return resultado.url;
   }
 
   async function salvarProduto() {
@@ -382,9 +310,7 @@ export default function GerenciadorProdutos({
     }
 
     if (!preco.trim()) {
-      setErro(
-        "Informe o preço."
-      );
+      setErro("Informe o preço.");
 
       return;
     }
@@ -392,7 +318,10 @@ export default function GerenciadorProdutos({
     const valor =
       converterPreco(preco);
 
-    if (valor < 0) {
+    if (
+      Number.isNaN(valor) ||
+      valor < 0
+    ) {
       setErro(
         "Informe um preço válido."
       );
@@ -408,6 +337,23 @@ export default function GerenciadorProdutos({
       let imagemFinal =
         imagemUrl.trim();
 
+      /*
+       * Se o comerciante escolheu uma nova imagem,
+       * ela passa pela API:
+       *
+       * imagem
+       * ↓
+       * /api/upload-image
+       * ↓
+       * Sharp
+       * ↓
+       * WebP
+       * ↓
+       * ImgBB
+       * ↓
+       * URL
+       */
+
       if (arquivoImagem) {
         imagemFinal =
           await enviarImagem(
@@ -418,14 +364,12 @@ export default function GerenciadorProdutos({
       const dados = {
         lojaId,
 
-        nome:
-          nome.trim(),
+        nome: nome.trim(),
 
         descricao:
           descricao.trim(),
 
-        preco:
-          valor,
+        preco: valor,
 
         imagemUrl:
           imagemFinal,
@@ -437,12 +381,11 @@ export default function GerenciadorProdutos({
       };
 
       if (produtoEditando) {
-        const referencia =
-          doc(
-            db,
-            "produtos",
-            produtoEditando
-          );
+        const referencia = doc(
+          db,
+          "produtos",
+          produtoEditando
+        );
 
         await updateDoc(
           referencia,
@@ -454,13 +397,9 @@ export default function GerenciadorProdutos({
         );
       } else {
         await addDoc(
-          collection(
-            db,
-            "produtos"
-          ),
+          collection(db, "produtos"),
           {
             ...dados,
-
             criadoEm:
               serverTimestamp(),
           }
@@ -473,9 +412,7 @@ export default function GerenciadorProdutos({
 
       limparFormulario();
 
-      setMostrarFormulario(
-        false
-      );
+      setMostrarFormulario(false);
 
       await carregarProdutos();
     } catch (error) {
@@ -484,8 +421,13 @@ export default function GerenciadorProdutos({
         error
       );
 
+      const mensagemErro =
+        error instanceof Error
+          ? error.message
+          : "Erro desconhecido.";
+
       setErro(
-        "Não foi possível salvar o produto. Verifique as permissões do Firebase Storage e Firestore."
+        `Não foi possível salvar o produto. ${mensagemErro}`
       );
     } finally {
       setSalvando(false);
@@ -547,9 +489,7 @@ export default function GerenciadorProdutos({
           produto.id
         ),
         {
-          ativo:
-            !produto.ativo,
-
+          ativo: !produto.ativo,
           atualizadoEm:
             serverTimestamp(),
         }
@@ -585,9 +525,10 @@ export default function GerenciadorProdutos({
           </h2>
 
           <p className="mt-1 text-xs leading-5 text-slate-500">
-            Cadastre o que você oferece. Depois
-            os moradores poderão montar um carrinho
-            e enviar o pedido para você.
+            Cadastre o que você oferece.
+            Depois os moradores poderão
+            montar um carrinho e enviar o
+            pedido para você.
           </p>
         </div>
 
@@ -624,9 +565,7 @@ export default function GerenciadorProdutos({
                 {produtoEditando
                   ? "✏️ Editar"
                   : "➕ Novo"}{" "}
-                {nomeTipo(
-                  tipoNegocio
-                )}
+                {nomeTipo(tipoNegocio)}
               </h3>
 
               <p className="mt-1 text-xs text-blue-700">
@@ -710,12 +649,14 @@ export default function GerenciadorProdutos({
                 />
 
                 <p className="mt-1 text-[10px] text-slate-400">
-                  Para serviços, pode ser o preço
-                  inicial ou valor de referência.
+                  Para serviços, pode ser o
+                  preço inicial ou valor de
+                  referência.
                 </p>
               </div>
 
               <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-white p-4">
+
                 <input
                   type="checkbox"
                   checked={ativo}
@@ -733,10 +674,11 @@ export default function GerenciadorProdutos({
                   </span>
 
                   <span className="block text-[10px] text-slate-500">
-                    Se desmarcado, ficará oculto
-                    para os moradores.
+                    Se desmarcado, ficará
+                    oculto para os moradores.
                   </span>
                 </span>
+
               </label>
 
             </div>
@@ -751,15 +693,19 @@ export default function GerenciadorProdutos({
 
                 {previewImagem ? (
                   <div className="overflow-hidden rounded-xl">
+
                     <img
                       src={previewImagem}
                       alt="Prévia"
                       className="h-56 w-full object-cover"
                     />
+
                   </div>
                 ) : (
                   <div className="flex h-56 items-center justify-center rounded-xl bg-slate-50">
+
                     <div className="text-center">
+
                       <div className="text-5xl">
                         📷
                       </div>
@@ -772,25 +718,33 @@ export default function GerenciadorProdutos({
                         Você pode enviar uma arte
                         pronta do seu produto.
                       </p>
+
                     </div>
+
                   </div>
                 )}
 
                 <label className="mt-4 block cursor-pointer rounded-xl bg-blue-900 px-4 py-3 text-center text-xs font-black text-white hover:bg-blue-800">
+
                   📤 Escolher imagem
 
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={
-                      selecionarImagem
-                    }
+                    onChange={selecionarImagem}
                     className="hidden"
                   />
+
                 </label>
 
                 <p className="mt-2 text-center text-[10px] text-slate-400">
-                  JPG, PNG ou WEBP • máximo 5 MB
+                  JPG, PNG, WEBP ou foto do celular
+                  • máximo 10 MB
+                </p>
+
+                <p className="mt-1 text-center text-[10px] text-emerald-600">
+                  A imagem será compactada
+                  automaticamente antes de ir para o ImgBB.
                 </p>
 
               </div>
@@ -810,7 +764,7 @@ export default function GerenciadorProdutos({
               className="rounded-xl bg-emerald-600 px-5 py-3 text-xs font-black text-white hover:bg-emerald-700 disabled:opacity-50"
             >
               {salvando
-                ? "Salvando..."
+                ? "Enviando imagem e salvando..."
                 : produtoEditando
                 ? "💾 Salvar alterações"
                 : "💾 Cadastrar"}
@@ -835,7 +789,9 @@ export default function GerenciadorProdutos({
       <div className="mt-5">
 
         {carregando ? (
+
           <div className="rounded-2xl bg-slate-50 p-8 text-center">
+
             <div className="text-3xl">
               📦
             </div>
@@ -843,8 +799,11 @@ export default function GerenciadorProdutos({
             <p className="mt-2 text-xs font-bold text-slate-500">
               Carregando produtos...
             </p>
+
           </div>
+
         ) : produtos.length === 0 ? (
+
           <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-8 text-center">
 
             <div className="text-4xl">
@@ -852,137 +811,138 @@ export default function GerenciadorProdutos({
             </div>
 
             <p className="mt-3 text-sm font-black text-slate-800">
-              Você ainda não cadastrou nenhum{" "}
-              {nomeTipo(
-                tipoNegocio
-              )}.
+              Você ainda não cadastrou
+              nenhum{" "}
+              {nomeTipo(tipoNegocio)}.
             </p>
 
             <p className="mt-1 text-xs text-slate-500">
-              Adicione seu primeiro item para
-              começar a montar seu catálogo.
+              Adicione seu primeiro item
+              para começar a montar seu
+              catálogo.
             </p>
 
           </div>
+
         ) : (
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
-            {produtos.map(
-              (produto) => (
-                <div
-                  key={produto.id}
-                  className={`overflow-hidden rounded-2xl border bg-white ${
-                    produto.ativo
-                      ? "border-slate-200"
-                      : "border-amber-200 opacity-70"
-                  }`}
-                >
+            {produtos.map((produto) => (
 
-                  <div className="h-48 bg-slate-100">
+              <div
+                key={produto.id}
+                className={`overflow-hidden rounded-2xl border bg-white ${
+                  produto.ativo
+                    ? "border-slate-200"
+                    : "border-amber-200 opacity-70"
+                }`}
+              >
 
-                    {produto.imagemUrl ? (
-                      <img
-                        src={
-                          produto.imagemUrl
-                        }
-                        alt={
-                          produto.nome
-                        }
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-5xl">
-                        📦
-                      </div>
-                    )}
+                <div className="h-48 bg-slate-100">
+
+                  {produto.imagemUrl ? (
+
+                    <img
+                      src={produto.imagemUrl}
+                      alt={produto.nome}
+                      className="h-full w-full object-cover"
+                    />
+
+                  ) : (
+
+                    <div className="flex h-full items-center justify-center text-5xl">
+                      📦
+                    </div>
+
+                  )}
+
+                </div>
+
+                <div className="p-4">
+
+                  <div className="flex items-start justify-between gap-2">
+
+                    <h3 className="text-sm font-black text-slate-900">
+                      {produto.nome}
+                    </h3>
+
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-black ${
+                        produto.ativo
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {produto.ativo
+                        ? "ATIVO"
+                        : "OCULTO"}
+                    </span>
 
                   </div>
 
-                  <div className="p-4">
-
-                    <div className="flex items-start justify-between gap-2">
-
-                      <h3 className="text-sm font-black text-slate-900">
-                        {produto.nome}
-                      </h3>
-
-                      <span
-                        className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-black ${
-                          produto.ativo
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-slate-100 text-slate-500"
-                        }`}
-                      >
-                        {produto.ativo
-                          ? "ATIVO"
-                          : "OCULTO"}
-                      </span>
-
-                    </div>
-
-                    {produto.descricao && (
-                      <p className="mt-2 line-clamp-3 text-xs leading-5 text-slate-500">
-                        {
-                          produto.descricao
-                        }
-                      </p>
-                    )}
-
-                    <p className="mt-3 text-lg font-black text-blue-900">
-                      {formatarPreco(
-                        produto.preco
-                      )}
+                  {produto.descricao && (
+                    <p className="mt-2 line-clamp-3 text-xs leading-5 text-slate-500">
+                      {produto.descricao}
                     </p>
+                  )}
 
-                    <div className="mt-4 grid grid-cols-3 gap-2">
+                  <p className="mt-3 text-lg font-black text-blue-900">
+                    {formatarPreco(
+                      produto.preco
+                    )}
+                  </p>
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          editarProduto(
-                            produto
-                          )
-                        }
-                        className="rounded-lg bg-blue-50 px-2 py-2 text-[10px] font-black text-blue-800"
-                      >
-                        ✏️ Editar
-                      </button>
+                  <div className="mt-4 grid grid-cols-3 gap-2">
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void alterarStatus(
-                            produto
-                          )
-                        }
-                        className="rounded-lg bg-amber-50 px-2 py-2 text-[10px] font-black text-amber-800"
-                      >
-                        {produto.ativo
-                          ? "Ocultar"
-                          : "Publicar"}
-                      </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        editarProduto(
+                          produto
+                        )
+                      }
+                      className="rounded-lg bg-blue-50 px-2 py-2 text-[10px] font-black text-blue-800"
+                    >
+                      ✏️ Editar
+                    </button>
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void excluirProduto(
-                            produto
-                          )
-                        }
-                        className="rounded-lg bg-red-50 px-2 py-2 text-[10px] font-black text-red-700"
-                      >
-                        🗑️ Excluir
-                      </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void alterarStatus(
+                          produto
+                        );
+                      }}
+                      className="rounded-lg bg-amber-50 px-2 py-2 text-[10px] font-black text-amber-800"
+                    >
+                      {produto.ativo
+                        ? "Ocultar"
+                        : "Publicar"}
+                    </button>
 
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void excluirProduto(
+                          produto
+                        );
+                      }}
+                      className="rounded-lg bg-red-50 px-2 py-2 text-[10px] font-black text-red-700"
+                    >
+                      🗑️ Excluir
+                    </button>
 
                   </div>
 
                 </div>
-              )
-            )}
+
+              </div>
+
+            ))}
 
           </div>
+
         )}
 
       </div>
