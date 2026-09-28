@@ -488,7 +488,7 @@ export default function Cabecalho() {
                   type="button"
                   onClick={() =>
                     alert(
-                      `📍 Rio Claro - SP\n\n` +
+                      `📍 Sobradão • Rio Claro/SP\n\n` +
                         `${clima.icone} ${clima.condicao}\n` +
                         `🌡️ ${clima.temp}°C\n` +
                         `💧 Umidade: ${clima.umidade}%\n` +
