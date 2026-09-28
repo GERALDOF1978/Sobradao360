@@ -10,13 +10,8 @@ import {
   query,
   serverTimestamp,
   updateDoc,
-  QueryDocumentSnapshot,
-  DocumentData,
 } from "firebase/firestore";
-import {
-  getAuth,
-  onAuthStateChanged,
-} from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 import { db } from "@/lib/firebase";
 
@@ -73,7 +68,7 @@ interface Usuario {
   perfil?: string;
 }
 
-interface UsuarioAuth {
+interface UsuarioLogado {
   uid: string;
   email: string | null;
   displayName: string | null;
@@ -82,30 +77,25 @@ interface UsuarioAuth {
 const TIPOS: Record<string, string> = {
   loja: "Loja / Comércio",
   oficina: "Oficina / Assistência",
-  profissional:
-    "Profissional / Prestador",
+  profissional: "Profissional / Prestador",
   alimentacao: "Alimentação",
   eventos: "Eventos",
   empresa: "Empresa",
-  tecnologia:
-    "Tecnologia / Serviço digital",
+  tecnologia: "Tecnologia / Serviço digital",
   outros: "Outro",
 };
 
 const DESTINOS: Record<string, string> = {
-  pagina_sobradao:
-    "Página dentro do Sobradão 360",
+  pagina_sobradao: "Página dentro do Sobradão 360",
   site_externo: "Site / Loja externa",
   whatsapp: "WhatsApp",
 };
 
-const FILTROS: Array<
-  [string, string]
-> = [
-  ["todos", "Todos"],
-  ["PENDENTE", "Pendentes"],
-  ["APROVADO", "Aprovados"],
-  ["SUSPENSO", "Suspensos"],
+const FILTROS = [
+  { valor: "todos", texto: "Todos" },
+  { valor: "PENDENTE", texto: "Pendentes" },
+  { valor: "APROVADO", texto: "Aprovados" },
+  { valor: "SUSPENSO", texto: "Suspensos" },
 ];
 
 function formatarData(valor: unknown): string {
@@ -118,11 +108,7 @@ function formatarData(valor: unknown): string {
       typeof valor === "object" &&
       valor !== null &&
       "toDate" in valor &&
-      typeof (
-        valor as {
-          toDate?: unknown;
-        }
-      ).toDate === "function"
+      typeof (valor as { toDate?: unknown }).toDate === "function"
     ) {
       const data = (
         valor as {
@@ -130,15 +116,11 @@ function formatarData(valor: unknown): string {
         }
       ).toDate();
 
-      return data.toLocaleDateString(
-        "pt-BR"
-      );
+      return data.toLocaleDateString("pt-BR");
     }
 
     if (valor instanceof Date) {
-      return valor.toLocaleDateString(
-        "pt-BR"
-      );
+      return valor.toLocaleDateString("pt-BR");
     }
 
     return "-";
@@ -147,24 +129,18 @@ function formatarData(valor: unknown): string {
   }
 }
 
-function limparWhatsapp(
-  numero: string
-): string {
+function limparWhatsapp(numero: string): string {
   return numero.replace(/\D/g, "");
 }
 
 export default function AdminMasterPage() {
-  const [user, setUser] =
-    useState<UsuarioAuth | null>(null);
+  const [user, setUser] = useState<UsuarioLogado | null>(null);
 
-  const [autorizado, setAutorizado] =
-    useState(false);
+  const [autorizado, setAutorizado] = useState(false);
 
-  const [carregando, setCarregando] =
-    useState(true);
+  const [carregando, setCarregando] = useState(true);
 
-  const [lojas, setLojas] =
-    useState<LojaParceira[]>([]);
+  const [lojas, setLojas] = useState<LojaParceira[]>([]);
 
   const [selecionada, setSelecionada] =
     useState<LojaParceira | null>(null);
@@ -172,170 +148,148 @@ export default function AdminMasterPage() {
   const [processando, setProcessando] =
     useState<string | null>(null);
 
-  const [filtro, setFiltro] =
-    useState("todos");
+  const [filtro, setFiltro] = useState("todos");
 
   useEffect(() => {
     const auth = getAuth();
 
-    const cancelar =
-      onAuthStateChanged(
-        auth,
-        async (usuario) => {
-          if (!usuario) {
-            setUser(null);
-            setAutorizado(false);
-            setCarregando(false);
-            return;
-          }
+    const cancelar = auth.onAuthStateChanged(
+  async (
+    usuario: import("firebase/auth").User | null
+  ) => {
+      if (!usuario) {
+        setUser(null);
+        setAutorizado(false);
+        setCarregando(false);
+        return;
+      }
 
-          const usuarioAtual: UsuarioAuth =
-            {
-              uid: usuario.uid,
-              email: usuario.email,
-              displayName:
-                usuario.displayName,
-            };
+      const usuarioAtual: UsuarioLogado = {
+        uid: usuario.uid,
+        email: usuario.email,
+        displayName: usuario.displayName,
+      };
 
-          setUser(usuarioAtual);
+      setUser(usuarioAtual);
 
-          try {
-            const usuarioRef = doc(
-              db,
-              "usuarios",
-              usuario.uid
-            );
+      try {
+        const usuarioRef = doc(
+          db,
+          "usuarios",
+          usuario.uid
+        );
 
-            const usuarioSnapshot =
-              await getDoc(usuarioRef);
+        const usuarioSnapshot = await getDoc(usuarioRef);
 
-            if (
-              !usuarioSnapshot.exists()
-            ) {
-              setAutorizado(false);
-              setCarregando(false);
-              return;
-            }
-
-            const dados =
-              usuarioSnapshot.data() as Omit<
-                Usuario,
-                "id"
-              >;
-
-            if (
-              dados.perfil !==
-              "master"
-            ) {
-              setAutorizado(false);
-              setCarregando(false);
-              return;
-            }
-
-            setAutorizado(true);
-
-            await carregarLojas();
-          } catch (error: unknown) {
-            console.error(
-              "Erro ao verificar acesso Master:",
-              error
-            );
-
-            setAutorizado(false);
-          } finally {
-            setCarregando(false);
-          }
+        if (!usuarioSnapshot.exists()) {
+          setAutorizado(false);
+          setCarregando(false);
+          return;
         }
-      );
+
+        const dados = usuarioSnapshot.data() as {
+          nome?: string;
+          displayName?: string;
+          email?: string;
+          perfil?: string;
+        };
+
+        if (dados.perfil !== "master") {
+          setAutorizado(false);
+          setCarregando(false);
+          return;
+        }
+
+        setAutorizado(true);
+
+        await carregarLojas();
+      } catch (error: unknown) {
+        console.error(
+          "Erro ao verificar acesso Master:",
+          error
+        );
+
+        setAutorizado(false);
+      } finally {
+        setCarregando(false);
+      }
+    });
 
     return () => cancelar();
   }, []);
 
   async function carregarLojas() {
     try {
-      const lojasRef =
-        collection(
-          db,
-          "lojas_parceiras"
-        );
+      const lojasRef = collection(
+        db,
+        "lojas_parceiras"
+      );
 
       const consulta = query(
         lojasRef,
-        orderBy(
-          "criadoEm",
-          "desc"
-        )
+        orderBy("criadoEm", "desc")
       );
 
-      const snapshot =
-        await getDocs(consulta);
+      const snapshot = await getDocs(consulta);
 
-      const usuariosSnapshot =
-        await getDocs(
-          collection(
-            db,
-            "usuarios"
-          )
-        );
+      const usuariosSnapshot = await getDocs(
+        collection(db, "usuarios")
+      );
 
-      const usuariosMap =
-        new Map<string, Usuario>();
+      const usuariosMap = new Map<
+        string,
+        Usuario
+      >();
 
       usuariosSnapshot.docs.forEach(
-        (
-          usuarioDoc: QueryDocumentSnapshot<DocumentData>
-        ) => {
-          const dados =
-            usuarioDoc.data() as Omit<
-              Usuario,
-              "id"
-            >;
+  (usuarioDoc: {
+    id: string;
+    data: () => Record<string, unknown>;
+  }) => {
+        const dados = usuarioDoc.data() as {
+          nome?: string;
+          displayName?: string;
+          email?: string;
+          perfil?: string;
+        };
 
-          usuariosMap.set(
-            usuarioDoc.id,
-            {
-              id: usuarioDoc.id,
-              ...dados,
-            }
-          );
-        }
-      );
+        usuariosMap.set(usuarioDoc.id, {
+          id: usuarioDoc.id,
+          ...dados,
+        });
+      });
 
       const lista: LojaParceira[] =
         snapshot.docs.map(
-          (
-            item: QueryDocumentSnapshot<DocumentData>
-          ) => {
-            const dados =
-              item.data() as Omit<
-                LojaParceira,
-                "id"
-              >;
+  (item: {
+    id: string;
+    data: () => Record<string, unknown>;
+  }) => {
+          const dados = item.data() as Omit<
+            LojaParceira,
+            "id"
+          >;
 
-            const usuario =
-              dados.uidDono
-                ? usuariosMap.get(
-                    dados.uidDono
-                  )
-                : undefined;
+          const usuario = dados.uidDono
+            ? usuariosMap.get(dados.uidDono)
+            : undefined;
 
-            return {
-              id: item.id,
-              ...dados,
+          return {
+            id: item.id,
+            ...dados,
 
-              nomeResponsavel:
-                dados.nomeResponsavel ||
-                usuario?.nome ||
-                usuario?.displayName ||
-                "",
+            nomeResponsavel:
+              dados.nomeResponsavel ||
+              usuario?.nome ||
+              usuario?.displayName ||
+              "",
 
-              emailDono:
-                dados.emailDono ||
-                usuario?.email ||
-                "",
-            };
-          }
-        );
+            emailDono:
+              dados.emailDono ||
+              usuario?.email ||
+              "",
+          };
+        });
 
       setLojas(lista);
     } catch (error: unknown) {
@@ -346,9 +300,7 @@ export default function AdminMasterPage() {
     }
   }
 
-  async function aprovarLoja(
-    id: string
-  ) {
+  async function aprovarLoja(id: string) {
     setProcessando(id);
 
     try {
@@ -361,44 +313,30 @@ export default function AdminMasterPage() {
       await updateDoc(lojaRef, {
         status: "APROVADO",
         ativo: true,
-        atualizadoEm:
-          serverTimestamp(),
+        atualizadoEm: serverTimestamp(),
       });
 
-      setLojas(
-        (lista: LojaParceira[]) =>
-          lista.map(
-            (
-              item: LojaParceira
-            ) =>
-              item.id === id
-                ? {
-                    ...item,
-                    status:
-                      "APROVADO",
-                    ativo: true,
-                  }
-                : item
-          )
+      setLojas((lista) =>
+        lista.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                status: "APROVADO",
+                ativo: true,
+              }
+            : item
+        )
       );
 
-      if (
-        selecionada?.id === id
-      ) {
-        setSelecionada(
-          (
-            item: LojaParceira | null
-          ) =>
-            item
-              ? {
-                  ...item,
-                  status:
-                    "APROVADO",
-                  ativo: true,
-                }
-              : null
-        );
-      }
+      setSelecionada((item) =>
+        item && item.id === id
+          ? {
+              ...item,
+              status: "APROVADO",
+              ativo: true,
+            }
+          : item
+      );
     } catch (error: unknown) {
       console.error(
         "Erro ao aprovar loja:",
@@ -413,9 +351,7 @@ export default function AdminMasterPage() {
     }
   }
 
-  async function suspenderLoja(
-    id: string
-  ) {
+  async function suspenderLoja(id: string) {
     setProcessando(id);
 
     try {
@@ -428,44 +364,30 @@ export default function AdminMasterPage() {
       await updateDoc(lojaRef, {
         status: "SUSPENSO",
         ativo: false,
-        atualizadoEm:
-          serverTimestamp(),
+        atualizadoEm: serverTimestamp(),
       });
 
-      setLojas(
-        (lista: LojaParceira[]) =>
-          lista.map(
-            (
-              item: LojaParceira
-            ) =>
-              item.id === id
-                ? {
-                    ...item,
-                    status:
-                      "SUSPENSO",
-                    ativo: false,
-                  }
-                : item
-          )
+      setLojas((lista) =>
+        lista.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                status: "SUSPENSO",
+                ativo: false,
+              }
+            : item
+        )
       );
 
-      if (
-        selecionada?.id === id
-      ) {
-        setSelecionada(
-          (
-            item: LojaParceira | null
-          ) =>
-            item
-              ? {
-                  ...item,
-                  status:
-                    "SUSPENSO",
-                  ativo: false,
-                }
-              : null
-        );
-      }
+      setSelecionada((item) =>
+        item && item.id === id
+          ? {
+              ...item,
+              status: "SUSPENSO",
+              ativo: false,
+            }
+          : item
+      );
     } catch (error: unknown) {
       console.error(
         "Erro ao suspender loja:",
@@ -480,9 +402,7 @@ export default function AdminMasterPage() {
     }
   }
 
-  async function reativarLoja(
-    id: string
-  ) {
+  async function reativarLoja(id: string) {
     setProcessando(id);
 
     try {
@@ -495,44 +415,30 @@ export default function AdminMasterPage() {
       await updateDoc(lojaRef, {
         status: "APROVADO",
         ativo: true,
-        atualizadoEm:
-          serverTimestamp(),
+        atualizadoEm: serverTimestamp(),
       });
 
-      setLojas(
-        (lista: LojaParceira[]) =>
-          lista.map(
-            (
-              item: LojaParceira
-            ) =>
-              item.id === id
-                ? {
-                    ...item,
-                    status:
-                      "APROVADO",
-                    ativo: true,
-                  }
-                : item
-          )
+      setLojas((lista) =>
+        lista.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                status: "APROVADO",
+                ativo: true,
+              }
+            : item
+        )
       );
 
-      if (
-        selecionada?.id === id
-      ) {
-        setSelecionada(
-          (
-            item: LojaParceira | null
-          ) =>
-            item
-              ? {
-                  ...item,
-                  status:
-                    "APROVADO",
-                  ativo: true,
-                }
-              : null
-        );
-      }
+      setSelecionada((item) =>
+        item && item.id === id
+          ? {
+              ...item,
+              status: "APROVADO",
+              ativo: true,
+            }
+          : item
+      );
     } catch (error: unknown) {
       console.error(
         "Erro ao reativar loja:",
@@ -547,21 +453,14 @@ export default function AdminMasterPage() {
     }
   }
 
-  function abrirDestino(
-    item: LojaParceira
-  ) {
+  function abrirDestino(item: LojaParceira) {
     if (
-      item.tipoPresenca ===
-        "site_externo" &&
+      item.tipoPresenca === "site_externo" &&
       item.siteUrl
     ) {
       const url =
-        item.siteUrl.startsWith(
-          "http://"
-        ) ||
-        item.siteUrl.startsWith(
-          "https://"
-        )
+        item.siteUrl.startsWith("http://") ||
+        item.siteUrl.startsWith("https://")
           ? item.siteUrl
           : `https://${item.siteUrl}`;
 
@@ -575,14 +474,12 @@ export default function AdminMasterPage() {
     }
 
     if (
-      item.tipoPresenca ===
-        "whatsapp" &&
+      item.tipoPresenca === "whatsapp" &&
       item.whatsapp
     ) {
-      const numero =
-        limparWhatsapp(
-          item.whatsapp
-        );
+      const numero = limparWhatsapp(
+        item.whatsapp
+      );
 
       if (numero) {
         window.open(
@@ -606,51 +503,35 @@ export default function AdminMasterPage() {
     filtro === "todos"
       ? lojas
       : lojas.filter(
-          (
-            item: LojaParceira
-          ) =>
-            (item.status ||
-              "PENDENTE") ===
+          (item) =>
+            (item.status || "PENDENTE") ===
             filtro
         );
 
   const total = lojas.length;
 
-  const pendentes =
-    lojas.filter(
-      (
-        item: LojaParceira
-      ) =>
-        (item.status ||
-          "PENDENTE") ===
-        "PENDENTE"
-    ).length;
+  const pendentes = lojas.filter(
+    (item) =>
+      (item.status || "PENDENTE") ===
+      "PENDENTE"
+  ).length;
 
-  const aprovadas =
-    lojas.filter(
-      (
-        item: LojaParceira
-      ) =>
-        item.status ===
-        "APROVADO"
-    ).length;
+  const aprovadas = lojas.filter(
+    (item) =>
+      item.status === "APROVADO"
+  ).length;
 
-  const suspensas =
-    lojas.filter(
-      (
-        item: LojaParceira
-      ) =>
-        item.status ===
-        "SUSPENSO"
-    ).length;
+  const suspensas = lojas.filter(
+    (item) =>
+      item.status === "SUSPENSO"
+  ).length;
 
   if (carregando) {
     return (
       <main className="min-h-screen bg-slate-100 p-6">
         <div className="mx-auto max-w-7xl">
           <div className="rounded-2xl bg-white p-8 text-center shadow">
-            Carregando painel
-            Master...
+            Carregando painel Master...
           </div>
         </div>
       </main>
@@ -677,8 +558,7 @@ export default function AdminMasterPage() {
 
           {user?.email && (
             <p className="mt-4 text-xs text-slate-400">
-              Usuário:{" "}
-              {user.email}
+              Usuário: {user.email}
             </p>
           )}
 
@@ -692,15 +572,12 @@ export default function AdminMasterPage() {
 
       <div className="mx-auto max-w-7xl">
 
-        {/* CABEÇALHO */}
         <header className="mb-6">
-
           <div className="rounded-2xl bg-slate-900 p-6 text-white shadow-lg">
 
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
 
               <div>
-
                 <div className="mb-1 text-sm font-semibold uppercase tracking-wider text-amber-400">
                   Sobradão 360
                 </div>
@@ -710,37 +587,28 @@ export default function AdminMasterPage() {
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-300">
-                  Administração dos
-                  anunciantes parceiros
+                  Administração dos anunciantes parceiros
                 </p>
-
               </div>
 
               <div className="rounded-xl bg-white/10 px-4 py-3 text-sm">
-
                 Logado como:
-
                 <div className="font-bold text-white">
-                  {user?.email ||
-                    "Master"}
+                  {user?.email || "Master"}
                 </div>
-
               </div>
 
             </div>
 
           </div>
-
         </header>
 
-        {/* RESUMO */}
         <section className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
 
           <div className="rounded-2xl bg-white p-5 shadow-sm">
             <div className="text-sm text-slate-500">
               Total
             </div>
-
             <div className="mt-1 text-3xl font-bold text-slate-900">
               {total}
             </div>
@@ -750,7 +618,6 @@ export default function AdminMasterPage() {
             <div className="text-sm text-slate-500">
               Pendentes
             </div>
-
             <div className="mt-1 text-3xl font-bold text-amber-500">
               {pendentes}
             </div>
@@ -760,7 +627,6 @@ export default function AdminMasterPage() {
             <div className="text-sm text-slate-500">
               Aprovados
             </div>
-
             <div className="mt-1 text-3xl font-bold text-green-600">
               {aprovadas}
             </div>
@@ -770,7 +636,6 @@ export default function AdminMasterPage() {
             <div className="text-sm text-slate-500">
               Suspensos
             </div>
-
             <div className="mt-1 text-3xl font-bold text-red-600">
               {suspensas}
             </div>
@@ -778,49 +643,30 @@ export default function AdminMasterPage() {
 
         </section>
 
-        {/* FILTROS */}
         <section className="mb-6 flex flex-wrap gap-2">
 
-          {FILTROS.map(
-            (
-              filtroItem: [
-                string,
-                string
-              ]
-            ) => {
-              const [
-                valor,
-                texto,
-              ] = filtroItem;
-
-              return (
-                <button
-                  key={valor}
-                  type="button"
-                  onClick={() =>
-                    setFiltro(
-                      valor
-                    )
-                  }
-                  className={`rounded-xl px-4 py-2 text-sm font-bold transition ${
-                    filtro === valor
-                      ? "bg-slate-900 text-white"
-                      : "bg-white text-slate-600 shadow-sm hover:bg-slate-50"
-                  }`}
-                >
-                  {texto}
-                </button>
-              );
-            }
-          )}
+          {FILTROS.map((filtroItem) => (
+            <button
+              key={filtroItem.valor}
+              type="button"
+              onClick={() =>
+                setFiltro(filtroItem.valor)
+              }
+              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${
+                filtro === filtroItem.valor
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-600 shadow-sm hover:bg-slate-50"
+              }`}
+            >
+              {filtroItem.texto}
+            </button>
+          ))}
 
         </section>
 
-        {/* LISTA */}
         <section className="space-y-4">
 
-          {lojasFiltradas.length ===
-          0 ? (
+          {lojasFiltradas.length === 0 ? (
             <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
 
               <div className="mb-2 text-4xl">
@@ -828,260 +674,221 @@ export default function AdminMasterPage() {
               </div>
 
               <h2 className="font-bold text-slate-800">
-                Nenhum anunciante
-                encontrado
+                Nenhum anunciante encontrado
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                Não existem parceiros
-                neste filtro.
+                Não existem parceiros neste filtro.
               </p>
 
             </div>
           ) : (
-            lojasFiltradas.map(
-              (
-                item: LojaParceira
-              ) => {
+            lojasFiltradas.map((item) => {
 
-                const status =
-                  item.status ||
-                  "PENDENTE";
+              const status =
+                item.status || "PENDENTE";
 
-                return (
-                  <article
-                    key={item.id}
-                    className="rounded-2xl bg-white p-5 shadow-sm"
-                  >
+              return (
+                <article
+                  key={item.id}
+                  className="rounded-2xl bg-white p-5 shadow-sm"
+                >
 
-                    <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
-                      <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1">
 
-                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
 
-                          <span
-                            className={`rounded-full px-3 py-1 text-xs font-bold ${
-                              status ===
-                              "APROVADO"
-                                ? "bg-green-100 text-green-700"
-                                : status ===
-                                  "SUSPENSO"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-amber-100 text-amber-700"
-                            }`}
-                          >
-                            {status}
-                          </span>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-bold ${
+                            status === "APROVADO"
+                              ? "bg-green-100 text-green-700"
+                              : status === "SUSPENSO"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {status}
+                        </span>
 
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                            {TIPOS[
-                              item.tipo ||
-                                ""
-                            ] ||
-                              "Parceiro"}
-                          </span>
-
-                        </div>
-
-                        <h2 className="text-xl font-bold text-slate-900">
-                          {item.nome ||
-                            item.titulo ||
-                            "Sem nome"}
-                        </h2>
-
-                        {item.subtitulo && (
-                          <p className="mt-1 text-sm text-slate-500">
-                            {
-                              item.subtitulo
-                            }
-                          </p>
-                        )}
-
-                        <div className="mt-4 grid gap-2 text-sm md:grid-cols-2">
-
-                          <div>
-                            <span className="font-semibold text-slate-700">
-                              Responsável:
-                            </span>{" "}
-                            {item.nomeResponsavel ||
-                              "Não informado"}
-                          </div>
-
-                          <div>
-                            <span className="font-semibold text-slate-700">
-                              E-mail:
-                            </span>{" "}
-                            {item.emailDono ||
-                              "Não informado"}
-                          </div>
-
-                          <div>
-                            <span className="font-semibold text-slate-700">
-                              Telefone:
-                            </span>{" "}
-                            {item.telefone ||
-                              "Não informado"}
-                          </div>
-
-                          <div>
-                            <span className="font-semibold text-slate-700">
-                              WhatsApp:
-                            </span>{" "}
-                            {item.whatsapp ||
-                              "Não informado"}
-                          </div>
-
-                          <div>
-                            <span className="font-semibold text-slate-700">
-                              Presença:
-                            </span>{" "}
-                            {DESTINOS[
-                              item.tipoPresenca ||
-                                ""
-                            ] ||
-                              "Página Sobradão 360"}
-                          </div>
-
-                          <div>
-                            <span className="font-semibold text-slate-700">
-                              Cadastro:
-                            </span>{" "}
-                            {formatarData(
-                              item.criadoEm
-                            )}
-                          </div>
-
-                        </div>
-
-                        {item.siteUrl && (
-                          <div className="mt-3 break-all text-sm">
-                            <span className="font-semibold text-slate-700">
-                              Site:
-                            </span>{" "}
-                            {
-                              item.siteUrl
-                            }
-                          </div>
-                        )}
-
-                        {item.descricao && (
-                          <p className="mt-3 line-clamp-3 text-sm text-slate-600">
-                            {
-                              item.descricao
-                            }
-                          </p>
-                        )}
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                          {TIPOS[item.tipo || ""] ||
+                            "Parceiro"}
+                        </span>
 
                       </div>
 
-                      <div className="flex flex-wrap gap-2 lg:w-[270px] lg:justify-end">
+                      <h2 className="text-xl font-bold text-slate-900">
+                        {item.nome ||
+                          item.titulo ||
+                          "Sem nome"}
+                      </h2>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelecionada(
-                              item
-                            )
-                          }
-                          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
-                        >
-                          Detalhes
-                        </button>
+                      {item.subtitulo && (
+                        <p className="mt-1 text-sm text-slate-500">
+                          {item.subtitulo}
+                        </p>
+                      )}
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            abrirDestino(
-                              item
-                            )
-                          }
-                          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
-                        >
-                          Abrir
-                        </button>
+                      <div className="mt-4 grid gap-2 text-sm md:grid-cols-2">
 
-                        {status !==
-                          "APROVADO" && (
-                          <button
-                            type="button"
-                            disabled={
-                              processando ===
-                              item.id
-                            }
-                            onClick={() =>
-                              aprovarLoja(
-                                item.id
-                              )
-                            }
-                            className="rounded-xl bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
-                          >
-                            {processando ===
-                            item.id
-                              ? "..."
-                              : "Aprovar"}
-                          </button>
-                        )}
+                        <div>
+                          <span className="font-semibold text-slate-700">
+                            Responsável:
+                          </span>{" "}
+                          {item.nomeResponsavel ||
+                            "Não informado"}
+                        </div>
 
-                        {status ===
-                          "APROVADO" && (
-                          <button
-                            type="button"
-                            disabled={
-                              processando ===
-                              item.id
-                            }
-                            onClick={() =>
-                              suspenderLoja(
-                                item.id
-                              )
-                            }
-                            className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50"
-                          >
-                            {processando ===
-                            item.id
-                              ? "..."
-                              : "Suspender"}
-                          </button>
-                        )}
+                        <div>
+                          <span className="font-semibold text-slate-700">
+                            E-mail:
+                          </span>{" "}
+                          {item.emailDono ||
+                            "Não informado"}
+                        </div>
 
-                        {status ===
-                          "SUSPENSO" && (
-                          <button
-                            type="button"
-                            disabled={
-                              processando ===
-                              item.id
-                            }
-                            onClick={() =>
-                              reativarLoja(
-                                item.id
-                              )
-                            }
-                            className="rounded-xl bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
-                          >
-                            {processando ===
-                            item.id
-                              ? "..."
-                              : "Reativar"}
-                          </button>
-                        )}
+                        <div>
+                          <span className="font-semibold text-slate-700">
+                            Telefone:
+                          </span>{" "}
+                          {item.telefone ||
+                            "Não informado"}
+                        </div>
+
+                        <div>
+                          <span className="font-semibold text-slate-700">
+                            WhatsApp:
+                          </span>{" "}
+                          {item.whatsapp ||
+                            "Não informado"}
+                        </div>
+
+                        <div>
+                          <span className="font-semibold text-slate-700">
+                            Presença:
+                          </span>{" "}
+                          {DESTINOS[
+                            item.tipoPresenca || ""
+                          ] ||
+                            "Página Sobradão 360"}
+                        </div>
+
+                        <div>
+                          <span className="font-semibold text-slate-700">
+                            Cadastro:
+                          </span>{" "}
+                          {formatarData(
+                            item.criadoEm
+                          )}
+                        </div>
 
                       </div>
+
+                      {item.siteUrl && (
+                        <div className="mt-3 break-all text-sm">
+                          <span className="font-semibold text-slate-700">
+                            Site:
+                          </span>{" "}
+                          {item.siteUrl}
+                        </div>
+                      )}
+
+                      {item.descricao && (
+                        <p className="mt-3 line-clamp-3 text-sm text-slate-600">
+                          {item.descricao}
+                        </p>
+                      )}
 
                     </div>
 
-                  </article>
-                );
-              }
-            )
+                    <div className="flex flex-wrap gap-2 lg:w-[270px] lg:justify-end">
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelecionada(item)
+                        }
+                        className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                      >
+                        Detalhes
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          abrirDestino(item)
+                        }
+                        className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
+                      >
+                        Abrir
+                      </button>
+
+                      {status !== "APROVADO" && (
+                        <button
+                          type="button"
+                          disabled={
+                            processando === item.id
+                          }
+                          onClick={() =>
+                            aprovarLoja(item.id)
+                          }
+                          className="rounded-xl bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+                        >
+                          {processando === item.id
+                            ? "..."
+                            : "Aprovar"}
+                        </button>
+                      )}
+
+                      {status === "APROVADO" && (
+                        <button
+                          type="button"
+                          disabled={
+                            processando === item.id
+                          }
+                          onClick={() =>
+                            suspenderLoja(item.id)
+                          }
+                          className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                        >
+                          {processando === item.id
+                            ? "..."
+                            : "Suspender"}
+                        </button>
+                      )}
+
+                      {status === "SUSPENSO" && (
+                        <button
+                          type="button"
+                          disabled={
+                            processando === item.id
+                          }
+                          onClick={() =>
+                            reativarLoja(item.id)
+                          }
+                          className="rounded-xl bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+                        >
+                          {processando === item.id
+                            ? "..."
+                            : "Reativar"}
+                        </button>
+                      )}
+
+                    </div>
+
+                  </div>
+
+                </article>
+              );
+            })
           )}
 
         </section>
 
       </div>
 
-      {/* MODAL */}
       {selecionada && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
@@ -1092,9 +899,7 @@ export default function AdminMasterPage() {
 
           <div
             className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
-            onClick={(
-              event
-            ) =>
+            onClick={(event) =>
               event.stopPropagation()
             }
           >
@@ -1102,7 +907,6 @@ export default function AdminMasterPage() {
             <div className="mb-5 flex items-start justify-between gap-4">
 
               <div>
-
                 <div className="text-xs font-bold uppercase tracking-wider text-amber-600">
                   Detalhes do parceiro
                 </div>
@@ -1112,15 +916,12 @@ export default function AdminMasterPage() {
                     selecionada.titulo ||
                     "Sem nome"}
                 </h2>
-
               </div>
 
               <button
                 type="button"
                 onClick={() =>
-                  setSelecionada(
-                    null
-                  )
+                  setSelecionada(null)
                 }
                 className="rounded-xl bg-slate-100 px-3 py-2 font-bold text-slate-600 hover:bg-slate-200"
               >
@@ -1138,25 +939,19 @@ export default function AdminMasterPage() {
                 </h3>
 
                 <p>
-                  <strong>
-                    Nome:
-                  </strong>{" "}
+                  <strong>Nome:</strong>{" "}
                   {selecionada.nomeResponsavel ||
                     "Não informado"}
                 </p>
 
                 <p>
-                  <strong>
-                    E-mail:
-                  </strong>{" "}
+                  <strong>E-mail:</strong>{" "}
                   {selecionada.emailDono ||
                     "Não informado"}
                 </p>
 
                 <p className="break-all">
-                  <strong>
-                    UID:
-                  </strong>{" "}
+                  <strong>UID:</strong>{" "}
                   {selecionada.uidDono ||
                     "Não informado"}
                 </p>
@@ -1170,28 +965,21 @@ export default function AdminMasterPage() {
                 </h3>
 
                 <p>
-                  <strong>
-                    Tipo:
-                  </strong>{" "}
+                  <strong>Tipo:</strong>{" "}
                   {TIPOS[
-                    selecionada.tipo ||
-                      ""
+                    selecionada.tipo || ""
                   ] ||
                     "Não informado"}
                 </p>
 
                 <p>
-                  <strong>
-                    Telefone:
-                  </strong>{" "}
+                  <strong>Telefone:</strong>{" "}
                   {selecionada.telefone ||
                     "Não informado"}
                 </p>
 
                 <p>
-                  <strong>
-                    WhatsApp:
-                  </strong>{" "}
+                  <strong>WhatsApp:</strong>{" "}
                   {selecionada.whatsapp ||
                     "Não informado"}
                 </p>
@@ -1205,9 +993,7 @@ export default function AdminMasterPage() {
                 </h3>
 
                 <p>
-                  <strong>
-                    Destino:
-                  </strong>{" "}
+                  <strong>Destino:</strong>{" "}
                   {DESTINOS[
                     selecionada.tipoPresenca ||
                       ""
@@ -1217,23 +1003,15 @@ export default function AdminMasterPage() {
 
                 {selecionada.siteUrl && (
                   <p className="mt-1 break-all">
-                    <strong>
-                      Site:
-                    </strong>{" "}
-                    {
-                      selecionada.siteUrl
-                    }
+                    <strong>Site:</strong>{" "}
+                    {selecionada.siteUrl}
                   </p>
                 )}
 
                 {selecionada.destinoDescricao && (
                   <p className="mt-1">
-                    <strong>
-                      Descrição:
-                    </strong>{" "}
-                    {
-                      selecionada.destinoDescricao
-                    }
+                    <strong>Descrição:</strong>{" "}
+                    {selecionada.destinoDescricao}
                   </p>
                 )}
 
@@ -1247,9 +1025,7 @@ export default function AdminMasterPage() {
                   </h3>
 
                   <p className="whitespace-pre-wrap text-slate-600">
-                    {
-                      selecionada.descricao
-                    }
+                    {selecionada.descricao}
                   </p>
 
                 </div>
@@ -1262,9 +1038,7 @@ export default function AdminMasterPage() {
               <button
                 type="button"
                 onClick={() =>
-                  abrirDestino(
-                    selecionada
-                  )
+                  abrirDestino(selecionada)
                 }
                 className="rounded-xl bg-blue-600 px-5 py-2.5 font-bold text-white hover:bg-blue-700"
               >
@@ -1274,9 +1048,7 @@ export default function AdminMasterPage() {
               <button
                 type="button"
                 onClick={() =>
-                  setSelecionada(
-                    null
-                  )
+                  setSelecionada(null)
                 }
                 className="rounded-xl bg-slate-900 px-5 py-2.5 font-bold text-white hover:bg-slate-800"
               >
@@ -1286,6 +1058,7 @@ export default function AdminMasterPage() {
             </div>
 
           </div>
+
         </div>
       )}
 
