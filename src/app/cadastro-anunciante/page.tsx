@@ -18,13 +18,13 @@ const TIPOS = [
   {
     id: "oficina",
     icon: "🔧",
-    nome: "Oficina",
+    nome: "Oficina / Assistência",
     descricao: "Divulgue serviços e receba pedidos de orçamento.",
   },
   {
     id: "profissional",
     icon: "👷",
-    nome: "Profissional",
+    nome: "Profissional / Prestador",
     descricao: "Pedreiro, eletricista, encanador e outros serviços.",
   },
   {
@@ -45,7 +45,71 @@ const TIPOS = [
     nome: "Empresa",
     descricao: "Apresente sua empresa e seus serviços.",
   },
+  {
+    id: "tecnologia",
+    icon: "💻",
+    nome: "Tecnologia / Serviço digital",
+    descricao: "Sites, sistemas, aplicativos e serviços digitais.",
+  },
+  {
+    id: "outros",
+    icon: "📌",
+    nome: "Outro",
+    descricao: "Seu negócio não se encaixa nas opções acima.",
+  },
 ];
+
+const DESTINOS = [
+  {
+    id: "pagina_sobradao",
+    icon: "🏠",
+    nome: "Quero uma página no Sobradão 360",
+    descricao:
+      "O cliente entra em uma página do seu negócio dentro do portal.",
+  },
+  {
+    id: "site_externo",
+    icon: "🌐",
+    nome: "Já tenho loja ou site pronto",
+    descricao:
+      "O cliente será direcionado para seu site ou loja online.",
+  },
+  {
+    id: "whatsapp",
+    icon: "💬",
+    nome: "Quero receber clientes pelo WhatsApp",
+    descricao:
+      "O cliente será direcionado diretamente para o seu WhatsApp.",
+  },
+];
+
+function normalizarUrl(url: string) {
+  const valor = url.trim();
+
+  if (!valor) {
+    return "";
+  }
+
+  if (valor.startsWith("http://") || valor.startsWith("https://")) {
+    return valor;
+  }
+
+  return `https://${valor}`;
+}
+
+function urlValida(url: string) {
+  try {
+    const urlNormalizada = normalizarUrl(url);
+    const objeto = new URL(urlNormalizada);
+
+    return (
+      objeto.protocol === "http:" ||
+      objeto.protocol === "https:"
+    );
+  } catch {
+    return false;
+  }
+}
 
 export default function CadastroAnunciantePage() {
   const router = useRouter();
@@ -53,9 +117,11 @@ export default function CadastroAnunciantePage() {
 
   const [nome, setNome] = useState("");
   const [tipo, setTipo] = useState("");
+  const [tipoPresenca, setTipoPresenca] = useState("");
   const [descricao, setDescricao] = useState("");
   const [telefone, setTelefone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [siteUrl, setSiteUrl] = useState("");
 
   const [salvando, setSalvando] = useState(false);
   const [mensagem, setMensagem] = useState("");
@@ -81,8 +147,40 @@ export default function CadastroAnunciantePage() {
       return;
     }
 
+    if (!tipoPresenca) {
+      setMensagem(
+        "Escolha como você deseja apresentar seu negócio."
+      );
+      return;
+    }
+
     if (!telefone.trim() && !whatsapp.trim()) {
-      setMensagem("Informe pelo menos um telefone ou WhatsApp.");
+      setMensagem(
+        "Informe pelo menos um telefone ou WhatsApp."
+      );
+      return;
+    }
+
+    if (tipoPresenca === "site_externo") {
+      if (!siteUrl.trim()) {
+        setMensagem(
+          "Informe o endereço da sua loja ou site."
+        );
+        return;
+      }
+
+      if (!urlValida(siteUrl)) {
+        setMensagem(
+          "Informe um endereço de site válido. Ex.: https://www.exemplo.com.br"
+        );
+        return;
+      }
+    }
+
+    if (tipoPresenca === "whatsapp" && !whatsapp.trim()) {
+      setMensagem(
+        "Informe o número de WhatsApp para receber os clientes."
+      );
       return;
     }
 
@@ -94,31 +192,99 @@ export default function CadastroAnunciantePage() {
         (item) => item.id === tipo
       );
 
+      const destinoSelecionado = DESTINOS.find(
+        (item) => item.id === tipoPresenca
+      );
+
+      const siteNormalizado =
+        tipoPresenca === "site_externo"
+          ? normalizarUrl(siteUrl)
+          : "";
+
       await addDoc(collection(db, "lojas_parceiras"), {
+        // =========================
+        // RESPONSÁVEL PELO NEGÓCIO
+        // =========================
         uidDono: user.uid,
 
+        nomeResponsavel:
+          user.displayName?.trim() || "",
+
+        emailDono:
+          user.email?.trim() || "",
+
+        // =========================
+        // DADOS DO NEGÓCIO
+        // =========================
         nome: nome.trim(),
+
         titulo: nome.trim(),
 
         subtitulo:
-          tipoSelecionado?.nome || "Negócio do Sobradão",
+          tipoSelecionado?.nome ||
+          "Negócio do Sobradão",
 
         descricao: descricao.trim(),
 
         tipo,
 
+        // =========================
+        // CONTATOS
+        // =========================
         telefone: telefone.trim(),
+
         whatsapp: whatsapp.trim(),
 
+        // =========================
+        // COMO O NEGÓCIO SERÁ
+        // APRESENTADO
+        // =========================
+        tipoPresenca,
+
+        destinoDescricao:
+          destinoSelecionado?.nome || "",
+
+        siteUrl: siteNormalizado,
+
+        // =========================
+        // IMAGEM
+        // =========================
         imagemUrl: "",
 
+        // =========================
+        // STATUS DO ANÚNCIO
+        // =========================
         ativo: false,
-        temLojaCriada: false,
-        linkLoja: "",
 
         status: "PENDENTE",
 
+        // Mantidos para compatibilidade
+        // com a estrutura atual.
+        temLojaCriada: false,
+
+        linkLoja: "",
+
+        // =========================
+        // CAMPOS PREPARADOS PARA
+        // FUTURO SISTEMA COMERCIAL
+        // =========================
+        plano: "gratuito",
+
+        statusPagamento: "nao_aplicavel",
+
+        valorPlano: 0,
+
+        mostrarMarquee: false,
+
+        mostrarCard: false,
+
+        mostrarBanner: false,
+
+        // =========================
+        // DATAS
+        // =========================
         criadoEm: serverTimestamp(),
+
         atualizadoEm: serverTimestamp(),
       });
 
@@ -130,7 +296,10 @@ export default function CadastroAnunciantePage() {
         router.push("/painel-anunciante");
       }, 1500);
     } catch (error) {
-      console.error("Erro ao cadastrar anunciante:", error);
+      console.error(
+        "Erro ao cadastrar anunciante:",
+        error
+      );
 
       setMensagem(
         "Não foi possível enviar o cadastro. Tente novamente."
@@ -145,6 +314,7 @@ export default function CadastroAnunciantePage() {
       <main className="min-h-screen bg-slate-100 px-4 py-10">
         <div className="mx-auto max-w-xl rounded-3xl bg-white p-10 text-center shadow-sm">
           <div className="text-4xl">🏪</div>
+
           <p className="mt-3 text-sm font-bold text-slate-500">
             Carregando...
           </p>
@@ -167,9 +337,8 @@ export default function CadastroAnunciantePage() {
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-slate-500">
-            Tenha sua própria página no Sobradão 360 e
-            apresente seus produtos ou serviços para os
-            moradores da comunidade.
+            Divulgue sua empresa, loja ou serviço
+            para os moradores do Sobradão e região.
           </p>
 
           <button
@@ -204,6 +373,7 @@ export default function CadastroAnunciantePage() {
 
         <div className="mt-4 rounded-3xl bg-white p-5 shadow-sm sm:p-7">
 
+          {/* CABEÇALHO */}
           <div className="text-center">
 
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-blue-50 text-4xl">
@@ -215,44 +385,74 @@ export default function CadastroAnunciantePage() {
             </h1>
 
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              Crie sua presença comercial no Sobradão 360.
+              Faça parte dos negócios divulgados
+              no Sobradão 360.
             </p>
+
+            <div className="mx-auto mt-4 max-w-lg rounded-2xl border border-blue-100 bg-blue-50 p-4 text-left">
+              <p className="text-xs font-black text-blue-950">
+                📢 Espaço exclusivo para parceiros
+              </p>
+
+              <p className="mt-1 text-[11px] leading-5 text-blue-900/70">
+                Este cadastro é exclusivo para empresas,
+                comerciantes e prestadores de serviços.
+                Ele é separado dos anúncios publicados
+                pelos moradores.
+              </p>
+            </div>
 
           </div>
 
-          <div className="mt-7 space-y-5">
+          <div className="mt-7 space-y-6">
 
-            {/* NOME */}
+            {/* =========================
+                NOME
+            ========================== */}
             <div>
+
               <label className="text-xs font-black text-slate-700">
                 Nome do negócio *
               </label>
 
               <input
                 value={nome}
-                onChange={(e) => setNome(e.target.value)}
+                onChange={(e) =>
+                  setNome(e.target.value)
+                }
                 placeholder="Ex.: Mercado do João"
                 className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white"
               />
+
             </div>
 
-            {/* TIPO */}
+            {/* =========================
+                TIPO DE NEGÓCIO
+            ========================== */}
             <div>
 
               <label className="text-xs font-black text-slate-700">
                 O que você oferece? *
               </label>
 
+              <p className="mt-1 text-[11px] text-slate-400">
+                Escolha a opção que mais combina
+                com seu negócio.
+              </p>
+
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
 
                 {TIPOS.map((item) => (
+
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => setTipo(item.id)}
+                    onClick={() =>
+                      setTipo(item.id)
+                    }
                     className={`rounded-2xl border-2 p-4 text-left transition ${
                       tipo === item.id
-                        ? "border-amber-400 bg-amber-50"
+                        ? "border-amber-400 bg-amber-50 shadow-sm"
                         : "border-slate-200 bg-slate-50 hover:border-blue-300"
                     }`}
                   >
@@ -264,6 +464,7 @@ export default function CadastroAnunciantePage() {
                       </span>
 
                       <div>
+
                         <p className="text-sm font-black text-slate-800">
                           {item.nome}
                         </p>
@@ -271,17 +472,22 @@ export default function CadastroAnunciantePage() {
                         <p className="mt-1 text-[10px] leading-4 text-slate-500">
                           {item.descricao}
                         </p>
+
                       </div>
 
                     </div>
 
                   </button>
+
                 ))}
 
               </div>
+
             </div>
 
-            {/* DESCRIÇÃO */}
+            {/* =========================
+                DESCRIÇÃO
+            ========================== */}
             <div>
 
               <label className="text-xs font-black text-slate-700">
@@ -290,53 +496,257 @@ export default function CadastroAnunciantePage() {
 
               <textarea
                 value={descricao}
-                onChange={(e) => setDescricao(e.target.value)}
+                onChange={(e) =>
+                  setDescricao(e.target.value)
+                }
                 placeholder="Conte brevemente o que você oferece..."
                 rows={5}
                 className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white"
               />
 
               <p className="mt-1 text-[10px] text-slate-400">
-                Essa informação aparecerá na página do seu negócio.
+                Essa informação poderá aparecer
+                na divulgação do seu negócio.
               </p>
 
             </div>
 
-            {/* TELEFONE */}
-            <div>
+            {/* =========================
+                CONTATO
+            ========================== */}
+            <div className="grid gap-4 sm:grid-cols-2">
 
-              <label className="text-xs font-black text-slate-700">
-                Telefone
-              </label>
+              {/* TELEFONE */}
+              <div>
 
-              <input
-                value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
-                placeholder="(19) 99999-9999"
-                inputMode="tel"
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white"
-              />
+                <label className="text-xs font-black text-slate-700">
+                  Telefone
+                </label>
+
+                <input
+                  value={telefone}
+                  onChange={(e) =>
+                    setTelefone(e.target.value)
+                  }
+                  placeholder="(19) 99999-9999"
+                  inputMode="tel"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white"
+                />
+
+              </div>
+
+              {/* WHATSAPP */}
+              <div>
+
+                <label className="text-xs font-black text-slate-700">
+                  WhatsApp
+                </label>
+
+                <input
+                  value={whatsapp}
+                  onChange={(e) =>
+                    setWhatsapp(e.target.value)
+                  }
+                  placeholder="(19) 99999-9999"
+                  inputMode="tel"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white"
+                />
+
+              </div>
 
             </div>
 
-            {/* WHATSAPP */}
+            {/* =========================
+                DESTINO
+            ========================== */}
             <div>
 
               <label className="text-xs font-black text-slate-700">
-                WhatsApp
+                Como você quer apresentar seu negócio? *
               </label>
 
-              <input
-                value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                placeholder="(19) 99999-9999"
-                inputMode="tel"
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white"
-              />
+              <p className="mt-1 text-[11px] leading-5 text-slate-400">
+                Essa escolha define para onde o morador
+                será levado quando clicar na divulgação.
+              </p>
+
+              <div className="mt-3 space-y-3">
+
+                {DESTINOS.map((item) => (
+
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() =>
+                      setTipoPresenca(item.id)
+                    }
+                    className={`w-full rounded-2xl border-2 p-4 text-left transition ${
+                      tipoPresenca === item.id
+                        ? "border-amber-400 bg-amber-50 shadow-sm"
+                        : "border-slate-200 bg-slate-50 hover:border-blue-300"
+                    }`}
+                  >
+
+                    <div className="flex items-start gap-3">
+
+                      <span className="text-2xl">
+                        {item.icon}
+                      </span>
+
+                      <div className="flex-1">
+
+                        <div className="flex items-center justify-between gap-2">
+
+                          <p className="text-sm font-black text-slate-800">
+                            {item.nome}
+                          </p>
+
+                          {tipoPresenca === item.id && (
+                            <span className="rounded-full bg-amber-400 px-2 py-1 text-[9px] font-black text-blue-950">
+                              SELECIONADO
+                            </span>
+                          )}
+
+                        </div>
+
+                        <p className="mt-1 text-[10px] leading-4 text-slate-500">
+                          {item.descricao}
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                  </button>
+
+                ))}
+
+              </div>
 
             </div>
 
-            {/* AVISO */}
+            {/* =========================
+                SITE EXTERNO
+            ========================== */}
+            {tipoPresenca === "site_externo" && (
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+
+                <label className="text-xs font-black text-blue-950">
+                  Endereço da sua loja ou site *
+                </label>
+
+                <input
+                  value={siteUrl}
+                  onChange={(e) =>
+                    setSiteUrl(e.target.value)
+                  }
+                  placeholder="https://www.sualoja.com.br"
+                  inputMode="url"
+                  className="mt-2 w-full rounded-2xl border border-blue-100 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500"
+                />
+
+                <p className="mt-2 text-[10px] leading-4 text-blue-900/60">
+                  Exemplo: se você possui uma loja online
+                  ou um sistema como o Agenda Aki, informe
+                  aqui o endereço que deseja divulgar.
+                </p>
+
+              </div>
+            )}
+
+            {/* =========================
+                WHATSAPP
+            ========================== */}
+            {tipoPresenca === "whatsapp" && (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+
+                <p className="text-xs font-black text-emerald-900">
+                  💬 Atendimento pelo WhatsApp
+                </p>
+
+                <p className="mt-2 text-[11px] leading-5 text-emerald-900/70">
+                  Quando o morador clicar na divulgação,
+                  ele poderá iniciar o contato pelo
+                  WhatsApp informado acima.
+                </p>
+
+                {!whatsapp.trim() && (
+                  <p className="mt-2 text-[10px] font-bold text-red-600">
+                    Informe o WhatsApp para continuar.
+                  </p>
+                )}
+
+              </div>
+            )}
+
+            {/* =========================
+                PÁGINA SOBRADÃO
+            ========================== */}
+            {tipoPresenca === "pagina_sobradao" && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+
+                <p className="text-xs font-black text-blue-950">
+                  🏠 Página no Sobradão 360
+                </p>
+
+                <p className="mt-2 text-[11px] leading-5 text-slate-600">
+                  Seu negócio poderá ter uma página própria
+                  dentro do portal. Dependendo do tipo de
+                  negócio, ela poderá apresentar produtos,
+                  serviços, informações, contatos e outras
+                  opções.
+                </p>
+
+              </div>
+            )}
+
+            {/* =========================
+                DADOS DO RESPONSÁVEL
+            ========================== */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+
+              <p className="text-xs font-black text-slate-700">
+                👤 Dados da conta responsável
+              </p>
+
+              <p className="mt-1 text-[10px] leading-4 text-slate-400">
+                Esses dados são obtidos da sua conta Google
+                e ficam vinculados ao cadastro do negócio.
+              </p>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+
+                <div className="rounded-xl bg-white p-3">
+
+                  <p className="text-[9px] font-black uppercase tracking-wide text-slate-400">
+                    Responsável
+                  </p>
+
+                  <p className="mt-1 text-xs font-bold text-slate-700">
+                    {user.displayName || "Não informado"}
+                  </p>
+
+                </div>
+
+                <div className="rounded-xl bg-white p-3">
+
+                  <p className="text-[9px] font-black uppercase tracking-wide text-slate-400">
+                    E-mail
+                  </p>
+
+                  <p className="mt-1 break-all text-xs font-bold text-slate-700">
+                    {user.email || "Não informado"}
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* =========================
+                AVISO
+            ========================== */}
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
 
               <p className="text-xs font-black text-blue-950">
@@ -346,13 +756,20 @@ export default function CadastroAnunciantePage() {
               <p className="mt-2 text-[11px] leading-5 text-slate-600">
                 Depois do cadastro, o Sobradão 360 analisará
                 as informações. Após a aprovação, sua empresa
-                poderá ter uma página própria no portal e
-                aparecer em <strong>Negócios do Sobradão</strong>.
+                poderá ser divulgada na área de
+                <strong> Negócios do Sobradão</strong>.
+              </p>
+
+              <p className="mt-2 text-[11px] leading-5 text-slate-600">
+                O cadastro do parceiro é independente dos
+                anúncios publicados pelos moradores.
               </p>
 
             </div>
 
-            {/* MENSAGEM */}
+            {/* =========================
+                MENSAGEM
+            ========================== */}
             {mensagem && (
               <div
                 className={`rounded-2xl p-4 text-xs font-bold ${
@@ -365,7 +782,9 @@ export default function CadastroAnunciantePage() {
               </div>
             )}
 
-            {/* BOTÃO */}
+            {/* =========================
+                BOTÃO
+            ========================== */}
             <button
               type="button"
               onClick={cadastrar}
@@ -380,13 +799,16 @@ export default function CadastroAnunciantePage() {
           </div>
         </div>
 
+        {/* PAINEL */}
         <div className="mt-5 text-center">
+
           <Link
             href="/painel-anunciante"
             className="text-xs font-bold text-blue-700"
           >
             Já possui cadastro? Acessar painel do anunciante →
           </Link>
+
         </div>
 
       </div>
