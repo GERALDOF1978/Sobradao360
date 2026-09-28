@@ -1,313 +1,496 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import {
   collection,
-  getDocs,
-  query,
-  orderBy,
-  updateDoc,
   doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
   serverTimestamp,
+  updateDoc,
 } from "firebase/firestore";
-
 import { db } from "@/lib/firebase";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface Anunciante {
+interface LojaParceira {
   id: string;
-  nome: string;
-  titulo: string;
-  subtitulo: string;
-  tipo: string;
-  telefone: string;
-  whatsapp: string;
-  descricao: string;
-  status: string;
-  ativo: boolean;
-  uidDono: string;
-  criadoEm?: any;
+
+  uidDono?: string;
+  nomeResponsavel?: string;
+  emailDono?: string;
+
+  nome?: string;
+  titulo?: string;
+  subtitulo?: string;
+  descricao?: string;
+
+  tipo?: string;
+
+  telefone?: string;
+  whatsapp?: string;
+
+  tipoPresenca?:
+    | "pagina_sobradao"
+    | "site_externo"
+    | "whatsapp";
+
+  destinoDescricao?: string;
+  siteUrl?: string;
+
+  imagemUrl?: string;
+
+  ativo?: boolean;
+  status?: string;
+
+  temLojaCriada?: boolean;
+  linkLoja?: string;
+
+  plano?: string;
+  statusPagamento?: string;
+  valorPlano?: number;
+
+  mostrarMarquee?: boolean;
+  mostrarCard?: boolean;
+  mostrarBanner?: boolean;
+
+  criadoEm?: unknown;
+  atualizadoEm?: unknown;
 }
 
 interface Usuario {
   id: string;
-  nome: string;
-  email: string;
-  foto: string;
-  status: string;
-  perfil: string;
+  nome?: string;
+  displayName?: string;
+  email?: string;
+  perfil?: string;
+}
+
+const TIPOS: Record<string, string> = {
+  loja: "Loja / Comércio",
+  oficina: "Oficina / Assistência",
+  profissional: "Profissional / Prestador",
+  alimentacao: "Alimentação",
+  eventos: "Eventos",
+  empresa: "Empresa",
+  tecnologia: "Tecnologia / Serviço digital",
+  outros: "Outro",
+};
+
+const DESTINOS: Record<string, string> = {
+  pagina_sobradao: "Página dentro do Sobradão 360",
+  site_externo: "Site / Loja externa",
+  whatsapp: "WhatsApp",
+};
+
+function formatarData(valor: unknown): string {
+  if (!valor) return "-";
+
+  try {
+    if (
+      typeof valor === "object" &&
+      valor !== null &&
+      "toDate" in valor &&
+      typeof (
+        valor as { toDate?: unknown }
+      ).toDate === "function"
+    ) {
+      const data = (
+        valor as { toDate: () => Date }
+      ).toDate();
+
+      return data.toLocaleDateString("pt-BR");
+    }
+
+    if (valor instanceof Date) {
+      return valor.toLocaleDateString("pt-BR");
+    }
+
+    return "-";
+  } catch {
+    return "-";
+  }
+}
+
+function limparWhatsapp(numero: string): string {
+  return numero.replace(/\D/g, "");
 }
 
 export default function AdminMasterPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
 
   const [autorizado, setAutorizado] = useState(false);
-  const [verificando, setVerificando] = useState(true);
+  const [carregando, setCarregando] = useState(true);
 
-  const [anunciantes, setAnunciantes] = useState<Anunciante[]>([]);
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [lojas, setLojas] = useState<LojaParceira[]>([]);
+  const [selecionada, setSelecionada] =
+    useState<LojaParceira | null>(null);
 
-  const [aba, setAba] = useState<
-    "anunciantes" | "moradores" | "publicidades" | "denuncias"
-  >("anunciantes");
+  const [processando, setProcessando] =
+    useState<string | null>(null);
 
-  const [carregando, setCarregando] = useState(false);
-  const [processando, setProcessando] = useState("");
+  const [filtro, setFiltro] = useState("todos");
 
   useEffect(() => {
     async function verificarMaster() {
       if (!user) {
         setAutorizado(false);
-        setVerificando(false);
+        setCarregando(false);
         return;
       }
 
       try {
-        const usuarioRef = doc(db, "usuarios", user.uid);
-        const { getDoc } = await import("firebase/firestore");
+        const usuarioRef = doc(
+          db,
+          "usuarios",
+          user.uid
+        );
 
-        const snapshot = await getDoc(usuarioRef);
+        const usuarioSnapshot =
+          await getDoc(usuarioRef);
 
-        if (
-          snapshot.exists() &&
-          snapshot.data()?.perfil === "master"
-        ) {
-          setAutorizado(true);
-        } else {
+        if (!usuarioSnapshot.exists()) {
           setAutorizado(false);
+          setCarregando(false);
+          return;
         }
-      } catch (error) {
-        console.error("Erro ao verificar administrador:", error);
+
+        const dados =
+          usuarioSnapshot.data() as Usuario;
+
+        if (dados.perfil !== "master") {
+          setAutorizado(false);
+          setCarregando(false);
+          return;
+        }
+
+        setAutorizado(true);
+
+        await carregarLojas();
+      } catch (error: unknown) {
+        console.error(
+          "Erro ao verificar acesso Master:",
+          error
+        );
+
         setAutorizado(false);
       } finally {
-        setVerificando(false);
+        setCarregando(false);
       }
     }
 
-    if (!authLoading) {
-      verificarMaster();
-    }
-  }, [user, authLoading]);
+    verificarMaster();
+  }, [user]);
 
-  useEffect(() => {
-    if (autorizado) {
-      carregarDados();
-    }
-  }, [autorizado]);
-
-  async function carregarDados() {
+  async function carregarLojas() {
     try {
-      setCarregando(true);
+      const lojasRef = collection(
+        db,
+        "lojas_parceiras"
+      );
 
-      const lojasQuery = query(
-        collection(db, "lojas_parceiras"),
+      const consulta = query(
+        lojasRef,
         orderBy("criadoEm", "desc")
       );
 
-      const usuariosQuery = query(
+      const snapshot = await getDocs(consulta);
+
+      const usuariosSnapshot = await getDocs(
         collection(db, "usuarios")
       );
 
-      const [lojasSnapshot, usuariosSnapshot] =
-        await Promise.all([
-          getDocs(lojasQuery),
-          getDocs(usuariosQuery),
-        ]);
+      const usuariosMap =
+        new Map<string, Usuario>();
 
-      const listaLojas: Anunciante[] =
-        lojasSnapshot.docs.map((item: any) => {
-          const data = item.data();
+      usuariosSnapshot.docs.forEach(
+        (usuarioDoc) => {
+          const dados =
+            usuarioDoc.data() as Omit<Usuario, "id">;
 
-          return {
-            id: item.id,
-            nome: data.nome || data.titulo || "Negócio",
-            titulo: data.titulo || data.nome || "Negócio",
-            subtitulo: data.subtitulo || "",
-            tipo: data.tipo || "empresa",
-            telefone: data.telefone || "",
-            whatsapp: data.whatsapp || "",
-            descricao: data.descricao || "",
-            status: data.status || "PENDENTE",
-            ativo: data.ativo === true,
-            uidDono: data.uidDono || "",
-            criadoEm: data.criadoEm,
-          };
-        });
-
-      const listaUsuarios: Usuario[] =
-        usuariosSnapshot.docs.map((item: any) => {
-          const data = item.data();
-
-          return {
-            id: item.id,
-            nome: data.nome || data.displayName || "Morador",
-            email: data.email || "",
-            foto: data.foto || data.photoURL || "",
-            status: data.status || "ATIVO",
-            perfil: data.perfil || "morador",
-          };
-        });
-
-      setAnunciantes(listaLojas);
-      setUsuarios(listaUsuarios);
-    } catch (error) {
-      console.error("Erro ao carregar painel:", error);
-    } finally {
-      setCarregando(false);
-    }
-  }
-
-  async function aprovarAnunciante(item: Anunciante) {
-    try {
-      setProcessando(item.id);
-
-      await updateDoc(
-        doc(db, "lojas_parceiras", item.id),
-        {
-          status: "APROVADO",
-          ativo: true,
-          temLojaCriada: true,
-          linkLoja: `/loja/${item.id}`,
-          atualizadoEm: serverTimestamp(),
+          usuariosMap.set(usuarioDoc.id, {
+            id: usuarioDoc.id,
+            ...dados,
+          });
         }
       );
 
-      await carregarDados();
-    } catch (error) {
-      console.error("Erro ao aprovar:", error);
-      alert("Não foi possível aprovar este anunciante.");
-    } finally {
-      setProcessando("");
+      const lista: LojaParceira[] =
+        snapshot.docs.map((item) => {
+          const dados =
+            item.data() as Omit<
+              LojaParceira,
+              "id"
+            >;
+
+          const usuario = dados.uidDono
+            ? usuariosMap.get(dados.uidDono)
+            : undefined;
+
+          return {
+            id: item.id,
+            ...dados,
+
+            nomeResponsavel:
+              dados.nomeResponsavel ||
+              usuario?.nome ||
+              usuario?.displayName ||
+              "",
+
+            emailDono:
+              dados.emailDono ||
+              usuario?.email ||
+              "",
+          };
+        });
+
+      setLojas(lista);
+    } catch (error: unknown) {
+      console.error(
+        "Erro ao carregar lojas parceiras:",
+        error
+      );
     }
   }
 
-  async function suspenderAnunciante(item: Anunciante) {
-    const motivo = window.prompt(
-      "Informe o motivo da suspensão:"
-    );
+  async function aprovarLoja(id: string) {
+    setProcessando(id);
 
-    if (!motivo?.trim()) {
+    try {
+      const lojaRef = doc(
+        db,
+        "lojas_parceiras",
+        id
+      );
+
+      await updateDoc(lojaRef, {
+        status: "APROVADO",
+        ativo: true,
+        atualizadoEm: serverTimestamp(),
+      });
+
+      setLojas((lista) =>
+        lista.map((item: LojaParceira) =>
+          item.id === id
+            ? {
+                ...item,
+                status: "APROVADO",
+                ativo: true,
+              }
+            : item
+        )
+      );
+
+      if (selecionada?.id === id) {
+        setSelecionada((item) =>
+          item
+            ? {
+                ...item,
+                status: "APROVADO",
+                ativo: true,
+              }
+            : null
+        );
+      }
+    } catch (error: unknown) {
+      console.error(
+        "Erro ao aprovar loja:",
+        error
+      );
+
+      alert(
+        "Não foi possível aprovar este parceiro."
+      );
+    } finally {
+      setProcessando(null);
+    }
+  }
+
+  async function suspenderLoja(id: string) {
+    setProcessando(id);
+
+    try {
+      const lojaRef = doc(
+        db,
+        "lojas_parceiras",
+        id
+      );
+
+      await updateDoc(lojaRef, {
+        status: "SUSPENSO",
+        ativo: false,
+        atualizadoEm: serverTimestamp(),
+      });
+
+      setLojas((lista) =>
+        lista.map((item: LojaParceira) =>
+          item.id === id
+            ? {
+                ...item,
+                status: "SUSPENSO",
+                ativo: false,
+              }
+            : item
+        )
+      );
+
+      if (selecionada?.id === id) {
+        setSelecionada((item) =>
+          item
+            ? {
+                ...item,
+                status: "SUSPENSO",
+                ativo: false,
+              }
+            : null
+        );
+      }
+    } catch (error: unknown) {
+      console.error(
+        "Erro ao suspender loja:",
+        error
+      );
+
+      alert(
+        "Não foi possível suspender este parceiro."
+      );
+    } finally {
+      setProcessando(null);
+    }
+  }
+
+  async function reativarLoja(id: string) {
+    setProcessando(id);
+
+    try {
+      const lojaRef = doc(
+        db,
+        "lojas_parceiras",
+        id
+      );
+
+      await updateDoc(lojaRef, {
+        status: "APROVADO",
+        ativo: true,
+        atualizadoEm: serverTimestamp(),
+      });
+
+      setLojas((lista) =>
+        lista.map((item: LojaParceira) =>
+          item.id === id
+            ? {
+                ...item,
+                status: "APROVADO",
+                ativo: true,
+              }
+            : item
+        )
+      );
+
+      if (selecionada?.id === id) {
+        setSelecionada((item) =>
+          item
+            ? {
+                ...item,
+                status: "APROVADO",
+                ativo: true,
+              }
+            : null
+        );
+      }
+    } catch (error: unknown) {
+      console.error(
+        "Erro ao reativar loja:",
+        error
+      );
+
+      alert(
+        "Não foi possível reativar este parceiro."
+      );
+    } finally {
+      setProcessando(null);
+    }
+  }
+
+  function abrirDestino(item: LojaParceira) {
+    if (
+      item.tipoPresenca === "site_externo" &&
+      item.siteUrl
+    ) {
+      const url =
+        item.siteUrl.startsWith("http://") ||
+        item.siteUrl.startsWith("https://")
+          ? item.siteUrl
+          : `https://${item.siteUrl}`;
+
+      window.open(
+        url,
+        "_blank",
+        "noopener,noreferrer"
+      );
+
       return;
     }
 
-    try {
-      setProcessando(item.id);
-
-      await updateDoc(
-        doc(db, "lojas_parceiras", item.id),
-        {
-          status: "SUSPENSO",
-          ativo: false,
-          motivoSuspensao: motivo.trim(),
-          atualizadoEm: serverTimestamp(),
-        }
+    if (
+      item.tipoPresenca === "whatsapp" &&
+      item.whatsapp
+    ) {
+      const numero = limparWhatsapp(
+        item.whatsapp
       );
 
-      await carregarDados();
-    } catch (error) {
-      console.error("Erro ao suspender:", error);
-      alert("Não foi possível suspender.");
-    } finally {
-      setProcessando("");
-    }
-  }
-
-  async function reativarAnunciante(item: Anunciante) {
-    try {
-      setProcessando(item.id);
-
-      await updateDoc(
-        doc(db, "lojas_parceiras", item.id),
-        {
-          status: "APROVADO",
-          ativo: true,
-          atualizadoEm: serverTimestamp(),
-        }
-      );
-
-      await carregarDados();
-    } catch (error) {
-      console.error("Erro ao reativar:", error);
-      alert("Não foi possível reativar.");
-    } finally {
-      setProcessando("");
-    }
-  }
-
-  async function alterarStatusMorador(
-    usuario: Usuario,
-    novoStatus: "ATIVO" | "SUSPENSO" | "BLOQUEADO"
-  ) {
-    let motivo = "";
-
-    if (novoStatus !== "ATIVO") {
-      const resposta = window.prompt(
-        `Informe o motivo para ${novoStatus.toLowerCase()}:`
-      );
-
-      if (!resposta?.trim()) {
-        return;
+      if (numero) {
+        window.open(
+          `https://wa.me/55${numero}`,
+          "_blank",
+          "noopener,noreferrer"
+        );
       }
 
-      motivo = resposta.trim();
+      return;
     }
 
-    try {
-      setProcessando(usuario.id);
-
-      await updateDoc(
-        doc(db, "usuarios", usuario.id),
-        {
-          status: novoStatus,
-          motivoStatus: motivo,
-          alteradoPor: user?.uid || "",
-          atualizadoEm: serverTimestamp(),
-        }
-      );
-
-      await carregarDados();
-    } catch (error) {
-      console.error("Erro ao alterar morador:", error);
-      alert("Não foi possível alterar o status.");
-    } finally {
-      setProcessando("");
-    }
-  }
-
-  if (authLoading || verificando) {
-    return (
-      <main className="min-h-screen bg-slate-100 px-4 py-10">
-        <div className="mx-auto max-w-xl rounded-3xl bg-white p-10 text-center shadow-sm">
-          <div className="text-4xl">👑</div>
-          <p className="mt-3 text-sm font-bold text-slate-500">
-            Verificando acesso...
-          </p>
-        </div>
-      </main>
+    window.open(
+      `/loja/${item.id}`,
+      "_blank",
+      "noopener,noreferrer"
     );
   }
 
-  if (!user) {
+  const lojasFiltradas =
+    filtro === "todos"
+      ? lojas
+      : lojas.filter(
+          (item: LojaParceira) =>
+            (item.status || "PENDENTE") === filtro
+        );
+
+  const total = lojas.length;
+
+  const pendentes = lojas.filter(
+    (item: LojaParceira) =>
+      (item.status || "PENDENTE") === "PENDENTE"
+  ).length;
+
+  const aprovadas = lojas.filter(
+    (item: LojaParceira) =>
+      item.status === "APROVADO"
+  ).length;
+
+  const suspensas = lojas.filter(
+    (item: LojaParceira) =>
+      item.status === "SUSPENSO"
+  ).length;
+
+  if (carregando) {
     return (
-      <main className="min-h-screen bg-slate-100 px-4 py-10">
-        <div className="mx-auto max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm">
-          <div className="text-5xl">🔐</div>
-
-          <h1 className="mt-4 text-xl font-black text-blue-950">
-            Área administrativa
-          </h1>
-
-          <p className="mt-2 text-sm text-slate-500">
-            Faça login para acessar o sistema.
-          </p>
-
-          <Link
-            href="/"
-            className="mt-6 inline-flex rounded-xl bg-blue-900 px-5 py-3 text-xs font-black text-white"
-          >
-            ← Voltar
-          </Link>
+      <main className="min-h-screen bg-slate-100 p-6">
+        <div className="mx-auto max-w-7xl">
+          <div className="rounded-2xl bg-white p-8 text-center shadow">
+            Carregando painel Master...
+          </div>
         </div>
       </main>
     );
@@ -315,595 +498,487 @@ export default function AdminMasterPage() {
 
   if (!autorizado) {
     return (
-      <main className="min-h-screen bg-slate-100 px-4 py-10">
-        <div className="mx-auto max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm">
-          <div className="text-5xl">⛔</div>
+      <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
+        <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow">
+          <div className="mb-4 text-5xl">🔒</div>
 
-          <h1 className="mt-4 text-xl font-black text-red-700">
-            Acesso não autorizado
+          <h1 className="text-xl font-bold text-slate-900">
+            Acesso restrito
           </h1>
 
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            Esta área é exclusiva do Administrador Master
-            do Sobradão 360.
+          <p className="mt-2 text-sm text-slate-500">
+            Esta área é exclusiva para o usuário
+            Master.
           </p>
-
-          <Link
-            href="/"
-            className="mt-6 inline-flex rounded-xl bg-blue-900 px-5 py-3 text-xs font-black text-white"
-          >
-            ← Voltar para o portal
-          </Link>
         </div>
       </main>
     );
   }
 
-  const pendentes = anunciantes.filter(
-    (item) =>
-      item.status === "PENDENTE" ||
-      (!item.status && !item.ativo)
-  );
-
-  const ativos = anunciantes.filter(
-    (item) =>
-      item.status === "APROVADO" &&
-      item.ativo === true
-  );
-
-  const suspensos = anunciantes.filter(
-    (item) =>
-      item.status === "SUSPENSO" ||
-      item.status === "BLOQUEADO"
-  );
-
-  const moradores = usuarios.filter(
-    (item) => item.perfil !== "master"
-  );
-
   return (
-    <main className="min-h-screen bg-slate-100 pb-12">
-
-      {/* CABEÇALHO */}
-      <section className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-800 text-white">
-
-        <div className="mx-auto max-w-6xl px-4 py-6">
-
-          <Link
-            href="/"
-            className="text-xs font-bold text-blue-200"
-          >
-            ← Sobradão 360
-          </Link>
-
-          <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-amber-300">
-                SOBRADÃO 360
-              </p>
-
-              <h1 className="mt-1 text-3xl font-black">
-                👑 Admin Master
-              </h1>
-
-              <p className="mt-1 text-xs text-blue-200">
-                Controle geral do portal
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white/10 px-4 py-3">
-              <p className="text-[10px] font-bold text-blue-200">
-                ADMINISTRADOR
-              </p>
-
-              <p className="mt-1 text-xs font-black">
-                {user.email}
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      <div className="mx-auto max-w-6xl px-4 py-5">
-
-        {/* RESUMO */}
-        <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-
-          <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <p className="text-2xl font-black text-amber-500">
-              {pendentes.length}
-            </p>
-            <p className="mt-1 text-[10px] font-black uppercase text-slate-500">
-              Pendentes
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <p className="text-2xl font-black text-emerald-600">
-              {ativos.length}
-            </p>
-            <p className="mt-1 text-[10px] font-black uppercase text-slate-500">
-              Ativos
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <p className="text-2xl font-black text-red-600">
-              {suspensos.length}
-            </p>
-            <p className="mt-1 text-[10px] font-black uppercase text-slate-500">
-              Suspensos
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <p className="text-2xl font-black text-blue-700">
-              {moradores.length}
-            </p>
-            <p className="mt-1 text-[10px] font-black uppercase text-slate-500">
-              Moradores
-            </p>
-          </div>
-
-        </section>
-
-        {/* MENU */}
-        <div className="mt-5 overflow-x-auto">
-
-          <div className="flex min-w-max gap-2">
-
-            <button
-              onClick={() => setAba("anunciantes")}
-              className={`rounded-xl px-4 py-3 text-xs font-black ${
-                aba === "anunciantes"
-                  ? "bg-blue-900 text-white"
-                  : "bg-white text-slate-600"
-              }`}
-            >
-              🏪 Anunciantes
-            </button>
-
-            <button
-              onClick={() => setAba("moradores")}
-              className={`rounded-xl px-4 py-3 text-xs font-black ${
-                aba === "moradores"
-                  ? "bg-blue-900 text-white"
-                  : "bg-white text-slate-600"
-              }`}
-            >
-              👤 Moradores
-            </button>
-
-            <button
-              onClick={() => setAba("publicidades")}
-              className={`rounded-xl px-4 py-3 text-xs font-black ${
-                aba === "publicidades"
-                  ? "bg-blue-900 text-white"
-                  : "bg-white text-slate-600"
-              }`}
-            >
-              📢 Publicidades
-            </button>
-
-            <button
-              onClick={() => setAba("denuncias")}
-              className={`rounded-xl px-4 py-3 text-xs font-black ${
-                aba === "denuncias"
-                  ? "bg-blue-900 text-white"
-                  : "bg-white text-slate-600"
-              }`}
-            >
-              🚩 Denúncias
-            </button>
-
-          </div>
-        </div>
-
-        {/* ANUNCIANTES */}
-        {aba === "anunciantes" && (
-          <section className="mt-5 space-y-4">
-
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
-
-              <div className="flex items-center justify-between">
-
-                <div>
-                  <h2 className="text-lg font-black text-slate-900">
-                    🏪 Anunciantes
-                  </h2>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    Aprove ou gerencie os negócios cadastrados.
-                  </p>
+    <main className="min-h-screen bg-slate-100 p-4 md:p-6">
+      <div className="mx-auto max-w-7xl">
+        <header className="mb-6">
+          <div className="rounded-2xl bg-slate-900 p-6 text-white shadow-lg">
+            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+              <div>
+                <div className="mb-1 text-sm font-semibold uppercase tracking-wider text-amber-400">
+                  Sobradão 360
                 </div>
 
-                <button
-                  onClick={carregarDados}
-                  className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-600"
-                >
-                  🔄 Atualizar
-                </button>
+                <h1 className="text-2xl font-bold md:text-3xl">
+                  Painel Master
+                </h1>
 
+                <p className="mt-1 text-sm text-slate-300">
+                  Administração dos anunciantes
+                  parceiros
+                </p>
               </div>
 
+              <div className="rounded-xl bg-white/10 px-4 py-3 text-sm">
+                Logado como:
+                <div className="font-bold text-white">
+                  {user?.email || "Master"}
+                </div>
+              </div>
             </div>
+          </div>
+        </header>
 
-            {carregando ? (
-              <div className="rounded-2xl bg-white p-8 text-center">
-                <p className="text-sm font-bold text-slate-500">
-                  Carregando...
-                </p>
+        <section className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <div className="text-sm text-slate-500">
+              Total
+            </div>
+            <div className="mt-1 text-3xl font-bold text-slate-900">
+              {total}
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <div className="text-sm text-slate-500">
+              Pendentes
+            </div>
+            <div className="mt-1 text-3xl font-bold text-amber-500">
+              {pendentes}
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <div className="text-sm text-slate-500">
+              Aprovados
+            </div>
+            <div className="mt-1 text-3xl font-bold text-green-600">
+              {aprovadas}
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <div className="text-sm text-slate-500">
+              Suspensos
+            </div>
+            <div className="mt-1 text-3xl font-bold text-red-600">
+              {suspensas}
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-6 flex flex-wrap gap-2">
+          {[
+            ["todos", "Todos"],
+            ["PENDENTE", "Pendentes"],
+            ["APROVADO", "Aprovados"],
+            ["SUSPENSO", "Suspensos"],
+          ].map(
+            ([valor, texto]: [string, string]) => (
+              <button
+                key={valor}
+                type="button"
+                onClick={() => setFiltro(valor)}
+                className={`rounded-xl px-4 py-2 text-sm font-bold transition ${
+                  filtro === valor
+                    ? "bg-slate-900 text-white"
+                    : "bg-white text-slate-600 shadow-sm hover:bg-slate-50"
+                }`}
+              >
+                {texto}
+              </button>
+            )
+          )}
+        </section>
+
+        <section className="space-y-4">
+          {lojasFiltradas.length === 0 ? (
+            <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
+              <div className="mb-2 text-4xl">
+                🏪
               </div>
-            ) : anunciantes.length === 0 ? (
-              <div className="rounded-2xl bg-white p-8 text-center">
-                <div className="text-4xl">🏪</div>
-                <p className="mt-3 text-sm font-black">
-                  Nenhum anunciante cadastrado.
-                </p>
-              </div>
-            ) : (
-              anunciantes.map((item) => (
-                <article
-                  key={item.id}
-                  className="rounded-3xl bg-white p-5 shadow-sm"
-                >
 
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <h2 className="font-bold text-slate-800">
+                Nenhum anunciante encontrado
+              </h2>
 
-                    <div className="min-w-0">
+              <p className="mt-1 text-sm text-slate-500">
+                Não existem parceiros neste filtro.
+              </p>
+            </div>
+          ) : (
+            lojasFiltradas.map(
+              (item: LojaParceira) => {
+                const status =
+                  item.status || "PENDENTE";
 
-                      <div className="flex flex-wrap items-center gap-2">
-
-                        <h3 className="text-lg font-black text-slate-900">
-                          {item.nome}
-                        </h3>
-
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-[9px] font-black ${
-                            item.status === "APROVADO"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : item.status === "SUSPENSO"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-amber-100 text-amber-700"
-                          }`}
-                        >
-                          {item.status || "PENDENTE"}
-                        </span>
-
-                      </div>
-
-                      <p className="mt-1 text-xs font-bold text-blue-700">
-                        {item.tipo}
-                      </p>
-
-                      <p className="mt-3 text-sm leading-6 text-slate-600">
-                        {item.descricao || "Sem descrição."}
-                      </p>
-
-                      <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-slate-500">
-
-                        {item.telefone && (
-                          <span className="rounded-lg bg-slate-100 px-2 py-1">
-                            📞 {item.telefone}
-                          </span>
-                        )}
-
-                        {item.whatsapp && (
-                          <span className="rounded-lg bg-slate-100 px-2 py-1">
-                            📱 {item.whatsapp}
-                          </span>
-                        )}
-
-                      </div>
-
-                    </div>
-
-                    <div className="flex shrink-0 flex-wrap gap-2">
-
-                      {item.status === "PENDENTE" && (
-                        <button
-                          onClick={() =>
-                            aprovarAnunciante(item)
-                          }
-                          disabled={processando === item.id}
-                          className="rounded-xl bg-emerald-600 px-4 py-3 text-xs font-black text-white disabled:opacity-50"
-                        >
-                          {processando === item.id
-                            ? "..."
-                            : "✓ Aprovar"}
-                        </button>
-                      )}
-
-                      {item.status === "APROVADO" &&
-                        item.ativo && (
-                          <button
-                            onClick={() =>
-                              suspenderAnunciante(item)
-                            }
-                            disabled={processando === item.id}
-                            className="rounded-xl bg-red-600 px-4 py-3 text-xs font-black text-white disabled:opacity-50"
+                return (
+                  <article
+                    key={item.id}
+                    className="rounded-2xl bg-white p-5 shadow-sm"
+                  >
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-bold ${
+                              status === "APROVADO"
+                                ? "bg-green-100 text-green-700"
+                                : status ===
+                                  "SUSPENSO"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-amber-100 text-amber-700"
+                            }`}
                           >
-                            Suspender
+                            {status}
+                          </span>
+
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                            {TIPOS[
+                              item.tipo || ""
+                            ] || "Parceiro"}
+                          </span>
+                        </div>
+
+                        <h2 className="text-xl font-bold text-slate-900">
+                          {item.nome ||
+                            item.titulo ||
+                            "Sem nome"}
+                        </h2>
+
+                        {item.subtitulo && (
+                          <p className="mt-1 text-sm text-slate-500">
+                            {item.subtitulo}
+                          </p>
+                        )}
+
+                        <div className="mt-4 grid gap-2 text-sm md:grid-cols-2">
+                          <div>
+                            <span className="font-semibold text-slate-700">
+                              Responsável:
+                            </span>{" "}
+                            {item.nomeResponsavel ||
+                              "Não informado"}
+                          </div>
+
+                          <div>
+                            <span className="font-semibold text-slate-700">
+                              E-mail:
+                            </span>{" "}
+                            {item.emailDono ||
+                              "Não informado"}
+                          </div>
+
+                          <div>
+                            <span className="font-semibold text-slate-700">
+                              Telefone:
+                            </span>{" "}
+                            {item.telefone ||
+                              "Não informado"}
+                          </div>
+
+                          <div>
+                            <span className="font-semibold text-slate-700">
+                              WhatsApp:
+                            </span>{" "}
+                            {item.whatsapp ||
+                              "Não informado"}
+                          </div>
+
+                          <div>
+                            <span className="font-semibold text-slate-700">
+                              Presença:
+                            </span>{" "}
+                            {DESTINOS[
+                              item.tipoPresenca ||
+                                ""
+                            ] ||
+                              "Página Sobradão 360"}
+                          </div>
+
+                          <div>
+                            <span className="font-semibold text-slate-700">
+                              Cadastro:
+                            </span>{" "}
+                            {formatarData(
+                              item.criadoEm
+                            )}
+                          </div>
+                        </div>
+
+                        {item.siteUrl && (
+                          <div className="mt-3 break-all text-sm">
+                            <span className="font-semibold text-slate-700">
+                              Site:
+                            </span>{" "}
+                            {item.siteUrl}
+                          </div>
+                        )}
+
+                        {item.descricao && (
+                          <p className="mt-3 line-clamp-3 text-sm text-slate-600">
+                            {item.descricao}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 lg:w-[270px] lg:justify-end">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelecionada(item)
+                          }
+                          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                        >
+                          Detalhes
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            abrirDestino(item)
+                          }
+                          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
+                        >
+                          Abrir
+                        </button>
+
+                        {status !== "APROVADO" && (
+                          <button
+                            type="button"
+                            disabled={
+                              processando ===
+                              item.id
+                            }
+                            onClick={() =>
+                              aprovarLoja(
+                                item.id
+                              )
+                            }
+                            className="rounded-xl bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+                          >
+                            {processando ===
+                            item.id
+                              ? "..."
+                              : "Aprovar"}
                           </button>
                         )}
 
-                      {(item.status === "SUSPENSO" ||
-                        !item.ativo) && (
-                        <button
-                          onClick={() =>
-                            reativarAnunciante(item)
-                          }
-                          disabled={processando === item.id}
-                          className="rounded-xl bg-blue-700 px-4 py-3 text-xs font-black text-white disabled:opacity-50"
-                        >
-                          Reativar
-                        </button>
-                      )}
-
-                      {item.ativo && (
-                        <Link
-                          href={`/loja/${item.id}`}
-                          target="_blank"
-                          className="rounded-xl bg-slate-100 px-4 py-3 text-xs font-black text-slate-700"
-                        >
-                          👁 Ver página
-                        </Link>
-                      )}
-
-                    </div>
-
-                  </div>
-
-                </article>
-              ))
-            )}
-
-          </section>
-        )}
-
-        {/* MORADORES */}
-        {aba === "moradores" && (
-          <section className="mt-5 space-y-4">
-
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-black text-slate-900">
-                👤 Moradores
-              </h2>
-
-              <p className="mt-1 text-xs text-slate-500">
-                Gerencie o acesso dos moradores ao portal.
-              </p>
-            </div>
-
-            {moradores.length === 0 ? (
-              <div className="rounded-2xl bg-white p-8 text-center">
-                <p className="text-sm text-slate-500">
-                  Nenhum morador cadastrado.
-                </p>
-              </div>
-            ) : (
-              moradores.map((usuario) => (
-                <article
-                  key={usuario.id}
-                  className="rounded-2xl bg-white p-5 shadow-sm"
-                >
-
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-                    <div className="flex items-center gap-3">
-
-                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-slate-100">
-
-                        {usuario.foto ? (
-                          <img
-                            src={usuario.foto}
-                            alt={usuario.nome}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-xl">
-                            👤
-                          </span>
+                        {status === "APROVADO" && (
+                          <button
+                            type="button"
+                            disabled={
+                              processando ===
+                              item.id
+                            }
+                            onClick={() =>
+                              suspenderLoja(
+                                item.id
+                              )
+                            }
+                            className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                          >
+                            {processando ===
+                            item.id
+                              ? "..."
+                              : "Suspender"}
+                          </button>
                         )}
 
+                        {status === "SUSPENSO" && (
+                          <button
+                            type="button"
+                            disabled={
+                              processando ===
+                              item.id
+                            }
+                            onClick={() =>
+                              reativarLoja(
+                                item.id
+                              )
+                            }
+                            className="rounded-xl bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+                          >
+                            {processando ===
+                            item.id
+                              ? "..."
+                              : "Reativar"}
+                          </button>
+                        )}
                       </div>
-
-                      <div>
-                        <p className="text-sm font-black text-slate-800">
-                          {usuario.nome}
-                        </p>
-
-                        <p className="text-[10px] text-slate-400">
-                          {usuario.email}
-                        </p>
-
-                        <span
-                          className={`mt-1 inline-flex rounded-full px-2 py-1 text-[9px] font-black ${
-                            usuario.status === "ATIVO"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : usuario.status === "SUSPENSO"
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {usuario.status}
-                        </span>
-                      </div>
-
                     </div>
-
-                    <div className="flex flex-wrap gap-2">
-
-                      {usuario.status !== "ATIVO" && (
-                        <button
-                          onClick={() =>
-                            alterarStatusMorador(
-                              usuario,
-                              "ATIVO"
-                            )
-                          }
-                          disabled={
-                            processando === usuario.id
-                          }
-                          className="rounded-xl bg-emerald-600 px-4 py-3 text-xs font-black text-white disabled:opacity-50"
-                        >
-                          ✓ Liberar
-                        </button>
-                      )}
-
-                      {usuario.status === "ATIVO" && (
-                        <button
-                          onClick={() =>
-                            alterarStatusMorador(
-                              usuario,
-                              "SUSPENSO"
-                            )
-                          }
-                          disabled={
-                            processando === usuario.id
-                          }
-                          className="rounded-xl bg-amber-500 px-4 py-3 text-xs font-black text-white disabled:opacity-50"
-                        >
-                          Suspender
-                        </button>
-                      )}
-
-                      {usuario.status !== "BLOQUEADO" && (
-                        <button
-                          onClick={() =>
-                            alterarStatusMorador(
-                              usuario,
-                              "BLOQUEADO"
-                            )
-                          }
-                          disabled={
-                            processando === usuario.id
-                          }
-                          className="rounded-xl bg-red-600 px-4 py-3 text-xs font-black text-white disabled:opacity-50"
-                        >
-                          Bloquear
-                        </button>
-                      )}
-
-                    </div>
-
-                  </div>
-
-                </article>
-              ))
-            )}
-
-          </section>
-        )}
-
-        {/* PUBLICIDADES */}
-        {aba === "publicidades" && (
-          <section className="mt-5">
-
-            <div className="rounded-3xl bg-white p-7 shadow-sm">
-
-              <div className="text-4xl">
-                📢
-              </div>
-
-              <h2 className="mt-4 text-xl font-black text-slate-900">
-                Publicidades
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Aqui vamos administrar os banners vendidos
-                pelo Sobradão 360.
-              </p>
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-
-                <div className="rounded-2xl border-2 border-dashed border-slate-200 p-5 text-center">
-                  <p className="text-2xl">▭</p>
-                  <p className="mt-2 text-xs font-black">
-                    Banner grande
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border-2 border-dashed border-slate-200 p-5 text-center">
-                  <p className="text-2xl">▭ ▭</p>
-                  <p className="mt-2 text-xs font-black">
-                    Dois banners
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border-2 border-dashed border-slate-200 p-5 text-center">
-                  <p className="text-2xl">▦</p>
-                  <p className="mt-2 text-xs font-black">
-                    Quatro banners
-                  </p>
-                </div>
-
-              </div>
-
-              <div className="mt-6 rounded-2xl bg-amber-50 p-4">
-                <p className="text-xs font-black text-blue-950">
-                  🚧 Próxima etapa
-                </p>
-
-                <p className="mt-1 text-[11px] leading-5 text-slate-600">
-                  Vamos criar o cadastro de banners,
-                  período da publicidade, anunciante,
-                  posição e ativação automática.
-                </p>
-              </div>
-
-            </div>
-
-          </section>
-        )}
-
-        {/* DENÚNCIAS */}
-        {aba === "denuncias" && (
-          <section className="mt-5">
-
-            <div className="rounded-3xl bg-white p-7 shadow-sm">
-
-              <div className="text-4xl">
-                🚩
-              </div>
-
-              <h2 className="mt-4 text-xl font-black text-slate-900">
-                Denúncias
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Aqui serão exibidas as publicações denunciadas
-                pelos moradores.
-              </p>
-
-              <div className="mt-6 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-
-                <p className="text-3xl">
-                  🚩
-                </p>
-
-                <p className="mt-3 text-sm font-black text-slate-700">
-                  Sistema de denúncias
-                </p>
-
-                <p className="mt-2 text-xs leading-5 text-slate-500">
-                  Na próxima etapa vamos conectar esta área
-                  à Voz do Morador, permitindo denunciar,
-                  analisar, manter ou remover publicações.
-                </p>
-
-              </div>
-
-            </div>
-
-          </section>
-        )}
-
+                  </article>
+                );
+              }
+            )
+          )}
+        </section>
       </div>
 
+      {selecionada && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setSelecionada(null)}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wider text-amber-600">
+                  Detalhes do parceiro
+                </div>
+
+                <h2 className="mt-1 text-2xl font-bold text-slate-900">
+                  {selecionada.nome ||
+                    selecionada.titulo ||
+                    "Sem nome"}
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelecionada(null)}
+                className="rounded-xl bg-slate-100 px-3 py-2 font-bold text-slate-600 hover:bg-slate-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 text-sm">
+              <div className="rounded-xl bg-slate-50 p-4">
+                <h3 className="mb-2 font-bold text-slate-800">
+                  Proprietário
+                </h3>
+
+                <p>
+                  <strong>Nome:</strong>{" "}
+                  {selecionada.nomeResponsavel ||
+                    "Não informado"}
+                </p>
+
+                <p>
+                  <strong>E-mail:</strong>{" "}
+                  {selecionada.emailDono ||
+                    "Não informado"}
+                </p>
+
+                <p className="break-all">
+                  <strong>UID:</strong>{" "}
+                  {selecionada.uidDono ||
+                    "Não informado"}
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-slate-50 p-4">
+                <h3 className="mb-2 font-bold text-slate-800">
+                  Negócio
+                </h3>
+
+                <p>
+                  <strong>Tipo:</strong>{" "}
+                  {TIPOS[
+                    selecionada.tipo || ""
+                  ] || "Não informado"}
+                </p>
+
+                <p>
+                  <strong>Telefone:</strong>{" "}
+                  {selecionada.telefone ||
+                    "Não informado"}
+                </p>
+
+                <p>
+                  <strong>WhatsApp:</strong>{" "}
+                  {selecionada.whatsapp ||
+                    "Não informado"}
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-slate-50 p-4">
+                <h3 className="mb-2 font-bold text-slate-800">
+                  Presença no portal
+                </h3>
+
+                <p>
+                  <strong>Destino:</strong>{" "}
+                  {DESTINOS[
+                    selecionada.tipoPresenca ||
+                      ""
+                  ] ||
+                    "Página dentro do Sobradão 360"}
+                </p>
+
+                {selecionada.siteUrl && (
+                  <p className="mt-1 break-all">
+                    <strong>Site:</strong>{" "}
+                    {selecionada.siteUrl}
+                  </p>
+                )}
+
+                {selecionada.destinoDescricao && (
+                  <p className="mt-1">
+                    <strong>Descrição:</strong>{" "}
+                    {selecionada.destinoDescricao}
+                  </p>
+                )}
+              </div>
+
+              {selecionada.descricao && (
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <h3 className="mb-2 font-bold text-slate-800">
+                    Descrição
+                  </h3>
+
+                  <p className="whitespace-pre-wrap text-slate-600">
+                    {selecionada.descricao}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  abrirDestino(selecionada)
+                }
+                className="rounded-xl bg-blue-600 px-5 py-2.5 font-bold text-white hover:bg-blue-700"
+              >
+                Abrir destino
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelecionada(null)}
+                className="rounded-xl bg-slate-900 px-5 py-2.5 font-bold text-white hover:bg-slate-800"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
