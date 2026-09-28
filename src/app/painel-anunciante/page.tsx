@@ -368,9 +368,12 @@ export default function PainelAnunciantePage() {
             texto(dados.destinoDescricao),
 
           siteUrl:
-            texto(dados.siteUrl),
+  texto(dados.siteUrl),
 
-          bannerUrl:
+imagemUrl:
+  texto(dados.imagemUrl),
+
+bannerUrl:
   texto(dados.bannerUrl),
 
 slogan:
