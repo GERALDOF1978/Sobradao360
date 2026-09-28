@@ -10,9 +10,15 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  QueryDocumentSnapshot,
+  DocumentData,
 } from "firebase/firestore";
+import {
+  getAuth,
+  onAuthStateChanged,
+} from "firebase/auth";
+
 import { db } from "@/lib/firebase";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface LojaParceira {
   id: string;
@@ -67,25 +73,45 @@ interface Usuario {
   perfil?: string;
 }
 
+interface UsuarioAuth {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+}
+
 const TIPOS: Record<string, string> = {
   loja: "Loja / Comércio",
   oficina: "Oficina / Assistência",
-  profissional: "Profissional / Prestador",
+  profissional:
+    "Profissional / Prestador",
   alimentacao: "Alimentação",
   eventos: "Eventos",
   empresa: "Empresa",
-  tecnologia: "Tecnologia / Serviço digital",
+  tecnologia:
+    "Tecnologia / Serviço digital",
   outros: "Outro",
 };
 
 const DESTINOS: Record<string, string> = {
-  pagina_sobradao: "Página dentro do Sobradão 360",
+  pagina_sobradao:
+    "Página dentro do Sobradão 360",
   site_externo: "Site / Loja externa",
   whatsapp: "WhatsApp",
 };
 
+const FILTROS: Array<
+  [string, string]
+> = [
+  ["todos", "Todos"],
+  ["PENDENTE", "Pendentes"],
+  ["APROVADO", "Aprovados"],
+  ["SUSPENSO", "Suspensos"],
+];
+
 function formatarData(valor: unknown): string {
-  if (!valor) return "-";
+  if (!valor) {
+    return "-";
+  }
 
   try {
     if (
@@ -93,18 +119,26 @@ function formatarData(valor: unknown): string {
       valor !== null &&
       "toDate" in valor &&
       typeof (
-        valor as { toDate?: unknown }
+        valor as {
+          toDate?: unknown;
+        }
       ).toDate === "function"
     ) {
       const data = (
-        valor as { toDate: () => Date }
+        valor as {
+          toDate: () => Date;
+        }
       ).toDate();
 
-      return data.toLocaleDateString("pt-BR");
+      return data.toLocaleDateString(
+        "pt-BR"
+      );
     }
 
     if (valor instanceof Date) {
-      return valor.toLocaleDateString("pt-BR");
+      return valor.toLocaleDateString(
+        "pt-BR"
+      );
     }
 
     return "-";
@@ -113,137 +147,195 @@ function formatarData(valor: unknown): string {
   }
 }
 
-function limparWhatsapp(numero: string): string {
+function limparWhatsapp(
+  numero: string
+): string {
   return numero.replace(/\D/g, "");
 }
 
 export default function AdminMasterPage() {
-  const { user } = useAuth();
+  const [user, setUser] =
+    useState<UsuarioAuth | null>(null);
 
-  const [autorizado, setAutorizado] = useState(false);
-  const [carregando, setCarregando] = useState(true);
+  const [autorizado, setAutorizado] =
+    useState(false);
 
-  const [lojas, setLojas] = useState<LojaParceira[]>([]);
+  const [carregando, setCarregando] =
+    useState(true);
+
+  const [lojas, setLojas] =
+    useState<LojaParceira[]>([]);
+
   const [selecionada, setSelecionada] =
     useState<LojaParceira | null>(null);
 
   const [processando, setProcessando] =
     useState<string | null>(null);
 
-  const [filtro, setFiltro] = useState("todos");
+  const [filtro, setFiltro] =
+    useState("todos");
 
   useEffect(() => {
-    async function verificarMaster() {
-      if (!user) {
-        setAutorizado(false);
-        setCarregando(false);
-        return;
-      }
+    const auth = getAuth();
 
-      try {
-        const usuarioRef = doc(
-          db,
-          "usuarios",
-          user.uid
-        );
+    const cancelar =
+      onAuthStateChanged(
+        auth,
+        async (usuario) => {
+          if (!usuario) {
+            setUser(null);
+            setAutorizado(false);
+            setCarregando(false);
+            return;
+          }
 
-        const usuarioSnapshot =
-          await getDoc(usuarioRef);
+          const usuarioAtual: UsuarioAuth =
+            {
+              uid: usuario.uid,
+              email: usuario.email,
+              displayName:
+                usuario.displayName,
+            };
 
-        if (!usuarioSnapshot.exists()) {
-          setAutorizado(false);
-          setCarregando(false);
-          return;
+          setUser(usuarioAtual);
+
+          try {
+            const usuarioRef = doc(
+              db,
+              "usuarios",
+              usuario.uid
+            );
+
+            const usuarioSnapshot =
+              await getDoc(usuarioRef);
+
+            if (
+              !usuarioSnapshot.exists()
+            ) {
+              setAutorizado(false);
+              setCarregando(false);
+              return;
+            }
+
+            const dados =
+              usuarioSnapshot.data() as Omit<
+                Usuario,
+                "id"
+              >;
+
+            if (
+              dados.perfil !==
+              "master"
+            ) {
+              setAutorizado(false);
+              setCarregando(false);
+              return;
+            }
+
+            setAutorizado(true);
+
+            await carregarLojas();
+          } catch (error: unknown) {
+            console.error(
+              "Erro ao verificar acesso Master:",
+              error
+            );
+
+            setAutorizado(false);
+          } finally {
+            setCarregando(false);
+          }
         }
+      );
 
-        const dados =
-          usuarioSnapshot.data() as Usuario;
-
-        if (dados.perfil !== "master") {
-          setAutorizado(false);
-          setCarregando(false);
-          return;
-        }
-
-        setAutorizado(true);
-
-        await carregarLojas();
-      } catch (error: unknown) {
-        console.error(
-          "Erro ao verificar acesso Master:",
-          error
-        );
-
-        setAutorizado(false);
-      } finally {
-        setCarregando(false);
-      }
-    }
-
-    verificarMaster();
-  }, [user]);
+    return () => cancelar();
+  }, []);
 
   async function carregarLojas() {
     try {
-      const lojasRef = collection(
-        db,
-        "lojas_parceiras"
-      );
+      const lojasRef =
+        collection(
+          db,
+          "lojas_parceiras"
+        );
 
       const consulta = query(
         lojasRef,
-        orderBy("criadoEm", "desc")
+        orderBy(
+          "criadoEm",
+          "desc"
+        )
       );
 
-      const snapshot = await getDocs(consulta);
+      const snapshot =
+        await getDocs(consulta);
 
-      const usuariosSnapshot = await getDocs(
-        collection(db, "usuarios")
-      );
+      const usuariosSnapshot =
+        await getDocs(
+          collection(
+            db,
+            "usuarios"
+          )
+        );
 
       const usuariosMap =
         new Map<string, Usuario>();
 
       usuariosSnapshot.docs.forEach(
-        (usuarioDoc) => {
+        (
+          usuarioDoc: QueryDocumentSnapshot<DocumentData>
+        ) => {
           const dados =
-            usuarioDoc.data() as Omit<Usuario, "id">;
+            usuarioDoc.data() as Omit<
+              Usuario,
+              "id"
+            >;
 
-          usuariosMap.set(usuarioDoc.id, {
-            id: usuarioDoc.id,
-            ...dados,
-          });
+          usuariosMap.set(
+            usuarioDoc.id,
+            {
+              id: usuarioDoc.id,
+              ...dados,
+            }
+          );
         }
       );
 
       const lista: LojaParceira[] =
-        snapshot.docs.map((item) => {
-          const dados =
-            item.data() as Omit<
-              LojaParceira,
-              "id"
-            >;
+        snapshot.docs.map(
+          (
+            item: QueryDocumentSnapshot<DocumentData>
+          ) => {
+            const dados =
+              item.data() as Omit<
+                LojaParceira,
+                "id"
+              >;
 
-          const usuario = dados.uidDono
-            ? usuariosMap.get(dados.uidDono)
-            : undefined;
+            const usuario =
+              dados.uidDono
+                ? usuariosMap.get(
+                    dados.uidDono
+                  )
+                : undefined;
 
-          return {
-            id: item.id,
-            ...dados,
+            return {
+              id: item.id,
+              ...dados,
 
-            nomeResponsavel:
-              dados.nomeResponsavel ||
-              usuario?.nome ||
-              usuario?.displayName ||
-              "",
+              nomeResponsavel:
+                dados.nomeResponsavel ||
+                usuario?.nome ||
+                usuario?.displayName ||
+                "",
 
-            emailDono:
-              dados.emailDono ||
-              usuario?.email ||
-              "",
-          };
-        });
+              emailDono:
+                dados.emailDono ||
+                usuario?.email ||
+                "",
+            };
+          }
+        );
 
       setLojas(lista);
     } catch (error: unknown) {
@@ -254,7 +346,9 @@ export default function AdminMasterPage() {
     }
   }
 
-  async function aprovarLoja(id: string) {
+  async function aprovarLoja(
+    id: string
+  ) {
     setProcessando(id);
 
     try {
@@ -267,30 +361,42 @@ export default function AdminMasterPage() {
       await updateDoc(lojaRef, {
         status: "APROVADO",
         ativo: true,
-        atualizadoEm: serverTimestamp(),
+        atualizadoEm:
+          serverTimestamp(),
       });
 
-      setLojas((lista) =>
-        lista.map((item: LojaParceira) =>
-          item.id === id
-            ? {
-                ...item,
-                status: "APROVADO",
-                ativo: true,
-              }
-            : item
-        )
+      setLojas(
+        (lista: LojaParceira[]) =>
+          lista.map(
+            (
+              item: LojaParceira
+            ) =>
+              item.id === id
+                ? {
+                    ...item,
+                    status:
+                      "APROVADO",
+                    ativo: true,
+                  }
+                : item
+          )
       );
 
-      if (selecionada?.id === id) {
-        setSelecionada((item) =>
-          item
-            ? {
-                ...item,
-                status: "APROVADO",
-                ativo: true,
-              }
-            : null
+      if (
+        selecionada?.id === id
+      ) {
+        setSelecionada(
+          (
+            item: LojaParceira | null
+          ) =>
+            item
+              ? {
+                  ...item,
+                  status:
+                    "APROVADO",
+                  ativo: true,
+                }
+              : null
         );
       }
     } catch (error: unknown) {
@@ -307,7 +413,9 @@ export default function AdminMasterPage() {
     }
   }
 
-  async function suspenderLoja(id: string) {
+  async function suspenderLoja(
+    id: string
+  ) {
     setProcessando(id);
 
     try {
@@ -320,30 +428,42 @@ export default function AdminMasterPage() {
       await updateDoc(lojaRef, {
         status: "SUSPENSO",
         ativo: false,
-        atualizadoEm: serverTimestamp(),
+        atualizadoEm:
+          serverTimestamp(),
       });
 
-      setLojas((lista) =>
-        lista.map((item: LojaParceira) =>
-          item.id === id
-            ? {
-                ...item,
-                status: "SUSPENSO",
-                ativo: false,
-              }
-            : item
-        )
+      setLojas(
+        (lista: LojaParceira[]) =>
+          lista.map(
+            (
+              item: LojaParceira
+            ) =>
+              item.id === id
+                ? {
+                    ...item,
+                    status:
+                      "SUSPENSO",
+                    ativo: false,
+                  }
+                : item
+          )
       );
 
-      if (selecionada?.id === id) {
-        setSelecionada((item) =>
-          item
-            ? {
-                ...item,
-                status: "SUSPENSO",
-                ativo: false,
-              }
-            : null
+      if (
+        selecionada?.id === id
+      ) {
+        setSelecionada(
+          (
+            item: LojaParceira | null
+          ) =>
+            item
+              ? {
+                  ...item,
+                  status:
+                    "SUSPENSO",
+                  ativo: false,
+                }
+              : null
         );
       }
     } catch (error: unknown) {
@@ -360,7 +480,9 @@ export default function AdminMasterPage() {
     }
   }
 
-  async function reativarLoja(id: string) {
+  async function reativarLoja(
+    id: string
+  ) {
     setProcessando(id);
 
     try {
@@ -373,30 +495,42 @@ export default function AdminMasterPage() {
       await updateDoc(lojaRef, {
         status: "APROVADO",
         ativo: true,
-        atualizadoEm: serverTimestamp(),
+        atualizadoEm:
+          serverTimestamp(),
       });
 
-      setLojas((lista) =>
-        lista.map((item: LojaParceira) =>
-          item.id === id
-            ? {
-                ...item,
-                status: "APROVADO",
-                ativo: true,
-              }
-            : item
-        )
+      setLojas(
+        (lista: LojaParceira[]) =>
+          lista.map(
+            (
+              item: LojaParceira
+            ) =>
+              item.id === id
+                ? {
+                    ...item,
+                    status:
+                      "APROVADO",
+                    ativo: true,
+                  }
+                : item
+          )
       );
 
-      if (selecionada?.id === id) {
-        setSelecionada((item) =>
-          item
-            ? {
-                ...item,
-                status: "APROVADO",
-                ativo: true,
-              }
-            : null
+      if (
+        selecionada?.id === id
+      ) {
+        setSelecionada(
+          (
+            item: LojaParceira | null
+          ) =>
+            item
+              ? {
+                  ...item,
+                  status:
+                    "APROVADO",
+                  ativo: true,
+                }
+              : null
         );
       }
     } catch (error: unknown) {
@@ -413,14 +547,21 @@ export default function AdminMasterPage() {
     }
   }
 
-  function abrirDestino(item: LojaParceira) {
+  function abrirDestino(
+    item: LojaParceira
+  ) {
     if (
-      item.tipoPresenca === "site_externo" &&
+      item.tipoPresenca ===
+        "site_externo" &&
       item.siteUrl
     ) {
       const url =
-        item.siteUrl.startsWith("http://") ||
-        item.siteUrl.startsWith("https://")
+        item.siteUrl.startsWith(
+          "http://"
+        ) ||
+        item.siteUrl.startsWith(
+          "https://"
+        )
           ? item.siteUrl
           : `https://${item.siteUrl}`;
 
@@ -434,12 +575,14 @@ export default function AdminMasterPage() {
     }
 
     if (
-      item.tipoPresenca === "whatsapp" &&
+      item.tipoPresenca ===
+        "whatsapp" &&
       item.whatsapp
     ) {
-      const numero = limparWhatsapp(
-        item.whatsapp
-      );
+      const numero =
+        limparWhatsapp(
+          item.whatsapp
+        );
 
       if (numero) {
         window.open(
@@ -463,33 +606,51 @@ export default function AdminMasterPage() {
     filtro === "todos"
       ? lojas
       : lojas.filter(
-          (item: LojaParceira) =>
-            (item.status || "PENDENTE") === filtro
+          (
+            item: LojaParceira
+          ) =>
+            (item.status ||
+              "PENDENTE") ===
+            filtro
         );
 
   const total = lojas.length;
 
-  const pendentes = lojas.filter(
-    (item: LojaParceira) =>
-      (item.status || "PENDENTE") === "PENDENTE"
-  ).length;
+  const pendentes =
+    lojas.filter(
+      (
+        item: LojaParceira
+      ) =>
+        (item.status ||
+          "PENDENTE") ===
+        "PENDENTE"
+    ).length;
 
-  const aprovadas = lojas.filter(
-    (item: LojaParceira) =>
-      item.status === "APROVADO"
-  ).length;
+  const aprovadas =
+    lojas.filter(
+      (
+        item: LojaParceira
+      ) =>
+        item.status ===
+        "APROVADO"
+    ).length;
 
-  const suspensas = lojas.filter(
-    (item: LojaParceira) =>
-      item.status === "SUSPENSO"
-  ).length;
+  const suspensas =
+    lojas.filter(
+      (
+        item: LojaParceira
+      ) =>
+        item.status ===
+        "SUSPENSO"
+    ).length;
 
   if (carregando) {
     return (
       <main className="min-h-screen bg-slate-100 p-6">
         <div className="mx-auto max-w-7xl">
           <div className="rounded-2xl bg-white p-8 text-center shadow">
-            Carregando painel Master...
+            Carregando painel
+            Master...
           </div>
         </div>
       </main>
@@ -500,16 +661,27 @@ export default function AdminMasterPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow">
-          <div className="mb-4 text-5xl">🔒</div>
+
+          <div className="mb-4 text-5xl">
+            🔒
+          </div>
 
           <h1 className="text-xl font-bold text-slate-900">
             Acesso restrito
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
-            Esta área é exclusiva para o usuário
-            Master.
+            Esta área é exclusiva
+            para o usuário Master.
           </p>
+
+          {user?.email && (
+            <p className="mt-4 text-xs text-slate-400">
+              Usuário:{" "}
+              {user.email}
+            </p>
+          )}
+
         </div>
       </main>
     );
@@ -517,11 +689,18 @@ export default function AdminMasterPage() {
 
   return (
     <main className="min-h-screen bg-slate-100 p-4 md:p-6">
+
       <div className="mx-auto max-w-7xl">
+
+        {/* CABEÇALHO */}
         <header className="mb-6">
+
           <div className="rounded-2xl bg-slate-900 p-6 text-white shadow-lg">
+
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+
               <div>
+
                 <div className="mb-1 text-sm font-semibold uppercase tracking-wider text-amber-400">
                   Sobradão 360
                 </div>
@@ -531,26 +710,37 @@ export default function AdminMasterPage() {
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-300">
-                  Administração dos anunciantes
-                  parceiros
+                  Administração dos
+                  anunciantes parceiros
                 </p>
+
               </div>
 
               <div className="rounded-xl bg-white/10 px-4 py-3 text-sm">
+
                 Logado como:
+
                 <div className="font-bold text-white">
-                  {user?.email || "Master"}
+                  {user?.email ||
+                    "Master"}
                 </div>
+
               </div>
+
             </div>
+
           </div>
+
         </header>
 
+        {/* RESUMO */}
         <section className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+
           <div className="rounded-2xl bg-white p-5 shadow-sm">
             <div className="text-sm text-slate-500">
               Total
             </div>
+
             <div className="mt-1 text-3xl font-bold text-slate-900">
               {total}
             </div>
@@ -560,6 +750,7 @@ export default function AdminMasterPage() {
             <div className="text-sm text-slate-500">
               Pendentes
             </div>
+
             <div className="mt-1 text-3xl font-bold text-amber-500">
               {pendentes}
             </div>
@@ -569,6 +760,7 @@ export default function AdminMasterPage() {
             <div className="text-sm text-slate-500">
               Aprovados
             </div>
+
             <div className="mt-1 text-3xl font-bold text-green-600">
               {aprovadas}
             </div>
@@ -578,68 +770,100 @@ export default function AdminMasterPage() {
             <div className="text-sm text-slate-500">
               Suspensos
             </div>
+
             <div className="mt-1 text-3xl font-bold text-red-600">
               {suspensas}
             </div>
           </div>
+
         </section>
 
+        {/* FILTROS */}
         <section className="mb-6 flex flex-wrap gap-2">
-          {[
-            ["todos", "Todos"],
-            ["PENDENTE", "Pendentes"],
-            ["APROVADO", "Aprovados"],
-            ["SUSPENSO", "Suspensos"],
-          ].map(
-            ([valor, texto]: [string, string]) => (
-              <button
-                key={valor}
-                type="button"
-                onClick={() => setFiltro(valor)}
-                className={`rounded-xl px-4 py-2 text-sm font-bold transition ${
-                  filtro === valor
-                    ? "bg-slate-900 text-white"
-                    : "bg-white text-slate-600 shadow-sm hover:bg-slate-50"
-                }`}
-              >
-                {texto}
-              </button>
-            )
+
+          {FILTROS.map(
+            (
+              filtroItem: [
+                string,
+                string
+              ]
+            ) => {
+              const [
+                valor,
+                texto,
+              ] = filtroItem;
+
+              return (
+                <button
+                  key={valor}
+                  type="button"
+                  onClick={() =>
+                    setFiltro(
+                      valor
+                    )
+                  }
+                  className={`rounded-xl px-4 py-2 text-sm font-bold transition ${
+                    filtro === valor
+                      ? "bg-slate-900 text-white"
+                      : "bg-white text-slate-600 shadow-sm hover:bg-slate-50"
+                  }`}
+                >
+                  {texto}
+                </button>
+              );
+            }
           )}
+
         </section>
 
+        {/* LISTA */}
         <section className="space-y-4">
-          {lojasFiltradas.length === 0 ? (
+
+          {lojasFiltradas.length ===
+          0 ? (
             <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
+
               <div className="mb-2 text-4xl">
                 🏪
               </div>
 
               <h2 className="font-bold text-slate-800">
-                Nenhum anunciante encontrado
+                Nenhum anunciante
+                encontrado
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                Não existem parceiros neste filtro.
+                Não existem parceiros
+                neste filtro.
               </p>
+
             </div>
           ) : (
             lojasFiltradas.map(
-              (item: LojaParceira) => {
+              (
+                item: LojaParceira
+              ) => {
+
                 const status =
-                  item.status || "PENDENTE";
+                  item.status ||
+                  "PENDENTE";
 
                 return (
                   <article
                     key={item.id}
                     className="rounded-2xl bg-white p-5 shadow-sm"
                   >
+
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+
                       <div className="min-w-0 flex-1">
+
                         <div className="mb-2 flex flex-wrap items-center gap-2">
+
                           <span
                             className={`rounded-full px-3 py-1 text-xs font-bold ${
-                              status === "APROVADO"
+                              status ===
+                              "APROVADO"
                                 ? "bg-green-100 text-green-700"
                                 : status ===
                                   "SUSPENSO"
@@ -652,9 +876,12 @@ export default function AdminMasterPage() {
 
                           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                             {TIPOS[
-                              item.tipo || ""
-                            ] || "Parceiro"}
+                              item.tipo ||
+                                ""
+                            ] ||
+                              "Parceiro"}
                           </span>
+
                         </div>
 
                         <h2 className="text-xl font-bold text-slate-900">
@@ -665,11 +892,14 @@ export default function AdminMasterPage() {
 
                         {item.subtitulo && (
                           <p className="mt-1 text-sm text-slate-500">
-                            {item.subtitulo}
+                            {
+                              item.subtitulo
+                            }
                           </p>
                         )}
 
                         <div className="mt-4 grid gap-2 text-sm md:grid-cols-2">
+
                           <div>
                             <span className="font-semibold text-slate-700">
                               Responsável:
@@ -721,6 +951,7 @@ export default function AdminMasterPage() {
                               item.criadoEm
                             )}
                           </div>
+
                         </div>
 
                         {item.siteUrl && (
@@ -728,22 +959,30 @@ export default function AdminMasterPage() {
                             <span className="font-semibold text-slate-700">
                               Site:
                             </span>{" "}
-                            {item.siteUrl}
+                            {
+                              item.siteUrl
+                            }
                           </div>
                         )}
 
                         {item.descricao && (
                           <p className="mt-3 line-clamp-3 text-sm text-slate-600">
-                            {item.descricao}
+                            {
+                              item.descricao
+                            }
                           </p>
                         )}
+
                       </div>
 
                       <div className="flex flex-wrap gap-2 lg:w-[270px] lg:justify-end">
+
                         <button
                           type="button"
                           onClick={() =>
-                            setSelecionada(item)
+                            setSelecionada(
+                              item
+                            )
                           }
                           className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
                         >
@@ -753,14 +992,17 @@ export default function AdminMasterPage() {
                         <button
                           type="button"
                           onClick={() =>
-                            abrirDestino(item)
+                            abrirDestino(
+                              item
+                            )
                           }
                           className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
                         >
                           Abrir
                         </button>
 
-                        {status !== "APROVADO" && (
+                        {status !==
+                          "APROVADO" && (
                           <button
                             type="button"
                             disabled={
@@ -781,7 +1023,8 @@ export default function AdminMasterPage() {
                           </button>
                         )}
 
-                        {status === "APROVADO" && (
+                        {status ===
+                          "APROVADO" && (
                           <button
                             type="button"
                             disabled={
@@ -802,7 +1045,8 @@ export default function AdminMasterPage() {
                           </button>
                         )}
 
-                        {status === "SUSPENSO" && (
+                        {status ===
+                          "SUSPENSO" && (
                           <button
                             type="button"
                             disabled={
@@ -822,29 +1066,43 @@ export default function AdminMasterPage() {
                               : "Reativar"}
                           </button>
                         )}
+
                       </div>
+
                     </div>
+
                   </article>
                 );
               }
             )
           )}
+
         </section>
+
       </div>
 
+      {/* MODAL */}
       {selecionada && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={() => setSelecionada(null)}
+          onClick={() =>
+            setSelecionada(null)
+          }
         >
+
           <div
             className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
-            onClick={(event) =>
+            onClick={(
+              event
+            ) =>
               event.stopPropagation()
             }
           >
+
             <div className="mb-5 flex items-start justify-between gap-4">
+
               <div>
+
                 <div className="text-xs font-bold uppercase tracking-wider text-amber-600">
                   Detalhes do parceiro
                 </div>
@@ -854,74 +1112,102 @@ export default function AdminMasterPage() {
                     selecionada.titulo ||
                     "Sem nome"}
                 </h2>
+
               </div>
 
               <button
                 type="button"
-                onClick={() => setSelecionada(null)}
+                onClick={() =>
+                  setSelecionada(
+                    null
+                  )
+                }
                 className="rounded-xl bg-slate-100 px-3 py-2 font-bold text-slate-600 hover:bg-slate-200"
               >
                 ✕
               </button>
+
             </div>
 
             <div className="space-y-4 text-sm">
+
               <div className="rounded-xl bg-slate-50 p-4">
+
                 <h3 className="mb-2 font-bold text-slate-800">
                   Proprietário
                 </h3>
 
                 <p>
-                  <strong>Nome:</strong>{" "}
+                  <strong>
+                    Nome:
+                  </strong>{" "}
                   {selecionada.nomeResponsavel ||
                     "Não informado"}
                 </p>
 
                 <p>
-                  <strong>E-mail:</strong>{" "}
+                  <strong>
+                    E-mail:
+                  </strong>{" "}
                   {selecionada.emailDono ||
                     "Não informado"}
                 </p>
 
                 <p className="break-all">
-                  <strong>UID:</strong>{" "}
+                  <strong>
+                    UID:
+                  </strong>{" "}
                   {selecionada.uidDono ||
                     "Não informado"}
                 </p>
+
               </div>
 
               <div className="rounded-xl bg-slate-50 p-4">
+
                 <h3 className="mb-2 font-bold text-slate-800">
                   Negócio
                 </h3>
 
                 <p>
-                  <strong>Tipo:</strong>{" "}
+                  <strong>
+                    Tipo:
+                  </strong>{" "}
                   {TIPOS[
-                    selecionada.tipo || ""
-                  ] || "Não informado"}
+                    selecionada.tipo ||
+                      ""
+                  ] ||
+                    "Não informado"}
                 </p>
 
                 <p>
-                  <strong>Telefone:</strong>{" "}
+                  <strong>
+                    Telefone:
+                  </strong>{" "}
                   {selecionada.telefone ||
                     "Não informado"}
                 </p>
 
                 <p>
-                  <strong>WhatsApp:</strong>{" "}
+                  <strong>
+                    WhatsApp:
+                  </strong>{" "}
                   {selecionada.whatsapp ||
                     "Não informado"}
                 </p>
+
               </div>
 
               <div className="rounded-xl bg-slate-50 p-4">
+
                 <h3 className="mb-2 font-bold text-slate-800">
                   Presença no portal
                 </h3>
 
                 <p>
-                  <strong>Destino:</strong>{" "}
+                  <strong>
+                    Destino:
+                  </strong>{" "}
                   {DESTINOS[
                     selecionada.tipoPresenca ||
                       ""
@@ -931,37 +1217,54 @@ export default function AdminMasterPage() {
 
                 {selecionada.siteUrl && (
                   <p className="mt-1 break-all">
-                    <strong>Site:</strong>{" "}
-                    {selecionada.siteUrl}
+                    <strong>
+                      Site:
+                    </strong>{" "}
+                    {
+                      selecionada.siteUrl
+                    }
                   </p>
                 )}
 
                 {selecionada.destinoDescricao && (
                   <p className="mt-1">
-                    <strong>Descrição:</strong>{" "}
-                    {selecionada.destinoDescricao}
+                    <strong>
+                      Descrição:
+                    </strong>{" "}
+                    {
+                      selecionada.destinoDescricao
+                    }
                   </p>
                 )}
+
               </div>
 
               {selecionada.descricao && (
                 <div className="rounded-xl bg-slate-50 p-4">
+
                   <h3 className="mb-2 font-bold text-slate-800">
                     Descrição
                   </h3>
 
                   <p className="whitespace-pre-wrap text-slate-600">
-                    {selecionada.descricao}
+                    {
+                      selecionada.descricao
+                    }
                   </p>
+
                 </div>
               )}
+
             </div>
 
             <div className="mt-6 flex justify-end gap-2">
+
               <button
                 type="button"
                 onClick={() =>
-                  abrirDestino(selecionada)
+                  abrirDestino(
+                    selecionada
+                  )
                 }
                 className="rounded-xl bg-blue-600 px-5 py-2.5 font-bold text-white hover:bg-blue-700"
               >
@@ -970,15 +1273,22 @@ export default function AdminMasterPage() {
 
               <button
                 type="button"
-                onClick={() => setSelecionada(null)}
+                onClick={() =>
+                  setSelecionada(
+                    null
+                  )
+                }
                 className="rounded-xl bg-slate-900 px-5 py-2.5 font-bold text-white hover:bg-slate-800"
               >
                 Fechar
               </button>
+
             </div>
+
           </div>
         </div>
       )}
+
     </main>
   );
 }
