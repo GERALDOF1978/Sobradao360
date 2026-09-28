@@ -15,7 +15,8 @@ import {
   onAuthStateChanged,
   signInWithPopup,
 } from "firebase/auth";
-import type { User as FirebaseUser } from "firebase/auth";
+
+
 
 import { auth, db, googleProvider } from "@/lib/firebase";
 import GerenciadorProdutos from "@/components/anunciante/GerenciadorProdutos";
@@ -230,8 +231,8 @@ function limparWhatsapp(numero: string): string {
 }
 
 export default function PainelAnunciantePage() {
-  const [usuario, setUsuario] =
-    useState<FirebaseUser | null>(null);
+ const [usuario, setUsuario] =
+  useState<typeof auth.currentUser>(null);
 
   const [carregandoUsuario, setCarregandoUsuario] =
     useState(true);
@@ -282,12 +283,12 @@ export default function PainelAnunciantePage() {
 
   useEffect(() => {
     const cancelar = onAuthStateChanged(
-      auth,
-      (usuarioAtual) => {
-        setUsuario(usuarioAtual);
-        setCarregandoUsuario(false);
-      }
-    );
+  auth,
+  (usuarioAtual: typeof auth.currentUser) => {
+    setUsuario(usuarioAtual);
+    setCarregandoUsuario(false);
+  }
+);
 
     return () => cancelar();
   }, []);
