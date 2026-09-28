@@ -119,16 +119,13 @@ function formatarPreco(valor: number) {
   });
 }
 
-function limparWhatsApp(numero: string) {
-  return numero.replace(/\D/g, "");
-}
-
 export default function LojaPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const [negocio, setNegocio] = useState<Negocio | null>(null);
+
   const [produtos, setProdutos] = useState<Produto[]>([]);
 
   const [carregando, setCarregando] = useState(true);
@@ -150,23 +147,29 @@ export default function LojaPage({
           return;
         }
 
+        /*
+         * CARREGA O NEGÓCIO
+         */
         const referencia = doc(
           db,
           "lojas_parceiras",
           id
         );
 
-        const snapshot = await getDoc(referencia);
+        const snapshot = await getDoc(
+          referencia
+        );
 
         if (!snapshot.exists()) {
           setErro("Este negócio não existe.");
           return;
         }
 
-        const data = snapshot.data() as Record<
-          string,
-          unknown
-        >;
+        const data =
+          snapshot.data() as Record<
+            string,
+            unknown
+          >;
 
         if (data.ativo !== true) {
           setErro(
@@ -180,19 +183,17 @@ export default function LojaPage({
             ? data.tipo
             : "empresa";
 
-        const tiposValidos = [
-          "loja",
-          "oficina",
-          "profissional",
-          "alimentacao",
-          "eventos",
-          "empresa",
-          "tecnologia",
-          "outros",
-        ];
-
         const tipoValido: TipoNegocio =
-          tiposValidos.includes(tipo)
+          [
+            "loja",
+            "oficina",
+            "profissional",
+            "alimentacao",
+            "eventos",
+            "empresa",
+            "tecnologia",
+            "outros",
+          ].includes(tipo)
             ? (tipo as TipoNegocio)
             : "empresa";
 
@@ -243,31 +244,36 @@ export default function LojaPage({
           ativo: true,
         });
 
+        /*
+         * CARREGA OS PRODUTOS DA LOJA
+         */
         try {
           setCarregandoProdutos(true);
           setErroProdutos("");
 
-          const produtosRef = collection(
-            db,
-            "produtos"
-          );
+          const produtosRef =
+            collection(db, "produtos");
 
-          const consultaProdutos = query(
-            produtosRef,
-            where("lojaId", "==", id),
-            where("ativo", "==", true)
-          );
+          const consultaProdutos =
+            query(
+              produtosRef,
+              where("lojaId", "==", id),
+              where("ativo", "==", true)
+            );
 
           const produtosSnapshot =
-            await getDocs(consultaProdutos);
+            await getDocs(
+              consultaProdutos
+            );
 
           const lista: Produto[] = [];
 
           for (const documento of produtosSnapshot.docs) {
-            const dados = documento.data() as Record<
-              string,
-              unknown
-            >;
+            const dados =
+              documento.data() as Record<
+                string,
+                unknown
+              >;
 
             lista.push({
               id: documento.id,
@@ -297,7 +303,8 @@ export default function LojaPage({
                   ? dados.imagemUrl
                   : "",
 
-              ativo: dados.ativo === true,
+              ativo:
+                dados.ativo === true,
             });
           }
 
@@ -338,10 +345,17 @@ export default function LojaPage({
     void carregar();
   }, [params]);
 
+  function limparWhatsApp(
+    numero: string
+  ) {
+    return numero.replace(/\D/g, "");
+  }
+
   if (carregando) {
     return (
       <main className="min-h-screen bg-slate-100 px-4 py-8">
         <div className="mx-auto max-w-4xl rounded-3xl bg-white p-10 text-center shadow-sm">
+
           <div className="text-4xl">
             🏪
           </div>
@@ -349,6 +363,7 @@ export default function LojaPage({
           <p className="mt-3 text-sm font-bold text-slate-600">
             Carregando página...
           </p>
+
         </div>
       </main>
     );
@@ -357,7 +372,9 @@ export default function LojaPage({
   if (erro || !negocio) {
     return (
       <main className="min-h-screen bg-slate-100 px-4 py-8">
+
         <div className="mx-auto max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm">
+
           <div className="text-5xl">
             🏪
           </div>
@@ -377,24 +394,33 @@ export default function LojaPage({
           >
             ← Voltar para o Sobradão 360
           </Link>
+
         </div>
+
       </main>
     );
   }
 
   const tipoInfo =
-    TIPOS[negocio.tipo] || TIPOS.empresa;
+    TIPOS[negocio.tipo] ||
+    TIPOS.empresa;
 
   const whatsappNumero =
-    limparWhatsApp(negocio.whatsapp);
+    limparWhatsApp(
+      negocio.whatsapp
+    );
 
   const telefoneNumero =
-    limparWhatsApp(negocio.telefone);
+    limparWhatsApp(
+      negocio.telefone
+    );
 
   return (
     <main className="min-h-screen bg-slate-100 pb-12">
 
+      {/* TOPO DA PÁGINA */}
       <section className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-800 text-white">
+
         <div className="mx-auto max-w-5xl px-4 py-5">
 
           <Link
@@ -406,6 +432,7 @@ export default function LojaPage({
 
           <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-center">
 
+            {/* IMAGEM PRINCIPAL */}
             <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-white/20 bg-white shadow-lg">
 
               {negocio.imagemUrl ? (
@@ -422,13 +449,16 @@ export default function LojaPage({
 
             </div>
 
+            {/* INFORMAÇÕES */}
             <div>
 
               <div className="flex flex-wrap items-center gap-2">
+
                 <span className="rounded-full bg-amber-400 px-3 py-1 text-[10px] font-black uppercase text-blue-950">
                   {tipoInfo.icon}{" "}
                   {tipoInfo.nome}
                 </span>
+
               </div>
 
               <h1 className="mt-2 text-3xl font-black">
@@ -442,12 +472,16 @@ export default function LojaPage({
               )}
 
             </div>
+
           </div>
+
         </div>
+
       </section>
 
       <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
 
+        {/* SOBRE */}
         <section className="rounded-3xl bg-white p-5 shadow-sm">
 
           <h2 className="text-sm font-black text-slate-900">
@@ -466,6 +500,7 @@ export default function LojaPage({
 
         </section>
 
+        {/* CONTATO */}
         <section className="rounded-3xl bg-white p-5 shadow-sm">
 
           <h2 className="text-sm font-black text-slate-900">
@@ -479,6 +514,7 @@ export default function LojaPage({
                 href={`tel:${telefoneNumero}`}
                 className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-300 hover:bg-blue-50"
               >
+
                 <span className="text-2xl">
                   📞
                 </span>
@@ -492,6 +528,7 @@ export default function LojaPage({
                     {negocio.telefone}
                   </p>
                 </div>
+
               </a>
             )}
 
@@ -502,6 +539,7 @@ export default function LojaPage({
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-emerald-300 hover:bg-emerald-50"
               >
+
                 <span className="text-2xl">
                   📱
                 </span>
@@ -515,6 +553,7 @@ export default function LojaPage({
                     Conversar pelo WhatsApp
                   </p>
                 </div>
+
               </a>
             )}
 
@@ -529,6 +568,7 @@ export default function LojaPage({
 
         </section>
 
+        {/* PRODUTOS / SERVIÇOS */}
         <section className="rounded-3xl bg-white p-5 shadow-sm">
 
           <div className="flex items-center gap-3">
@@ -538,7 +578,6 @@ export default function LojaPage({
             </div>
 
             <div>
-
               <h2 className="text-lg font-black text-slate-900">
                 {tipoInfo.titulo}
               </h2>
@@ -546,17 +585,18 @@ export default function LojaPage({
               <p className="text-xs text-slate-500">
                 {tipoInfo.descricao}
               </p>
-
             </div>
 
           </div>
 
+          {/* ERRO DOS PRODUTOS */}
           {erroProdutos && (
             <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-bold text-red-700">
               {erroProdutos}
             </div>
           )}
 
+          {/* CARREGANDO */}
           {carregandoProdutos ? (
 
             <div className="mt-5 rounded-2xl bg-slate-50 p-8 text-center">
@@ -573,6 +613,7 @@ export default function LojaPage({
 
           ) : produtos.length === 0 ? (
 
+            /* NENHUM PRODUTO */
             <div className="mt-5 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-8 text-center">
 
               <div className="text-4xl">
@@ -593,71 +634,80 @@ export default function LojaPage({
 
           ) : (
 
+            /* LISTA DE PRODUTOS */
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
-              {produtos.map((produto) => (
+              {produtos.map(
+                (produto) => (
 
-                <article
-                  key={produto.id}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                >
+                  <article
+                    key={produto.id}
+                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
 
-                  <div className="h-48 bg-slate-100">
+                    {/* IMAGEM */}
+                    <div className="h-48 bg-slate-100">
 
-                    {produto.imagemUrl ? (
-                      <img
-                        src={produto.imagemUrl}
-                        alt={produto.nome}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-5xl">
-                        {tipoInfo.icon}
-                      </div>
-                    )}
+                      {produto.imagemUrl ? (
 
-                  </div>
+                        <img
+                          src={produto.imagemUrl}
+                          alt={produto.nome}
+                          className="h-full w-full object-cover"
+                        />
 
-                  <div className="p-4">
+                      ) : (
 
-                    <h3 className="text-base font-black text-slate-900">
-                      {produto.nome}
-                    </h3>
+                        <div className="flex h-full items-center justify-center text-5xl">
+                          {tipoInfo.icon}
+                        </div>
 
-                    {produto.descricao && (
-                      <p className="mt-2 line-clamp-3 text-xs leading-5 text-slate-500">
-                        {produto.descricao}
-                      </p>
-                    )}
-
-                    <div className="mt-4 flex items-center justify-between gap-3">
-
-                      <p className="text-lg font-black text-blue-900">
-                        {formatarPreco(
-                          produto.preco
-                        )}
-                      </p>
-
-                      {whatsappNumero && (
-                        <a
-                          href={`https://wa.me/55${whatsappNumero}?text=${encodeURIComponent(
-                            `Olá! Vi o item "${produto.nome}" no Sobradão 360 e gostaria de mais informações.`
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rounded-xl bg-emerald-600 px-3 py-2 text-[10px] font-black text-white hover:bg-emerald-700"
-                        >
-                          📱 Consultar
-                        </a>
                       )}
 
                     </div>
 
-                  </div>
+                    {/* INFORMAÇÕES */}
+                    <div className="p-4">
 
-                </article>
+                      <h3 className="text-base font-black text-slate-900">
+                        {produto.nome}
+                      </h3>
 
-              ))}
+                      {produto.descricao && (
+                        <p className="mt-2 line-clamp-3 text-xs leading-5 text-slate-500">
+                          {produto.descricao}
+                        </p>
+                      )}
+
+                      <div className="mt-4 flex items-center justify-between gap-3">
+
+                        <p className="text-lg font-black text-blue-900">
+                          {formatarPreco(
+                            produto.preco
+                          )}
+                        </p>
+
+                        {whatsappNumero && (
+                          <a
+                            href={`https://wa.me/55${whatsappNumero}?text=${encodeURIComponent(
+                              `Olá! Vi o item "${produto.nome}" no Sobradão 360 e gostaria de mais informações.`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-xl bg-emerald-600 px-3 py-2 text-[10px] font-black text-white hover:bg-emerald-700"
+                          >
+                            📱 Consultar
+                          </a>
+                        )}
+
+                      </div>
+
+                    </div>
+
+                  </article>
+
+                )
+              )}
 
             </div>
 
@@ -665,6 +715,7 @@ export default function LojaPage({
 
         </section>
 
+        {/* PUBLICIDADE */}
         <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5">
 
           <div className="flex items-center gap-3">
@@ -699,6 +750,7 @@ export default function LojaPage({
 
         </section>
 
+        {/* RODAPÉ */}
         <div className="text-center">
 
           <Link
