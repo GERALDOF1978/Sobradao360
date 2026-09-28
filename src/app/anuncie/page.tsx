@@ -14,37 +14,23 @@ import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 
 type ModoPublicacao = "anuncio" | "post";
+type TipoDoacao = "doando" | "solicitando" | "";
 
 const subcategorias = [
   {
     id: "compre-venda",
-    nome: "Compre & Venda",
+    nome: "Compra & Venda",
     icone: "🛒",
   },
   {
-    id: "alimentacao",
-    nome: "Alimentação",
-    icone: "🍰",
-  },
-  {
     id: "reformas",
-    nome: "Reformas",
+    nome: "Serviços & Reformas",
     icone: "🛠️",
   },
   {
-    id: "lazer",
-    nome: "Lazer",
-    icone: "🏡",
-  },
-  {
-    id: "automotivo",
-    nome: "Automotivo",
-    icone: "🚗",
-  },
-  {
-    id: "zeladoria",
-    nome: "Zeladoria",
-    icone: "🧹",
+    id: "casa-aluguel",
+    nome: "Casa & Aluguel",
+    icone: "🏠",
   },
   {
     id: "pet-saude",
@@ -55,6 +41,11 @@ const subcategorias = [
     id: "eventos",
     nome: "Eventos",
     icone: "🎉",
+  },
+  {
+    id: "doacoes",
+    nome: "Doações",
+    icone: "❤️",
   },
 ];
 
@@ -80,59 +71,38 @@ function compressImage(
         let height = img.height;
 
         if (width > maxWidth) {
-          height = Math.round(
-            (height * maxWidth) / width
-          );
-
+          height = Math.round((height * maxWidth) / width);
           width = maxWidth;
         }
 
-        const canvas =
-          document.createElement("canvas");
+        const canvas = document.createElement("canvas");
 
         canvas.width = width;
         canvas.height = height;
 
-        const ctx =
-          canvas.getContext("2d");
+        const ctx = canvas.getContext("2d");
 
         if (!ctx) {
-          reject(
-            "Erro ao preparar a imagem."
-          );
-
+          reject("Erro ao preparar a imagem.");
           return;
         }
 
-        ctx.drawImage(
-          img,
-          0,
-          0,
-          width,
-          height
-        );
+        ctx.drawImage(img, 0, 0, width, height);
 
         canvas.toBlob(
           (blob) => {
             if (!blob) {
-              reject(
-                "Erro ao compactar a imagem."
-              );
-
+              reject("Erro ao compactar a imagem.");
               return;
             }
 
             resolve(
               new File(
                 [blob],
-                file.name.replace(
-                  /\.[^/.]+$/,
-                  ""
-                ) + ".webp",
+                file.name.replace(/\.[^/.]+$/, "") + ".webp",
                 {
                   type: "image/webp",
-                  lastModified:
-                    Date.now(),
+                  lastModified: Date.now(),
                 }
               )
             );
@@ -143,15 +113,11 @@ function compressImage(
       };
 
       img.onerror = () =>
-        reject(
-          "Não foi possível abrir a imagem."
-        );
+        reject("Não foi possível abrir a imagem.");
     };
 
     reader.onerror = () =>
-      reject(
-        "Não foi possível ler a imagem."
-      );
+      reject("Não foi possível ler a imagem.");
 
     reader.readAsDataURL(file);
   });
@@ -162,14 +128,7 @@ function compressImage(
    ========================================================= */
 
 export default function AnunciePage() {
-  const {
-    user,
-    loginWithGoogle,
-  } = useAuth();
-
-  /* =======================================================
-     CONTROLE DA PUBLICAÇÃO
-     ======================================================= */
+  const { user, loginWithGoogle } = useAuth();
 
   const [modo, setModo] =
     useState<ModoPublicacao>("anuncio");
@@ -177,41 +136,27 @@ export default function AnunciePage() {
   const [subCategoria, setSubCategoria] =
     useState("");
 
+  const [tipoDoacao, setTipoDoacao] =
+    useState<TipoDoacao>("");
+
   const [mostrarFormulario, setMostrarFormulario] =
     useState(false);
 
-  /* =======================================================
-     DADOS DO ANÚNCIO
-     ======================================================= */
-
-  const [titulo, setTitulo] =
-    useState("");
-
-  const [descricao, setDescricao] =
-    useState("");
-
-  const [preco, setPreco] =
-    useState("");
-
-  const [imagemUrl, setImagemUrl] =
-    useState("");
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [preco, setPreco] = useState("");
+  const [imagemUrl, setImagemUrl] = useState("");
 
   /* =======================================================
-     DADOS PRIVADOS DE CONTATO
+     CONTATO
      ======================================================= */
 
-  const [contatoNome, setContatoNome] =
-    useState("");
-
+  const [contatoNome, setContatoNome] = useState("");
   const [contatoWhatsapp, setContatoWhatsapp] =
     useState("");
-
   const [contatoTelefone, setContatoTelefone] =
     useState("");
-
-  const [contatoEmail, setContatoEmail] =
-    useState("");
-
+  const [contatoEmail, setContatoEmail] = useState("");
   const [contatoBairro, setContatoBairro] =
     useState("");
 
@@ -219,23 +164,13 @@ export default function AnunciePage() {
      CONTROLES
      ======================================================= */
 
-  const [isBloqueado, setIsBloqueado] =
-    useState(false);
-
-  const [uploading, setUploading] =
-    useState(false);
-
-  const [salvando, setSalvando] =
-    useState(false);
-
-  /* =======================================================
-     CATEGORIA SELECIONADA
-     ======================================================= */
+  const [isBloqueado, setIsBloqueado] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [salvando, setSalvando] = useState(false);
 
   const categoriaSelecionada =
     subcategorias.find(
-      (cat) =>
-        cat.nome === subCategoria
+      (cat) => cat.nome === subCategoria
     );
 
   /* =======================================================
@@ -246,13 +181,11 @@ export default function AnunciePage() {
     async function carregarDadosMorador() {
       if (!user) {
         setIsBloqueado(false);
-
         setContatoNome("");
         setContatoWhatsapp("");
         setContatoTelefone("");
         setContatoEmail("");
         setContatoBairro("");
-
         return;
       }
 
@@ -263,12 +196,10 @@ export default function AnunciePage() {
           user.uid
         );
 
-        const snap =
-          await getDoc(userRef);
+        const snap = await getDoc(userRef);
 
         if (snap.exists()) {
-          const dados =
-            snap.data();
+          const dados = snap.data();
 
           setIsBloqueado(
             dados.bloqueado || false
@@ -306,12 +237,9 @@ export default function AnunciePage() {
               nome:
                 user.displayName ||
                 "Morador",
-
               email:
                 user.email || "",
-
               bloqueado: false,
-
               createdAt:
                 serverTimestamp(),
             },
@@ -348,101 +276,99 @@ export default function AnunciePage() {
     categoria: string
   ) => {
     setModo("anuncio");
-
-    setSubCategoria(
-      categoria
-    );
-
-    setMostrarFormulario(
-      true
-    );
+    setSubCategoria(categoria);
+    setTipoDoacao("");
+    setMostrarFormulario(true);
   };
 
   /* =======================================================
-     ENVIAR SOMENTE POST
+     SELECIONAR TIPO DE DOAÇÃO
+     ======================================================= */
+
+  const selecionarDoacao = (
+    tipo: TipoDoacao
+  ) => {
+    setModo("anuncio");
+    setSubCategoria("Doações");
+    setTipoDoacao(tipo);
+    setMostrarFormulario(true);
+  };
+
+  /* =======================================================
+     INICIAR POST
      ======================================================= */
 
   const iniciarPost = () => {
     setModo("post");
-
     setSubCategoria("");
-
-    setMostrarFormulario(
-      true
-    );
+    setTipoDoacao("");
+    setMostrarFormulario(true);
   };
 
   /* =======================================================
-     UPLOAD DA IMAGEM
+     UPLOAD
      ======================================================= */
 
-  const handleImageUpload =
-    async (
-      event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-      const file =
-        event.target.files?.[0];
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file =
+      event.target.files?.[0];
 
-      if (!file) {
-        return;
-      }
+    if (!file) return;
 
-      setUploading(true);
+    setUploading(true);
 
-      try {
-        const compressedFile =
-          await compressImage(
-            file,
-            1000,
-            0.75
-          );
-
-        const formData =
-          new FormData();
-
-        formData.append(
-          "file",
-          compressedFile
+    try {
+      const compressedFile =
+        await compressImage(
+          file,
+          1000,
+          0.75
         );
 
-        const response =
-          await fetch(
-            "/api/upload-image",
-            {
-              method: "POST",
-              body: formData,
-            }
-          );
+      const formData = new FormData();
 
-        const result =
-          await response.json();
+      formData.append(
+        "file",
+        compressedFile
+      );
 
-        if (
-          !response.ok ||
-          !result.success
-        ) {
-          throw new Error(
-            result.error ||
-              "Erro no upload."
-          );
+      const response = await fetch(
+        "/api/upload-image",
+        {
+          method: "POST",
+          body: formData,
         }
+      );
 
-        setImagemUrl(
-          result.url
-        );
-      } catch (error) {
-        console.error(
-          "Erro ao enviar imagem:",
-          error
-        );
+      const result =
+        await response.json();
 
-        alert(
-          "Não foi possível enviar a imagem."
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        throw new Error(
+          result.error ||
+            "Erro no upload."
         );
-      } finally {
-        setUploading(false);
       }
-    };
+
+      setImagemUrl(result.url);
+    } catch (error) {
+      console.error(
+        "Erro ao enviar imagem:",
+        error
+      );
+
+      alert(
+        "Não foi possível enviar a imagem."
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
 
   /* =======================================================
      LIMPAR FORMULÁRIO
@@ -453,13 +379,9 @@ export default function AnunciePage() {
     setDescricao("");
     setPreco("");
     setImagemUrl("");
-
     setSubCategoria("");
-
-    setMostrarFormulario(
-      false
-    );
-
+    setTipoDoacao("");
+    setMostrarFormulario(false);
     setModo("anuncio");
   };
 
@@ -467,195 +389,177 @@ export default function AnunciePage() {
      PUBLICAR
      ======================================================= */
 
-  const handlePublicar =
-    async (
-      event: React.FormEvent<HTMLFormElement>
-    ) => {
-      event.preventDefault();
+  const handlePublicar = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
 
-      /* ---------------------------------------------------
-         LOGIN
-         --------------------------------------------------- */
+    if (!user) {
+      alert(
+        "Você precisa estar logado para publicar."
+      );
+      return;
+    }
 
-      if (!user) {
-        alert(
-          "Você precisa estar logado para publicar."
-        );
+    if (isBloqueado) {
+      alert(
+        "Sua conta está bloqueada pela administração e você não pode publicar novos conteúdos."
+      );
+      return;
+    }
 
-        return;
-      }
+    if (
+      !titulo.trim() ||
+      !descricao.trim()
+    ) {
+      alert(
+        "Preencha o título e a descrição."
+      );
+      return;
+    }
 
-      /* ---------------------------------------------------
-         BLOQUEIO
-         --------------------------------------------------- */
+    if (
+      modo === "anuncio" &&
+      !subCategoria
+    ) {
+      alert(
+        "Escolha uma categoria para o anúncio."
+      );
+      return;
+    }
 
-      if (isBloqueado) {
-        alert(
-          "Sua conta está bloqueada pela administração e você não pode publicar novos conteúdos."
-        );
+    if (
+      modo === "anuncio" &&
+      subCategoria === "Doações" &&
+      !tipoDoacao
+    ) {
+      alert(
+        "Escolha se você quer fazer uma doação ou solicitar uma doação."
+      );
+      return;
+    }
 
-        return;
-      }
+    setSalvando(true);
 
-      /* ---------------------------------------------------
-         CAMPOS OBRIGATÓRIOS
-         --------------------------------------------------- */
+    try {
+      const categoriaPublicacao =
+        modo === "post"
+          ? "Notícias"
+          : subCategoria;
 
-      if (
-        !titulo.trim() ||
-        !descricao.trim()
-      ) {
-        alert(
-          "Preencha o título e a descrição."
-        );
-
-        return;
-      }
-
-      /* ---------------------------------------------------
-         CATEGORIA
-         --------------------------------------------------- */
-
-      if (
-        modo === "anuncio" &&
-        !subCategoria
-      ) {
-        alert(
-          "Escolha uma categoria para o anúncio."
-        );
-
-        return;
-      }
-
-      setSalvando(true);
-
-      try {
-        /* -------------------------------------------------
-           POST = NOTÍCIAS
-           ANÚNCIO = SUBCATEGORIA
-           ------------------------------------------------- */
-
-        const categoriaPublicacao =
-          modo === "post"
-            ? "Notícias"
-            : subCategoria;
-
-        /* -------------------------------------------------
-           DOCUMENTO PÚBLICO
-           ------------------------------------------------- */
-
-        const anuncioRef =
-          await addDoc(
-            collection(
-              db,
-              "anuncios"
-            ),
-            {
-              titulo:
-                titulo.trim(),
-
-              descricao:
-                descricao.trim(),
-
-              categoria:
-                categoriaPublicacao,
-
-              tipoPublicacao:
-                modo,
-
-              preco:
-                modo === "anuncio" &&
-                subCategoria ===
-                  "Compre & Venda"
-                  ? preco.trim()
-                  : null,
-
-              salario:
-                null,
-
-              imagemUrl:
-                imagemUrl || "",
-
-              autorUid:
-                user.uid,
-
-              autorNome:
-                user.displayName ||
-                contatoNome ||
-                "Morador",
-
-              autorFoto:
-                user.photoURL ||
-                "https://api.dicebear.com/7.x/thumbs/svg?seed=padrao",
-
-              createdAt:
-                serverTimestamp(),
-
-              origem:
-                "morador",
-            }
-          );
-
-        /* -------------------------------------------------
-           DOCUMENTO PRIVADO
-           ------------------------------------------------- */
-
-        await setDoc(
-          doc(
+      const anuncioRef =
+        await addDoc(
+          collection(
             db,
-            "anuncios",
-            anuncioRef.id,
-            "privado",
-            "contato"
+            "anuncios"
           ),
           {
-            nome:
-              contatoNome.trim(),
+            titulo:
+              titulo.trim(),
 
-            whatsapp:
-              contatoWhatsapp.trim(),
+            descricao:
+              descricao.trim(),
 
-            telefone:
-              contatoTelefone.trim(),
+            categoria:
+              categoriaPublicacao,
 
-            email:
-              contatoEmail.trim(),
+            tipoPublicacao:
+              modo,
 
-            bairro:
-              contatoBairro.trim(),
+            tipoDoacao:
+              subCategoria ===
+              "Doações"
+                ? tipoDoacao
+                : null,
+
+            preco:
+              modo === "anuncio" &&
+              subCategoria ===
+                "Compra & Venda"
+                ? preco.trim()
+                : null,
+
+            salario: null,
+
+            imagemUrl:
+              imagemUrl || "",
 
             autorUid:
               user.uid,
 
-            updatedAt:
+            autorNome:
+              user.displayName ||
+              contatoNome ||
+              "Morador",
+
+            autorFoto:
+              user.photoURL ||
+              "https://api.dicebear.com/7.x/thumbs/svg?seed=padrao",
+
+            createdAt:
               serverTimestamp(),
+
+            origem:
+              "morador",
           }
         );
 
-        /* -------------------------------------------------
-           LIMPAR
-           ------------------------------------------------- */
+      await setDoc(
+        doc(
+          db,
+          "anuncios",
+          anuncioRef.id,
+          "privado",
+          "contato"
+        ),
+        {
+          nome:
+            contatoNome.trim(),
 
-        limparFormulario();
+          whatsapp:
+            contatoWhatsapp.trim(),
 
-        alert(
-          modo === "post"
-            ? "Post enviado com sucesso!"
+          telefone:
+            contatoTelefone.trim(),
+
+          email:
+            contatoEmail.trim(),
+
+          bairro:
+            contatoBairro.trim(),
+
+          autorUid:
+            user.uid,
+
+          updatedAt:
+            serverTimestamp(),
+        }
+      );
+
+      limparFormulario();
+
+      alert(
+        modo === "post"
+          ? "Post enviado com sucesso!"
+          : subCategoria === "Doações"
+            ? tipoDoacao === "doando"
+              ? "Sua doação foi publicada com sucesso!"
+              : "Seu pedido de doação foi publicado com sucesso!"
             : "Anúncio publicado com sucesso!"
-        );
-      } catch (error) {
-        console.error(
-          "Erro ao publicar:",
-          error
-        );
+      );
+    } catch (error) {
+      console.error(
+        "Erro ao publicar:",
+        error
+      );
 
-        alert(
-          "Erro ao publicar. Verifique sua conexão e tente novamente."
-        );
-      } finally {
-        setSalvando(false);
-      }
-    };
+      alert(
+        "Erro ao publicar. Verifique sua conexão e tente novamente."
+      );
+    } finally {
+      setSalvando(false);
+    }
+  };
 
   /* =======================================================
      INTERFACE
@@ -665,12 +569,9 @@ export default function AnunciePage() {
     <div className="min-h-screen bg-slate-100 text-slate-900 p-4 pb-10">
       <div className="max-w-4xl mx-auto">
 
-        {/* =================================================
-            CABEÇALHO
-            ================================================= */}
+        {/* CABEÇALHO */}
 
         <div className="flex items-center justify-between mb-6">
-
           <Link
             href="/"
             className="text-xs bg-white border border-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl shadow-sm"
@@ -683,12 +584,9 @@ export default function AnunciePage() {
           </h1>
 
           <div className="w-16" />
-
         </div>
 
-        {/* =================================================
-            USUÁRIO NÃO LOGADO
-            ================================================= */}
+        {/* NÃO LOGADO */}
 
         {!user ? (
           <div className="bg-white rounded-3xl border border-slate-200 shadow-md p-6 md:p-8 text-center">
@@ -697,15 +595,15 @@ export default function AnunciePage() {
               🔐
             </div>
 
-            <h2 className="text-xl font-black text-slate-900">
+            <h2 className="text-xl font-black">
               Entre para publicar
             </h2>
 
             <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
-              Para publicar anúncios ou
-              posts no Sobradão 360,
-              você precisa estar logado
-              como morador.
+              Para publicar anúncios,
+              doações ou posts no
+              Sobradão 360, você precisa
+              estar logado como morador.
             </p>
 
             <button
@@ -717,14 +615,11 @@ export default function AnunciePage() {
             >
               🔐 Entrar / Cadastrar
             </button>
-
           </div>
 
         ) : isBloqueado ? (
 
-          /* =================================================
-             USUÁRIO BLOQUEADO
-             ================================================= */
+          /* BLOQUEADO */
 
           <div className="bg-red-50 border border-red-200 rounded-3xl p-6 text-center">
 
@@ -746,14 +641,10 @@ export default function AnunciePage() {
 
         ) : (
 
-          /* =================================================
-             USUÁRIO LOGADO
-             ================================================= */
-
           <>
 
             {/* =================================================
-                ESCOLHA DA PUBLICAÇÃO
+                ESCOLHA
                 ================================================= */}
 
             {!mostrarFormulario && (
@@ -766,18 +657,15 @@ export default function AnunciePage() {
                   </h2>
 
                   <p className="text-sm text-slate-500 mt-2">
-                    Anuncie um produto ou
-                    serviço para a comunidade,
-                    ou envie apenas um post.
+                    Compartilhe algo com a
+                    comunidade do Sobradão.
                   </p>
 
                 </div>
 
-                {/* =================================================
-                    SUBCATEGORIAS
-                    ================================================= */}
+                {/* CATEGORIAS */}
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
 
                   {subcategorias.map(
                     (cat) => (
@@ -785,9 +673,14 @@ export default function AnunciePage() {
                         key={cat.id}
                         type="button"
                         onClick={() =>
-                          selecionarCategoria(
-                            cat.nome
-                          )
+                          cat.id ===
+                          "doacoes"
+                            ? setSubCategoria(
+                                "Doações"
+                              )
+                            : selecionarCategoria(
+                                cat.nome
+                              )
                         }
                         className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-400 hover:bg-amber-50 transition-all flex flex-col items-center justify-center min-h-[145px]"
                       >
@@ -807,6 +700,90 @@ export default function AnunciePage() {
                 </div>
 
                 {/* =================================================
+                    DOAÇÕES
+                    ================================================= */}
+
+                {subCategoria ===
+                  "Doações" && (
+                  <div className="mt-5 bg-white border border-rose-200 rounded-3xl p-5 shadow-sm">
+
+                    <div className="text-center mb-5">
+
+                      <div className="text-4xl">
+                        ❤️
+                      </div>
+
+                      <h3 className="font-black text-lg mt-2">
+                        Doações
+                      </h3>
+
+                      <p className="text-xs text-slate-500 mt-1">
+                        Ajude alguém da
+                        comunidade ou peça
+                        ajuda quando precisar.
+                      </p>
+
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          selecionarDoacao(
+                            "doando"
+                          )
+                        }
+                        className="rounded-2xl border-2 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 p-6 transition text-left"
+                      >
+
+                        <div className="text-4xl mb-3">
+                          🤝
+                        </div>
+
+                        <h4 className="font-black text-emerald-800">
+                          Quero fazer uma doação
+                        </h4>
+
+                        <p className="text-xs text-emerald-700 mt-1">
+                          Tenho algo que posso
+                          doar para alguém da
+                          comunidade.
+                        </p>
+
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          selecionarDoacao(
+                            "solicitando"
+                          )
+                        }
+                        className="rounded-2xl border-2 border-amber-200 bg-amber-50 hover:bg-amber-100 p-6 transition text-left"
+                      >
+
+                        <div className="text-4xl mb-3">
+                          🆘
+                        </div>
+
+                        <h4 className="font-black text-amber-800">
+                          Preciso de uma doação
+                        </h4>
+
+                        <p className="text-xs text-amber-700 mt-1">
+                          Estou procurando
+                          algum item que alguém
+                          possa doar.
+                        </p>
+
+                      </button>
+
+                    </div>
+                  </div>
+                )}
+
+                {/* =================================================
                     POST
                     ================================================= */}
 
@@ -815,18 +792,18 @@ export default function AnunciePage() {
                   <div className="text-center">
 
                     <div className="text-4xl mb-2">
-                      📰
+                      💬
                     </div>
 
-                    <h3 className="font-black text-slate-900">
-                      Quer somente divulgar um post?
+                    <h3 className="font-black">
+                      Quer falar sobre o bairro?
                     </h3>
 
                     <p className="text-xs text-slate-500 mt-1">
-                      Use para avisos,
-                      informações e
-                      acontecimentos da
-                      comunidade.
+                      Use a Voz do Morador para
+                      compartilhar informações,
+                      avisos e acontecimentos
+                      da comunidade.
                     </p>
 
                     <button
@@ -836,7 +813,7 @@ export default function AnunciePage() {
                       }
                       className="mt-4 w-full bg-slate-800 hover:bg-slate-900 text-white font-black py-3 rounded-2xl"
                     >
-                      📰 ENVIAR SOMENTE UM POST
+                      💬 PUBLICAR SOBRE O BAIRRO
                     </button>
 
                   </div>
@@ -854,9 +831,7 @@ export default function AnunciePage() {
 
               <div className="bg-white rounded-3xl shadow-md border border-slate-200 p-5 md:p-8">
 
-                {/* -------------------------------------------------
-                    TÍTULO DO FORMULÁRIO
-                    ------------------------------------------------- */}
+                {/* CABEÇALHO */}
 
                 <div className="flex items-center justify-between gap-3 mb-5">
 
@@ -864,21 +839,30 @@ export default function AnunciePage() {
 
                     <p className="text-[10px] uppercase font-black text-amber-600">
                       {modo === "post"
-                        ? "Post da comunidade"
-                        : "Novo anúncio"}
+                        ? "Voz do Morador"
+                        : subCategoria ===
+                            "Doações"
+                          ? "Doações da comunidade"
+                          : "Novo anúncio"}
                     </p>
 
                     <h2 className="text-xl font-black">
 
                       {modo === "post"
-                        ? "📰 Enviar um post"
-                        : (
-                          <>
-                            {categoriaSelecionada?.icone ||
-                              "📢"}{" "}
-                            {subCategoria}
-                          </>
-                        )}
+                        ? "💬 Falar sobre o bairro"
+                        : subCategoria ===
+                            "Doações"
+                          ? tipoDoacao ===
+                            "doando"
+                            ? "🤝 Fazer uma doação"
+                            : "🆘 Solicitar uma doação"
+                          : (
+                            <>
+                              {categoriaSelecionada?.icone ||
+                                "📢"}{" "}
+                              {subCategoria}
+                            </>
+                          )}
 
                     </h2>
 
@@ -896,28 +880,40 @@ export default function AnunciePage() {
 
                 </div>
 
-                {/* -------------------------------------------------
-                    AVISO POST
-                    ------------------------------------------------- */}
+                {/* AVISO DOAÇÃO */}
 
-                {modo === "post" && (
+                {subCategoria ===
+                  "Doações" && (
+                  <div className="mb-4 bg-rose-50 border border-rose-200 rounded-2xl p-4">
 
-                  <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3 mb-4">
-
-                    <p className="text-xs text-blue-800">
-                      Este conteúdo será
-                      publicado como um post
-                      da comunidade, dentro
-                      de Notícias.
+                    <p className="text-xs text-rose-800 font-semibold">
+                      {tipoDoacao ===
+                      "doando"
+                        ? "🤝 Você está oferecendo algo para doação à comunidade."
+                        : "🆘 Você está solicitando algo que precisa receber por doação."}
                     </p>
 
                   </div>
-
                 )}
 
-                {/* =================================================
-                    FORM
-                    ================================================= */}
+                {/* AVISO VOZ DO MORADOR */}
+
+                {modo === "post" && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4">
+
+                    <p className="text-xs text-blue-800">
+                      💬 Esta publicação será
+                      exibida na área da Voz
+                      do Morador. Em seguida
+                      vamos adicionar curtidas
+                      e comentários da
+                      comunidade.
+                    </p>
+
+                  </div>
+                )}
+
+                {/* FORM */}
 
                 <form
                   onSubmit={
@@ -926,22 +922,32 @@ export default function AnunciePage() {
                   className="space-y-4"
                 >
 
-                  {/* -------------------------------------------------
-                      TÍTULO
-                      ------------------------------------------------- */}
+                  {/* TÍTULO */}
 
                   <div>
 
                     <label className="text-xs font-black text-slate-700">
-                      Título
+                      {subCategoria ===
+                      "Doações"
+                        ? tipoDoacao ===
+                          "doando"
+                          ? "O que você está doando?"
+                          : "O que você está procurando?"
+                        : "Título"}
                     </label>
 
                     <input
                       type="text"
                       placeholder={
-                        modo === "post"
-                          ? "Ex.: Falta de água no bairro"
-                          : "Título principal do anúncio"
+                        subCategoria ===
+                        "Doações"
+                          ? tipoDoacao ===
+                            "doando"
+                            ? "Ex.: Roupas infantis"
+                            : "Ex.: Cama de solteiro"
+                          : modo === "post"
+                            ? "Ex.: Falta de água no bairro"
+                            : "Título principal do anúncio"
                       }
                       value={titulo}
                       onChange={(e) =>
@@ -954,9 +960,7 @@ export default function AnunciePage() {
 
                   </div>
 
-                  {/* -------------------------------------------------
-                      DESCRIÇÃO
-                      ------------------------------------------------- */}
+                  {/* DESCRIÇÃO */}
 
                   <div>
 
@@ -966,9 +970,15 @@ export default function AnunciePage() {
 
                     <textarea
                       placeholder={
-                        modo === "post"
-                          ? "Conte o que aconteceu ou o que deseja informar à comunidade..."
-                          : "Descreva seu produto, serviço ou anúncio..."
+                        subCategoria ===
+                        "Doações"
+                          ? tipoDoacao ===
+                            "doando"
+                            ? "Conte um pouco sobre o item que você está doando..."
+                            : "Conte um pouco sobre o que você precisa..."
+                          : modo === "post"
+                            ? "Conte o que aconteceu ou o que deseja informar à comunidade..."
+                            : "Descreva seu produto, serviço ou anúncio..."
                       }
                       value={descricao}
                       onChange={(e) =>
@@ -982,13 +992,11 @@ export default function AnunciePage() {
 
                   </div>
 
-                  {/* -------------------------------------------------
-                      PREÇO
-                      ------------------------------------------------- */}
+                  {/* PREÇO */}
 
                   {modo === "anuncio" &&
                     subCategoria ===
-                      "Compre & Venda" && (
+                      "Compra & Venda" && (
 
                     <div>
 
@@ -1012,9 +1020,7 @@ export default function AnunciePage() {
 
                   )}
 
-                  {/* -------------------------------------------------
-                      IMAGEM
-                      ------------------------------------------------- */}
+                  {/* IMAGEM */}
 
                   <div>
 
@@ -1035,15 +1041,12 @@ export default function AnunciePage() {
                     />
 
                     {uploading && (
-
                       <p className="text-[10px] text-amber-600 animate-pulse mt-2">
                         Enviando imagem...
                       </p>
-
                     )}
 
                     {imagemUrl && (
-
                       <div className="relative mt-3 bg-slate-100 p-1 rounded-xl">
 
                         <img
@@ -1063,13 +1066,12 @@ export default function AnunciePage() {
                         </button>
 
                       </div>
-
                     )}
 
                   </div>
 
                   {/* =================================================
-                      DADOS PESSOAIS
+                      CONTATO
                       ================================================= */}
 
                   <div className="border border-emerald-200 bg-emerald-50 rounded-2xl p-4 space-y-3">
@@ -1084,9 +1086,7 @@ export default function AnunciePage() {
                         🔒 Seus dados pessoais
                         não ficam públicos.
                         Eles são armazenados
-                        separadamente e ficam
-                        disponíveis somente
-                        para moradores logados.
+                        separadamente.
                       </p>
 
                     </div>
@@ -1153,9 +1153,7 @@ export default function AnunciePage() {
 
                   </div>
 
-                  {/* =================================================
-                      BOTÃO PUBLICAR
-                      ================================================= */}
+                  {/* PUBLICAR */}
 
                   <button
                     type="submit"
@@ -1169,21 +1167,24 @@ export default function AnunciePage() {
                     {salvando
                       ? "Publicando..."
                       : modo === "post"
-                        ? "📰 PUBLICAR POST"
-                        : "📢 PUBLICAR ANÚNCIO"}
+                        ? "💬 PUBLICAR NA VOZ DO MORADOR"
+                        : subCategoria ===
+                            "Doações"
+                          ? tipoDoacao ===
+                            "doando"
+                            ? "🤝 PUBLICAR DOAÇÃO"
+                            : "🆘 PUBLICAR PEDIDO DE DOAÇÃO"
+                          : "📢 PUBLICAR ANÚNCIO"}
 
                   </button>
 
                 </form>
 
               </div>
-
             )}
 
           </>
-
         )}
-
       </div>
     </div>
   );
