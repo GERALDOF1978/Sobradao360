@@ -18,7 +18,7 @@ import {
 } from "firebase/auth";
 
 import { auth, db, googleProvider } from "@/lib/firebase";
-
+import GerenciadorProdutos from "@/components/anunciante/GerenciadorProdutos";
 type UsuarioFirebase = {
   uid: string;
   email: string | null;
@@ -1373,9 +1373,15 @@ export default function PainelAnunciantePage() {
                           >
                             👀 Ver minha página
                           </button>
+
+                          
                         )}
 
                       </div>
+                      <GerenciadorProdutos
+  lojaId={negocio.id}
+  tipoNegocio={negocio.tipo}
+/>
 
                     </div>
                   );
