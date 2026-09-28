@@ -75,8 +75,7 @@ export default function NegociosMarquee() {
         const lista: Negocio[] = [];
 
         for (
-          const firestoreDoc
-          of snapshot.docs
+          const firestoreDoc of snapshot.docs
         ) {
           const dados =
             firestoreDoc.data() as Record<
@@ -84,25 +83,15 @@ export default function NegociosMarquee() {
               unknown
             >;
 
-          /*
-           * IMPORTANTE:
-           *
-           * Negócios antigos que ainda não
-           * possuem mostrarMarquee continuam
-           * aparecendo.
-           *
-           * Quando o anunciante salvar o
-           * painel, o campo passa a existir.
-           */
-
           if (
             dados.mostrarMarquee === false
           ) {
             continue;
           }
 
-          const negocio: Negocio = {
-            id: firestoreDoc.id,
+          lista.push({
+            id:
+              firestoreDoc.id,
 
             nome:
               typeof dados.nome ===
@@ -182,11 +171,7 @@ export default function NegociosMarquee() {
               "string"
                 ? dados.siteUrl
                 : "",
-          };
-
-          lista.push(
-            negocio
-          );
+          });
         }
 
         if (ativo) {
@@ -272,22 +257,39 @@ export default function NegociosMarquee() {
     return null;
   }
 
-  return (
-    <section className="w-full overflow-hidden">
+  /*
+   * Três cópias deixam o movimento contínuo.
+   */
+  const itens = [
+    ...negocios,
+    ...negocios,
+    ...negocios,
+  ];
 
-      <div className="relative w-full overflow-hidden">
+  return (
+    <section className="w-full overflow-hidden py-2">
+
+      <div
+        className="
+          group
+          relative
+          w-full
+          overflow-hidden
+        "
+      >
 
         <div
           className="
             flex
             w-max
-            animate-marquee
             gap-4
-            py-2
+            px-2
+            animate-marquee
+            group-hover:[animation-play-state:paused]
           "
         >
 
-          {[...negocios, ...negocios].map(
+          {itens.map(
             (
               negocio,
               indice
@@ -296,6 +298,11 @@ export default function NegociosMarquee() {
               const cor =
                 negocio.corMarca ||
                 "#0f172a";
+
+              const temBanner =
+                Boolean(
+                  negocio.bannerUrl
+                );
 
               return (
                 <button
@@ -308,132 +315,157 @@ export default function NegociosMarquee() {
                   }
                   className="
                     relative
-                    flex
-                    min-w-[270px]
-                    max-w-[320px]
-                    items-center
-                    gap-3
+                    h-[108px]
+                    w-[310px]
+                    shrink-0
                     overflow-hidden
                     rounded-2xl
                     border
-                    border-gray-200
-                    bg-white
-                    px-4
-                    py-3
+                    border-white/20
+                    bg-slate-900
                     text-left
-                    shadow-sm
+                    shadow-md
                     transition
-                    hover:-translate-y-0.5
-                    hover:shadow-lg
-                    active:scale-[0.98]
+                    duration-300
+                    hover:-translate-y-1
+                    hover:shadow-xl
                   "
                 >
 
-                  {negocio.bannerUrl && (
+                  {/* BANNER DO PRÓPRIO ANUNCIANTE */}
+
+                  {temBanner ? (
+                    <img
+                      src={
+                        negocio.bannerUrl
+                      }
+                      alt=""
+                      aria-hidden="true"
+                      className="
+                        absolute
+                        inset-0
+                        h-full
+                        w-full
+                        object-cover
+                        transition
+                        duration-500
+                        group-hover:scale-105
+                      "
+                    />
+                  ) : (
                     <div
-                      className="absolute inset-0 opacity-10"
+                      className="absolute inset-0"
                       style={{
-                        backgroundImage:
-                          `url(${negocio.bannerUrl})`,
-                        backgroundSize:
-                          "cover",
-                        backgroundPosition:
-                          "center",
+                        background:
+                          `linear-gradient(135deg, ${cor}, #020617)`,
                       }}
                     />
                   )}
 
+                  {/* ESCURECIMENTO */}
+
                   <div
                     className="
-                      relative
-                      flex
-                      h-14
-                      w-14
-                      shrink-0
-                      items-center
-                      justify-center
-                      overflow-hidden
-                      rounded-xl
-                      bg-gray-100
+                      absolute
+                      inset-0
+                      bg-gradient-to-r
+                      from-black/85
+                      via-black/55
+                      to-black/20
                     "
-                    style={{
-                      border:
-                        `2px solid ${cor}`,
-                    }}
-                  >
+                  />
 
-                    {negocio.imagemUrl ? (
-                      <img
-                        src={
-                          negocio.imagemUrl
-                        }
-                        alt={
-                          negocio.nome ||
-                          "Negócio"
-                        }
-                        className="
-                          h-full
-                          w-full
-                          object-contain
-                          bg-white
-                        "
-                      />
-                    ) : (
-                      <span className="text-xl">
-                        🏪
-                      </span>
-                    )}
+                  {/* CONTEÚDO */}
 
-                  </div>
+                  <div className="relative z-10 flex h-full items-center gap-3 px-3">
 
-                  <div className="relative min-w-0">
+                    {/* LOGO */}
 
                     <div
                       className="
-                        truncate
-                        text-sm
-                        font-black
-                        text-gray-900
+                        flex
+                        h-[78px]
+                        w-[78px]
+                        shrink-0
+                        items-center
+                        justify-center
+                        overflow-hidden
+                        rounded-2xl
+                        border-2
+                        bg-white
+                        shadow-lg
                       "
+                      style={{
+                        borderColor:
+                          cor,
+                      }}
                     >
-                      {negocio.nome ||
-                        "Comércio parceiro"}
+
+                      {negocio.imagemUrl ? (
+                        <img
+                          src={
+                            negocio.imagemUrl
+                          }
+                          alt={
+                            negocio.nome ||
+                            "Negócio"
+                          }
+                          className="
+                            h-full
+                            w-full
+                            object-contain
+                            bg-white
+                            p-1
+                          "
+                        />
+                      ) : (
+                        <span className="text-3xl">
+                          🏪
+                        </span>
+                      )}
+
                     </div>
 
-                    {negocio.slogan ? (
-                      <div
+                    {/* TEXTOS */}
+
+                    <div className="min-w-0 flex-1">
+
+                      <p className="truncate text-[10px] font-black uppercase tracking-[0.12em] text-white/70">
+                        Parceiro Sobradão 360
+                      </p>
+
+                      <h3 className="mt-1 truncate text-base font-black text-white">
+                        {negocio.nome ||
+                          negocio.titulo ||
+                          "Comércio parceiro"}
+                      </h3>
+
+                      <p className="mt-1 line-clamp-2 text-xs font-semibold leading-4 text-white/85">
+                        {negocio.slogan ||
+                          negocio.subtitulo ||
+                          "Conheça este anunciante"}
+                      </p>
+
+                      <span
                         className="
-                          truncate
-                          text-xs
-                          font-semibold
+                          mt-2
+                          inline-flex
+                          rounded-full
+                          px-3
+                          py-1
+                          text-[9px]
+                          font-black
+                          text-white
                         "
                         style={{
-                          color: cor,
+                          backgroundColor:
+                            cor,
                         }}
                       >
-                        {negocio.slogan}
-                      </div>
-                    ) : negocio.subtitulo ? (
-                      <div
-                        className="
-                          truncate
-                          text-xs
-                          text-gray-600
-                        "
-                      >
-                        {negocio.subtitulo}
-                      </div>
-                    ) : (
-                      <div
-                        className="
-                          truncate
-                          text-xs
-                          text-gray-500
-                        "
-                      >
-                        Conheça este parceiro
-                      </div>
-                    )}
+                        VER ANUNCIANTE →
+                      </span>
+
+                    </div>
 
                   </div>
 

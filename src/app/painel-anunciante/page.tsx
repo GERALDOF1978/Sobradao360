@@ -20,6 +20,7 @@ import {
 
 import { auth, db, googleProvider } from "@/lib/firebase";
 import GerenciadorProdutos from "@/components/anunciante/GerenciadorProdutos";
+import IdentidadeAnunciante from "@/components/anunciante/IdentidadeAnunciante";
 
 type TipoNegocio =
   | "loja"
@@ -63,6 +64,9 @@ type Negocio = {
   siteUrl: string;
 
   imagemUrl: string;
+  bannerUrl: string;
+slogan: string;
+corMarca: string;
 
   ativo: boolean;
   status: StatusNegocio;
@@ -366,8 +370,15 @@ export default function PainelAnunciantePage() {
           siteUrl:
             texto(dados.siteUrl),
 
-          imagemUrl:
-            texto(dados.imagemUrl),
+          bannerUrl:
+  texto(dados.bannerUrl),
+
+slogan:
+  texto(dados.slogan),
+
+corMarca:
+  texto(dados.corMarca) ||
+  "#0f172a",
 
           ativo:
             booleano(dados.ativo),
@@ -1430,6 +1441,25 @@ export default function PainelAnunciantePage() {
                         )}
 
                       </div>
+                      <IdentidadeAnunciante
+  lojaId={negocio.id}
+  nome={negocio.nome}
+  imagemUrl={negocio.imagemUrl}
+  bannerUrl={negocio.bannerUrl}
+  corMarca={negocio.corMarca}
+  mostrarBanner={
+    negocio.mostrarBanner
+  }
+  mostrarMarquee={
+    negocio.mostrarMarquee
+  }
+  mostrarCard={
+    negocio.mostrarCard
+  }
+  onAtualizado={() => {
+    void carregarNegocios();
+  }}
+/>
 
                       <GerenciadorProdutos
                         lojaId={negocio.id}
