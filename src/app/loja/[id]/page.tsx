@@ -184,6 +184,9 @@ export default function LojaPage({
   const [erroProdutos, setErroProdutos] =
     useState("");
 
+  const [sobreExpandido, setSobreExpandido] =
+    useState(false);
+
   useEffect(() => {
     async function carregar() {
       try {
@@ -625,19 +628,87 @@ export default function LojaPage({
 
         <section className="rounded-3xl bg-white p-5 shadow-sm">
 
-          <h2 className="text-sm font-black text-slate-900">
-            Sobre o negócio
-          </h2>
+          <div className="flex items-center gap-4">
 
-          {negocio.descricao ? (
-            <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-600">
-              {negocio.descricao}
-            </p>
-          ) : (
-            <p className="mt-3 text-sm text-slate-400">
-              Este negócio ainda não adicionou uma descrição.
-            </p>
-          )}
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+
+              {negocio.imagemUrl ? (
+                <img
+                  src={negocio.imagemUrl}
+                  alt={"Logo " + negocio.nome}
+                  className="h-full w-full object-contain p-1"
+                />
+              ) : (
+                <span className="text-3xl">
+                  {tipoInfo.icon}
+                </span>
+              )}
+
+            </div>
+
+            <div className="min-w-0">
+
+              <h2 className="text-lg font-black text-slate-900">
+                {negocio.nome}
+              </h2>
+
+              {negocio.titulo && negocio.titulo !== negocio.nome && (
+                <p className="mt-0.5 text-xs font-bold text-slate-500">
+                  {negocio.titulo}
+                </p>
+              )}
+
+              {negocio.slogan && (
+                <p className="mt-1 text-xs italic text-slate-400">
+                  {negocio.slogan}
+                </p>
+              )}
+
+            </div>
+
+          </div>
+
+          <div className="mt-4">
+
+            <h3 className="text-sm font-black text-slate-800">
+              Sobre o negócio
+            </h3>
+
+            {negocio.descricao ? (
+              <>
+                <p
+                  className={
+                    sobreExpandido
+                      ? "mt-2 whitespace-pre-line text-sm leading-6 text-slate-600"
+                      : "mt-2 whitespace-pre-line text-sm leading-6 text-slate-600 line-clamp-4"
+                  }
+                >
+                  {negocio.descricao}
+                </p>
+
+                {negocio.descricao.length > 260 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSobreExpandido(
+                        (valor) => !valor
+                      )
+                    }
+                    className="mt-2 text-xs font-black text-blue-700 hover:text-blue-900"
+                  >
+                    {sobreExpandido
+                      ? "Mostrar menos"
+                      : "Ler mais"}
+                  </button>
+                )}
+              </>
+            ) : (
+              <p className="mt-2 text-sm text-slate-400">
+                Este negócio ainda não adicionou uma descrição.
+              </p>
+            )}
+
+          </div>
 
         </section>
 
