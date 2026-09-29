@@ -29,6 +29,7 @@ type Produto = {
 type GerenciadorProdutosProps = {
   lojaId: string;
   tipoNegocio: string;
+  limiteProdutos?: number;
 };
 
 type ResultadoUpload = {
@@ -206,6 +207,7 @@ function textoPreco(tipo: string): string {
 export default function GerenciadorProdutos({
   lojaId,
   tipoNegocio,
+  limiteProdutos = 0,
 }: GerenciadorProdutosProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
 
@@ -332,6 +334,11 @@ export default function GerenciadorProdutos({
     void carregarProdutos();
   }, [lojaId]);
 
+  const limiteAtingido =
+    limiteProdutos > 0 && produtos.length >= limiteProdutos;
+
+
+
   function limparFormulario() {
     setNome("");
     setDescricao("");
@@ -344,6 +351,13 @@ export default function GerenciadorProdutos({
   }
 
   function abrirNovoProduto() {
+    if (limiteAtingido) {
+      setErro(
+        `Seu plano permite até ${limiteProdutos} ${nomeTipo(tipoNegocio)}s. Exclua um item ou fale com o administrador para ampliar o limite.`
+      );
+      return;
+    }
+
     limparFormulario();
 
     setErro("");
@@ -493,6 +507,13 @@ export default function GerenciadorProdutos({
   }
 
   async function salvarProduto() {
+    if (!produtoEditando && limiteAtingido) {
+      setErro(
+        `Seu plano permite até ${limiteProdutos} ${nomeTipo(tipoNegocio)}s. O limite foi atingido.`
+      );
+      return;
+    }
+
     if (!nome.trim()) {
       setErro(
         `Informe o nome do ${nomeTipo(
@@ -731,6 +752,12 @@ export default function GerenciadorProdutos({
             )}
           </p>
 
+          <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900">
+            {limiteProdutos > 0
+              ? `Produtos cadastrados: ${produtos.length} / ${limiteProdutos}`
+              : `Produtos cadastrados: ${produtos.length} / sem limite definido`}
+          </div>
+
         </div>
 
         <button
@@ -738,12 +765,11 @@ export default function GerenciadorProdutos({
           onClick={
             abrirNovoProduto
           }
-          className="rounded-xl bg-blue-900 px-4 py-3 text-xs font-black text-white hover:bg-blue-800"
+          disabled={limiteAtingido}
+          className="rounded-xl bg-blue-900 px-4 py-3 text-xs font-black text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
         >
-          + Adicionar{" "}
-          {nomeTipo(
-            tipoNegocio
-          )}
+          {limiteAtingido ? "Limite atingido" : "+ Adicionar"}{" "}
+          {!limiteAtingido && nomeTipo(tipoNegocio)}
         </button>
 
       </div>
