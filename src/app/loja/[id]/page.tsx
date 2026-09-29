@@ -578,7 +578,7 @@ export default function LojaPage({
       {/* BANNER / IDENTIDADE DO ANUNCIANTE */}
 
       <section
-        className="relative min-h-[230px] overflow-hidden text-white"
+        className="relative min-h-[190px] overflow-hidden text-white"
         style={{
           backgroundColor: cor,
         }}
@@ -603,27 +603,27 @@ export default function LojaPage({
 
           <Link
             href="/"
-            className="inline-flex text-xs font-bold text-white/80 hover:text-white"
+            className="inline-flex rounded-full bg-black/25 px-3 py-2 text-xs font-bold text-white/90 backdrop-blur hover:bg-black/40"
           >
-            ← Sobradão 360
+            ← Voltar
           </Link>
 
-          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="mt-3 flex items-center gap-3">
 
             <div
               className="
                 flex
-                h-20
-                w-20
+                h-16
+                w-16
                 shrink-0
                 items-center
                 justify-center
                 overflow-hidden
-                rounded-3xl
-                border-4
-                border-white/30
+                rounded-2xl
+                border-2
+                border-white/40
                 bg-white
-                shadow-xl
+                shadow-lg
               "
             >
 
@@ -634,7 +634,7 @@ export default function LojaPage({
                   className="h-full w-full object-contain p-2"
                 />
               ) : (
-                <span className="text-5xl">
+                <span className="text-3xl">
                   {tipoInfo.icon}
                 </span>
               )}
@@ -643,35 +643,25 @@ export default function LojaPage({
 
             <div className="min-w-0">
 
-              <div className="flex flex-wrap items-center gap-2">
+              <h1 className="truncate text-xl font-black md:text-2xl">
+                {negocio.titulo}
+              </h1>
 
-                <span
-                  className="rounded-full px-3 py-1 text-[10px] font-black uppercase"
-                  style={{
-                    backgroundColor:
-                      "rgba(255,255,255,.9)",
-                    color: cor,
-                  }}
-                >
-                  {tipoInfo.icon}{" "}
+              <div className="mt-1 flex items-center gap-2">
+
+                <span className="text-sm">
+                  {tipoInfo.icon}
+                </span>
+
+                <span className="text-xs font-bold uppercase text-white/90">
                   {tipoInfo.nome}
                 </span>
 
               </div>
 
-              <h1 className="mt-2 text-2xl font-black md:text-3xl">
-                {negocio.titulo}
-              </h1>
-
               {negocio.slogan && (
-                <p className="mt-1 text-sm font-bold text-white">
+                <p className="mt-1 truncate text-xs font-semibold text-white/80">
                   {negocio.slogan}
-                </p>
-              )}
-
-              {negocio.subtitulo && (
-                <p className="mt-1 text-xs text-white/80">
-                  {negocio.subtitulo}
                 </p>
               )}
 
@@ -879,10 +869,10 @@ export default function LojaPage({
                         </p>
                       )}
 
-                      <div className="mt-4 flex items-center justify-between gap-3">
+                      <div className="mt-4">
 
                         <p
-                          className="text-lg font-black"
+                          className="text-base font-black sm:text-lg"
                           style={{
                             color: cor,
                           }}
@@ -900,7 +890,7 @@ export default function LojaPage({
                                 `Olá! Vi o item "${produto.nome}" no Sobradão 360 e gostaria de mais informações.`
                               )
                             }
-                            className="rounded-xl px-3 py-2 text-[10px] font-black text-white hover:opacity-90"
+                            className="mt-3 flex w-full items-center justify-center rounded-xl px-2 py-2.5 text-[10px] font-black leading-tight text-white hover:opacity-90"
                             style={{
                               backgroundColor:
                                 cor,
@@ -942,11 +932,22 @@ export default function LojaPage({
 
         {/* RODAPÉ */}
 
-        <div className="text-center">
+        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-5 text-center shadow-sm">
+
+          <p className="text-[11px] leading-5 text-slate-500">
+            As informações apresentadas nesta página, incluindo produtos,
+            serviços, preços, contatos e demais dados, são de
+            <strong className="font-black text-slate-700">
+              responsabilidade exclusiva do anunciante {negocio.nome}.
+            </strong>
+            O Portal Sobradão 360 disponibiliza este espaço para divulgação
+            e não se responsabiliza pelo conteúdo, negociação, qualidade,
+            disponibilidade ou cumprimento das ofertas anunciadas.
+          </p>
 
           <Link
             href="/"
-            className="text-xs font-bold text-blue-700 hover:text-blue-900"
+            className="mt-4 inline-flex text-xs font-bold text-blue-700 hover:text-blue-900"
           >
             ← Voltar para o Sobradão 360
           </Link>
