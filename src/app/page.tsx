@@ -286,7 +286,11 @@ export default function Home() {
           </div>
 
           <Link
-            href="/loja-explicativa?anunciante=novo"
+            href={
+              publicidade[0]
+                ? `/loja/${publicidade[0].lojaId}`
+                : "/loja-explicativa?anunciante=novo"
+            }
             className="block w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 hover:shadow-md transition"
           >
 
