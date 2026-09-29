@@ -335,126 +335,144 @@ export default function Home() {
 
         {/* ==========================================
             4. PUBLICIDADE
-            BANNER RETANGULAR
+            ATÉ 3 BANNERS POR VEZ
         ========================================== */}
 
         <section className="space-y-2">
 
-          <div className="px-1">
-
+          <div className="px-1 flex items-center justify-between gap-2">
             <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
               Publicidade
             </h2>
-
+            {publicidade.length > 0 && (
+              <span className="text-[10px] font-bold text-slate-400">
+                {publicidade.length} anunciante{publicidade.length === 1 ? "" : "s"}
+              </span>
+            )}
           </div>
 
-          <Link
-            href={
-              publicidade[0]
-                ? `/loja/${publicidade[0].lojaId}`
-                : "/loja-explicativa?anunciante=novo"
-            }
-            className="block w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 hover:shadow-md transition"
-          >
-
-            <div className="aspect-[3/1] w-full bg-slate-200 overflow-hidden">
-              {publicidade[0] ? (
-                <img
-                  src={publicidade[0].bannerUrl}
-                  alt={publicidade[0].nome || "Publicidade"}
-                  className="block h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-center px-4">
-                  <div>
-                    <p className="text-[10px] text-amber-300 font-black uppercase tracking-widest">Banner Retangular</p>
-                    <p className="text-lg font-black text-white mt-1">Sua empresa aqui</p>
-                    <p className="text-[10px] text-blue-100 mt-1">Clique e saiba como anunciar</p>
-                  </div>
+          <div className="space-y-3">
+            {publicidadeVisiveis.map((item) => (
+              <Link
+                key={item.id}
+                href={`/loja/${item.lojaId}`}
+                className="block w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 hover:shadow-md transition"
+              >
+                <div className="aspect-[3/1] w-full bg-slate-200 overflow-hidden">
+                  <img
+                    src={item.bannerUrl}
+                    alt={item.nome || "Publicidade"}
+                    className="block h-full w-full object-cover"
+                  />
                 </div>
-              )}
-            </div>
-
-          </Link>
+              </Link>
+            ))}
+          </div>
 
         </section>
 
         {/* ==========================================
-            5. PUBLICIDADE
-            2 POR LINHA
+            5. DESTAQUES
+            ATÉ 6 CARDS MÉDIOS POR VEZ
         ========================================== */}
 
         <section className="space-y-2">
 
-          <div className="px-1">
-
+          <div className="px-1 flex items-center justify-between gap-2">
             <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
               Destaques
             </h2>
-
+            {destaques.length > 0 && (
+              <span className="text-[10px] font-bold text-slate-400">
+                {destaques.length} anunciante{destaques.length === 1 ? "" : "s"}
+              </span>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            {[0, 1].map((indice) => {
-              const item = destaques[indice];
-              return (
-                <Link
-                  key={item?.id || `destaque-vazio-${indice}`}
-                  href={item ? `/loja/${item.lojaId}` : "/loja-explicativa?anunciante=novo"}
-                  className="aspect-[3/2] w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 transition"
-                >
-                  {item ? (
-                    <img src={item.bannerUrl} alt={item.nome || "Destaque"} className="block h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-700 to-emerald-900 p-3 text-center">
-                      <div>
-                        <p className="text-[9px] text-emerald-100 font-bold uppercase">Anuncie</p>
-                        <p className="text-sm font-black text-white">Sua marca</p>
-                      </div>
-                    </div>
-                  )}
-                </Link>
-              );
-            })}
+            {destaquesVisiveis.map((item) => (
+              <Link
+                key={item.id}
+                href={`/loja/${item.lojaId}`}
+                className="aspect-[3/2] w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 transition"
+              >
+                <img
+                  src={item.bannerUrl}
+                  alt={item.nome || "Destaque"}
+                  className="block h-full w-full object-cover"
+                />
+              </Link>
+            ))}
           </div>
 
         </section>
 
         {/* ==========================================
-            6. PUBLICIDADE
-            4 POR TELA
+            6. TODAS AS LOJAS
+            CARDS PEQUENOS + BUSCA
         ========================================== */}
 
         <section className="space-y-2">
 
-          <div className="px-1">
-
+          <div className="px-1 flex items-center justify-between gap-2">
             <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
-              Parceiros
+              Todas as lojas
             </h2>
+            <span className="text-[10px] font-bold text-slate-400">
+              {lojasFiltradas.length} loja{lojasFiltradas.length === 1 ? "" : "s"}
+            </span>
+          </div>
 
+          <div className="relative">
+            <input
+              type="search"
+              value={buscaLoja}
+              onChange={(evento) => setBuscaLoja(evento.target.value)}
+              placeholder="Buscar loja..."
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-10 text-sm font-medium text-slate-700 shadow-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+            />
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+              🔎
+            </span>
           </div>
 
           <div className="grid grid-cols-4 gap-2">
-            {[0, 1, 2, 3].map((indice) => {
-              const item = parceiros[indice];
-              return (
-                <Link
-                  key={item?.id || `parceiro-vazio-${indice}`}
-                  href={item ? `/loja/${item.lojaId}` : "/loja-explicativa?anunciante=novo"}
-                  className="aspect-square w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-amber-400 transition"
-                >
-                  {item ? (
-                    <img src={item.bannerUrl} alt={item.nome || "Parceiro"} className="block h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-800 p-2 text-center">
-                      <span className="text-[9px] font-black text-white leading-tight">Anuncie aqui</span>
-                    </div>
-                  )}
-                </Link>
-              );
-            })}
+            {lojasFiltradas.map((loja) => (
+              <Link
+                key={loja.id}
+                href={`/loja/${loja.id}`}
+                className="aspect-square w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-amber-400 transition"
+                title={loja.nome || "Loja"}
+              >
+                {loja.bannerUrl ? (
+                  <img
+                    src={loja.bannerUrl}
+                    alt={loja.nome || "Loja"}
+                    className="block h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-slate-800 p-2 text-center">
+                    <span className="text-[9px] font-black text-white leading-tight">
+                      {loja.nome || "Loja"}
+                    </span>
+                  </div>
+                )}
+              </Link>
+            ))}
           </div>
+
+          {lojasFiltradas.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center">
+              <p className="text-sm font-bold text-slate-600">
+                {buscaLoja ? "Nenhuma loja encontrada." : "Nenhuma loja cadastrada ainda."}
+              </p>
+              {buscaLoja && (
+                <p className="text-xs text-slate-400 mt-1">
+                  Tente outro nome na busca.
+                </p>
+              )}
+            </div>
+          )}
 
         </section>
 
