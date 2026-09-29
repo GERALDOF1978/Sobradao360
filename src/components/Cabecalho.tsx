@@ -460,7 +460,7 @@ export default function Cabecalho() {
 
         <div className="mx-auto max-w-7xl px-2 sm:px-4">
 
-          <div className="flex h-[56px] items-center gap-2">
+          <div className="flex h-[64px] items-center gap-2">
 
             {/* LOGO */}
 
@@ -469,15 +469,29 @@ export default function Cabecalho() {
               onClick={() =>
                 (window.location.href = "/")
               }
-              className="shrink-0"
+              className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl"
               aria-label="Página inicial"
             >
               <img
                 src={LOGO}
                 alt="Sobradão 360"
-                className="h-10 w-auto object-contain sm:h-11"
+                className="h-12 w-12 object-contain"
               />
             </button>
+
+            {/* PLANTÃO */}
+
+            <div className="min-w-0 flex-1 px-1">
+              <div className="flex h-10 items-center">
+                <span className="mr-2 shrink-0 text-[8px] font-black tracking-wider text-emerald-700 sm:text-[9px]">
+                  PLANTÃO
+                </span>
+
+                <span className="truncate text-[9px] text-slate-500 sm:text-[10px]">
+                  {plantao[plantaoAtual]}
+                </span>
+              </div>
+            </div>
 
             {/* CLIMA */}
 
@@ -569,20 +583,6 @@ export default function Cabecalho() {
                 </div>
               )}
             </button>
-
-          </div>
-
-          {/* PLANTÃO COMPACTO */}
-
-          <div className="flex h-6 items-center border-t border-slate-100">
-
-            <span className="mr-2 shrink-0 text-[8px] font-black tracking-wider text-emerald-700 sm:text-[9px]">
-              PLANTÃO
-            </span>
-
-            <span className="truncate text-[9px] text-slate-500 sm:text-[10px]">
-              {plantao[plantaoAtual]}
-            </span>
 
           </div>
 
