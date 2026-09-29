@@ -55,6 +55,12 @@ type AnuncioHome = {
   exibicao: Exibicao;
 };
 
+type LojaHome = {
+  id: string;
+  nome: string;
+  bannerUrl: string;
+};
+
 function dataTimestamp(valor: unknown): Date | null {
   if (valor instanceof Date) return valor;
 
@@ -83,6 +89,10 @@ function dataTimestamp(valor: unknown): Date | null {
 
 export default function Home() {
   const [anunciosHome, setAnunciosHome] = useState<AnuncioHome[]>([]);
+  const [lojasAtivas, setLojasAtivas] = useState<LojaHome[]>([]);
+  const [buscaLoja, setBuscaLoja] = useState("");
+  const [indicePublicidade, setIndicePublicidade] = useState(0);
+  const [indiceDestaques, setIndiceDestaques] = useState(0);
 
   useEffect(() => {
     async function carregarAnunciosHome() {
@@ -97,6 +107,17 @@ export default function Home() {
           const dados = doc.data() as Record<string, unknown>;
           lojas.set(doc.id, dados);
         });
+
+        setLojasAtivas(
+          lojasSnapshot.docs
+            .map((doc: (typeof lojasSnapshot.docs)[number]) => {
+              const dados = doc.data() as Record<string, unknown>;
+              const bannerUrl = typeof dados.bannerUrl === "string" ? dados.bannerUrl : "";
+              const nome = typeof dados.nome === "string" ? dados.nome : "";
+              return { id: doc.id, nome, bannerUrl };
+            })
+            .filter((loja) => loja.nome || loja.bannerUrl)
+        );
 
         console.groupCollapsed("[Sobradão 360] Diagnóstico da publicidade da Home");
         console.log("Lojas ativas encontradas:", lojasSnapshot.size);
@@ -195,6 +216,48 @@ export default function Home() {
   const publicidade = anunciosHome.filter((item) => item.exibicao.publicidade);
   const destaques = anunciosHome.filter((item) => item.exibicao.destaques);
   const parceiros = anunciosHome.filter((item) => item.exibicao.parceiros);
+
+  useEffect(() => {
+    const paginas = Math.max(1, Math.ceil(publicidade.length / 3));
+    if (indicePublicidade >= paginas) {
+      setIndicePublicidade(0);
+    }
+    if (paginas <= 1) return;
+
+    const timer = window.setInterval(() => {
+      setIndicePublicidade((indice) => (indice + 1) % paginas);
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [publicidade.length, indicePublicidade]);
+
+  useEffect(() => {
+    const paginas = Math.max(1, Math.ceil(destaques.length / 6));
+    if (indiceDestaques >= paginas) {
+      setIndiceDestaques(0);
+    }
+    if (paginas <= 1) return;
+
+    const timer = window.setInterval(() => {
+      setIndiceDestaques((indice) => (indice + 1) % paginas);
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [destaques.length, indiceDestaques]);
+
+  const publicidadeVisiveis = publicidade.slice(
+    indicePublicidade * 3,
+    indicePublicidade * 3 + 3
+  );
+
+  const destaquesVisiveis = destaques.slice(
+    indiceDestaques * 6,
+    indiceDestaques * 6 + 6
+  );
+
+  const lojasFiltradas = lojasAtivas.filter((loja) =>
+    loja.nome.toLocaleLowerCase("pt-BR").includes(buscaLoja.trim().toLocaleLowerCase("pt-BR"))
+  );
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-16 font-sans">
