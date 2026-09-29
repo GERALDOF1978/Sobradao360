@@ -3,24 +3,20 @@
 import { NextResponse } from "next/server";
 
 const CIDADE = "RIO CLARO";
+const CODIGO_IBGE = "3543907";
 const UF = "SP";
 
-interface AlertaINMET {
-  id?: string;
-  identifier?: string;
-  event?: string;
-  headline?: string;
-  description?: string;
-  instruction?: string;
-  severity?: string;
-  urgency?: string;
-  certainty?: string;
-  effective?: string;
-  onset?: string;
-  expires?: string;
-  senderName?: string;
-  areaDesc?: string;
-  polygon?: string;
+interface AlertaNormalizado {
+  id: string;
+  titulo: string;
+  severidade: string;
+  severidadeNivel: number;
+  inicio: string | null;
+  fim: string | null;
+  descricao: string;
+  instrucao: string;
+  area: string;
+  fonte: string;
 }
 
 function normalizarTexto(valor: unknown): string {
@@ -32,27 +28,182 @@ function normalizarTexto(valor: unknown): string {
     .toUpperCase();
 }
 
-function alertaEhRioClaro(alerta: AlertaINMET): boolean {
-  const texto = normalizarTexto(
-    [
-      alerta.areaDesc,
-      alerta.headline,
-      alerta.description,
-      alerta.event,
-    ].join(" ")
-  );
+function textoDoObjeto(valor: unknown): string {
+  try {
+    return normalizarTexto(JSON.stringify(valor));
+  } catch {
+    return "";
+  }
+}
 
-  return (
-    texto.includes(CIDADE) &&
-    texto.includes(UF)
+function extrairLista(dados: unknown): unknown[] {
+  if (Array.isArray(dados)) {
+    return dados;
+  }
+
+  if (!dados || typeof dados !== "object") {
+    return [];
+  }
+
+  const objeto = dados as Record<string, unknown>;
+
+  const chaves = [
+    "avisos",
+    "alertas",
+    "data",
+    "items",
+    "itens",
+    "results",
+    "features",
+  ];
+
+  for (const chave of chaves) {
+    const valor = objeto[chave];
+
+    if (Array.isArray(valor)) {
+      return valor;
+    }
+  }
+
+  return Object.values(objeto).filter(
+    (valor) =>
+      valor &&
+      typeof valor === "object" &&
+      !Array.isArray(valor)
   );
 }
 
-function alertaVigente(alerta: AlertaINMET): boolean {
+function campo(objeto: Record<string, unknown>, chaves: string[]) {
+  for (const chave of chaves) {
+    const valor = objeto[chave];
+
+    if (
+      typeof valor === "string" ||
+      typeof valor === "number"
+    ) {
+      return String(valor);
+    }
+  }
+
+  return "";
+}
+
+function severidadeNumero(valor: unknown): number {
+  const texto = normalizarTexto(valor);
+
+  if (
+    texto.includes("EXTREME") ||
+    texto.includes("GRANDE PERIGO") ||
+    texto.includes("VERMELHO")
+  ) {
+    return 3;
+  }
+
+  if (
+    texto.includes("SEVERE") ||
+    texto.includes("PERIGO") ||
+    texto.includes("LARANJA")
+  ) {
+    return 2;
+  }
+
+  if (
+    texto.includes("MODERATE") ||
+    texto.includes("PERIGO POTENCIAL") ||
+    texto.includes("AMARELO")
+  ) {
+    return 1;
+  }
+
+  return 0;
+}
+
+function severidadeTexto(valor: unknown): string {
+  const texto = normalizarTexto(valor);
+
+  if (
+    texto.includes("EXTREME") ||
+    texto.includes("GRANDE PERIGO") ||
+    texto.includes("VERMELHO")
+  ) {
+    return "Grande Perigo";
+  }
+
+  if (
+    texto.includes("SEVERE") ||
+    texto === "PERIGO" ||
+    texto.includes("LARANJA")
+  ) {
+    return "Perigo";
+  }
+
+  if (
+    texto.includes("MODERATE") ||
+    texto.includes("PERIGO POTENCIAL") ||
+    texto.includes("AMARELO")
+  ) {
+    return "Perigo Potencial";
+  }
+
+  return (
+    typeof valor === "string" && valor.trim()
+      ? valor
+      : "Aviso Meteorológico"
+  );
+}
+
+function encontrarObjetoAlerta(item: unknown): Record<string, unknown> {
+  if (!item || typeof item !== "object") {
+    return {};
+  }
+
+  const objeto = item as Record<string, unknown>;
+
+  if (
+    objeto.properties &&
+    typeof objeto.properties === "object" &&
+    !Array.isArray(objeto.properties)
+  ) {
+    return {
+      ...(objeto.properties as Record<string, unknown>),
+      geometry: objeto.geometry,
+    };
+  }
+
+  return objeto;
+}
+
+function alertaEhRioClaro(item: unknown): boolean {
+  const texto = textoDoObjeto(item);
+
+  return (
+    texto.includes(CIDADE) ||
+    texto.includes(CODIGO_IBGE)
+  );
+}
+
+function alertaVigente(item: Record<string, unknown>): boolean {
   const agora = Date.now();
 
-  const inicio = alerta.onset || alerta.effective;
-  const fim = alerta.expires;
+  const inicio = campo(item, [
+    "inicio",
+    "início",
+    "onset",
+    "effective",
+    "data_inicio",
+    "dataInicio",
+    "validade_inicio",
+  ]);
+
+  const fim = campo(item, [
+    "fim",
+    "término",
+    "termino",
+    "expires",
+    "data_fim",
+    "dataFim",
+    "validade_fim",
+  ]);
 
   if (inicio) {
     const inicioMs = new Date(inicio).getTime();
@@ -73,79 +224,106 @@ function alertaVigente(alerta: AlertaINMET): boolean {
   return true;
 }
 
-function severidadeNumero(severidade?: string) {
-  const valor = normalizarTexto(severidade);
+function formatarAlerta(item: unknown): AlertaNormalizado {
+  const alerta = encontrarObjetoAlerta(item);
 
-  if (valor.includes("EXTREME")) return 3;
-  if (valor.includes("SEVERE")) return 2;
-  if (valor.includes("MODERATE")) return 1;
+  const severidadeValor = campo(alerta, [
+    "severidade",
+    "severity",
+    "nivel",
+    "nivel_severidade",
+    "nivelSeveridade",
+    "cor",
+  ]);
 
-  return 0;
-}
+  const titulo =
+    campo(alerta, [
+      "titulo",
+      "título",
+      "headline",
+      "event",
+      "evento",
+      "descricao_evento",
+      "descricaoEvento",
+    ]) || "Alerta meteorológico";
 
-function severidadeTexto(severidade?: string) {
-  const valor = normalizarTexto(severidade);
+  const inicio =
+    campo(alerta, [
+      "inicio",
+      "início",
+      "onset",
+      "effective",
+      "data_inicio",
+      "dataInicio",
+      "validade_inicio",
+    ]) || null;
 
-  if (valor.includes("EXTREME")) {
-    return "Grande Perigo";
-  }
+  const fim =
+    campo(alerta, [
+      "fim",
+      "término",
+      "termino",
+      "expires",
+      "data_fim",
+      "dataFim",
+      "validade_fim",
+    ]) || null;
 
-  if (valor.includes("SEVERE")) {
-    return "Perigo";
-  }
-
-  if (valor.includes("MODERATE")) {
-    return "Perigo Potencial";
-  }
-
-  return severidade || "Aviso Meteorológico";
-}
-
-function formatarAlerta(alerta: AlertaINMET) {
   return {
     id:
-      alerta.identifier ||
-      alerta.id ||
-      `inmet-${Date.now()}`,
+      campo(alerta, [
+        "id",
+        "identifier",
+        "id_aviso",
+        "idAviso",
+        "codigo",
+      ]) ||
+      `inmet-${Date.now()}-${Math.random().toString(36).slice(2)}`,
 
-    evento:
-      alerta.event ||
-      alerta.headline ||
-      "Alerta meteorológico",
+    titulo,
 
-    titulo:
-      alerta.headline ||
-      alerta.event ||
-      "Alerta meteorológico",
+    severidade: severidadeTexto(severidadeValor),
 
-    severidade: severidadeTexto(alerta.severity),
+    severidadeNivel: severidadeNumero(severidadeValor),
 
-    severidadeNivel: severidadeNumero(alerta.severity),
+    inicio,
 
-    inicio:
-      alerta.onset ||
-      alerta.effective ||
-      null,
-
-    fim:
-      alerta.expires ||
-      null,
+    fim,
 
     descricao:
-      alerta.description ||
-      "",
+      campo(alerta, [
+        "descricao",
+        "description",
+        "texto",
+        "detalhes",
+      ]) || "",
 
     instrucao:
-      alerta.instruction ||
-      "",
+      campo(alerta, [
+        "instrucao",
+        "instrução",
+        "instruction",
+        "recomendacao",
+        "recomendação",
+      ]) || "",
 
     area:
-      alerta.areaDesc ||
-      "Rio Claro e região",
+      campo(alerta, [
+        "area",
+        "área",
+        "areaDesc",
+        "municipios",
+        "municipios_afetados",
+        "municipiosAfetados",
+      ]) || "Rio Claro e região",
 
     fonte:
-      alerta.senderName ||
-      "Instituto Nacional de Meteorologia - INMET",
+      campo(alerta, [
+        "fonte",
+        "senderName",
+        "orgao",
+        "órgão",
+      ]) || "Instituto Nacional de Meteorologia - INMET",
   };
 }
 
@@ -154,10 +332,7 @@ async function buscarFonte(url: string) {
     headers: {
       Accept: "application/json",
     },
-
-    next: {
-      revalidate: 300,
-    },
+    cache: "no-store",
   });
 
   if (!resposta.ok) {
@@ -172,120 +347,41 @@ async function buscarFonte(url: string) {
 export async function GET() {
   try {
     /*
-     * O INMET publica seus avisos no ecossistema WIS2
-     * em formato CAP.
-     *
-     * A consulta abaixo tenta obter as notificações
-     * recentes do WIS2.
+     * Fonte oficial atual de avisos ativos do INMET.
+     * O retorno pode variar entre versões da API, por isso
+     * a leitura abaixo aceita os formatos mais comuns.
      */
+    const dados = await buscarFonte(
+      "https://apiprevmet3.inmet.gov.br/avisos/ativos"
+    );
 
-    const url =
-      "https://wis2bra.inmet.gov.br/oapi/collections/messages/items" +
-      "?limit=100";
+    const itens = extrairLista(dados);
 
-    const dados = await buscarFonte(url);
-
-    const itens = Array.isArray(dados?.features)
-      ? dados.features
-      : Array.isArray(dados?.items)
-      ? dados.items
-      : [];
-
-    const alertas: AlertaINMET[] = [];
-
-    for (const item of itens) {
-      const properties =
-        item?.properties || item || {};
-
-      const alerta: AlertaINMET = {
-        id:
-          properties.id ||
-          item?.id,
-
-        identifier:
-          properties.identifier ||
-          properties.alertIdentifier,
-
-        event:
-          properties.event,
-
-        headline:
-          properties.headline,
-
-        description:
-          properties.description,
-
-        instruction:
-          properties.instruction,
-
-        severity:
-          properties.severity,
-
-        urgency:
-          properties.urgency,
-
-        certainty:
-          properties.certainty,
-
-        effective:
-          properties.effective,
-
-        onset:
-          properties.onset,
-
-        expires:
-          properties.expires,
-
-        senderName:
-          properties.senderName,
-
-        areaDesc:
-          properties.areaDesc,
-
-        polygon:
-          item?.geometry,
-      };
-
-      if (!alertaEhRioClaro(alerta)) {
-        continue;
-      }
-
-      if (!alertaVigente(alerta)) {
-        continue;
-      }
-
-      alertas.push(alerta);
-    }
-
-    const formatados = alertas
-      .map(formatarAlerta)
+    const alertas = itens
+      .filter(alertaEhRioClaro)
+      .map((item) => encontrarObjetoAlerta(item))
+      .filter(alertaVigente)
+      .map((item) => formatarAlerta(item))
       .sort(
         (a, b) =>
-          b.severidadeNivel -
-          a.severidadeNivel
+          b.severidadeNivel - a.severidadeNivel
       );
 
     return NextResponse.json({
       sucesso: true,
       cidade: "Rio Claro",
       estado: "SP",
-      possuiAlerta: formatados.length > 0,
-      quantidade: formatados.length,
-      alertas: formatados,
+      possuiAlerta: alertas.length > 0,
+      quantidade: alertas.length,
+      alertas,
       atualizadoEm: new Date().toISOString(),
       fonte: "INMET",
     });
   } catch (erro) {
     console.error(
-      "Erro ao consultar alertas do INMET:",
+      "Erro ao consultar avisos ativos do INMET:",
       erro
     );
-
-    /*
-     * Importante:
-     * se o serviço externo estiver indisponível,
-     * não mostramos um falso alerta.
-     */
 
     return NextResponse.json(
       {
