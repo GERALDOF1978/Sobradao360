@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+@keyframes negocios-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-50% - 0.375rem));
+  }
+}
+
+.negocios-marquee {
+  animation: negocios-marquee 28s linear infinite;
+  will-change: transform;
+}
