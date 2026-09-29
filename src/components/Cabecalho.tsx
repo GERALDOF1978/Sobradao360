@@ -876,12 +876,12 @@ export default function Cabecalho() {
           BOTÃO FLUTUANTE PARA ANUNCIANTES
           ===================================================== */}
       <a
-        href="/loja-explicativa?anunciante=novo"
-        className="fixed bottom-5 right-4 z-[90] flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-3 text-xs font-black text-white shadow-xl ring-2 ring-white hover:bg-emerald-700 transition"
-        title="Quero anunciar"
+        href="/quero-divulgar"
+        className="fixed bottom-5 right-4 z-[90] flex items-center gap-2 rounded-full bg-amber-400 px-4 py-3 text-xs font-black text-blue-950 shadow-xl ring-2 ring-white hover:bg-amber-300 transition"
+        title="Quero divulgar meu negócio"
       >
         <span className="text-base">📢</span>
-        <span>Anuncie aqui</span>
+        <span>Quero divulgar meu negócio</span>
       </a>
 
     </>
