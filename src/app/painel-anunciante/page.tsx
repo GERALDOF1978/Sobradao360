@@ -449,7 +449,7 @@ corMarca:
             );
 
             const listaContratos: ContratoAnuncio[] = snapshotContratos.docs
-              .map((item: (typeof snapshotContratos.docs)[number]): ContratoAnuncio => {
+              .map((item): ContratoAnuncio => {
                 const dados = item.data() as DadosFirestore;
                 const data = (valor: unknown): Date | null => {
                   if (valor instanceof Date) {
