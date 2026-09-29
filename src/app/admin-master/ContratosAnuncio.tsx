@@ -397,6 +397,7 @@ export default function ContratosAnuncio({
       nome: item.nome,
       valor: String(item.valor),
       duracaoDias: item.duracaoDias,
+      limiteProdutos: item.limiteProdutos || 5,
       ativo: item.ativo,
       exibicaoPadrao: {
         ...item.exibicaoPadrao,
@@ -535,6 +536,8 @@ export default function ContratosAnuncio({
         String(item.valorContratado),
       duracaoDias:
         item.duracaoDias,
+      limiteProdutos:
+        item.limiteProdutos || 5,
       inicio:
         dataInput(item.inicio) ||
         new Date()
