@@ -575,10 +575,10 @@ export default function LojaPage({
   return (
     <main className="min-h-screen bg-slate-100 pb-12">
 
-      {/* BANNER / IDENTIDADE DO ANUNCIANTE */}
+      {/* BANNER */}
 
       <section
-        className="relative min-h-[190px] overflow-hidden text-white"
+        className="relative overflow-hidden text-white"
         style={{
           backgroundColor: cor,
         }}
@@ -586,90 +586,36 @@ export default function LojaPage({
 
         {negocio.mostrarBanner &&
           negocio.bannerUrl && (
-            <div className="absolute inset-0">
-
+            <div className="relative">
               <img
                 src={negocio.bannerUrl}
-                alt=""
-                className="h-full w-full object-cover"
+                alt={`Banner ${negocio.nome}`}
+                className="block h-auto max-h-[400px] w-full object-contain"
               />
 
-              <div className="absolute inset-0 bg-black/55" />
-
+              <div className="absolute inset-0 bg-black/10" />
             </div>
           )}
 
-        <div className="relative mx-auto max-w-5xl px-4 py-4">
-
+        <div className="absolute left-4 top-4 z-10">
           <Link
             href="/"
-            className="inline-flex rounded-full bg-black/25 px-3 py-2 text-xs font-bold text-white/90 backdrop-blur hover:bg-black/40"
+            className="inline-flex rounded-full bg-black/45 px-3 py-2 text-xs font-bold text-white backdrop-blur hover:bg-black/60"
           >
             ← Voltar
           </Link>
-
-          <div className="mt-3 flex items-center gap-3">
-
-            <div
-              className="
-                flex
-                h-16
-                w-16
-                shrink-0
-                items-center
-                justify-center
-                overflow-hidden
-                rounded-2xl
-                border-2
-                border-white/40
-                bg-white
-                shadow-lg
-              "
-            >
-
-              {negocio.imagemUrl ? (
-                <img
-                  src={negocio.imagemUrl}
-                  alt={negocio.nome}
-                  className="h-full w-full object-contain p-2"
-                />
-              ) : (
-                <span className="text-3xl">
-                  {tipoInfo.icon}
-                </span>
-              )}
-
-            </div>
-
-            <div className="min-w-0">
-
-              <h1 className="truncate text-xl font-black md:text-2xl">
-                {negocio.titulo}
-              </h1>
-
-              <div className="mt-1 flex items-center gap-2">
-
-                <span className="text-sm">
-                  {tipoInfo.icon}
-                </span>
-
-                <span className="text-xs font-bold uppercase text-white/90">
-                  {tipoInfo.nome}
-                </span>
-
-              </div>
-
-              {negocio.slogan && (
-                <p className="mt-1 truncate text-xs font-semibold text-white/80">
-                  {negocio.slogan}
-                </p>
-              )}
-
-            </div>
-
-          </div>
-
         </div>
+
+        {!negocio.mostrarBanner || !negocio.bannerUrl ? (
+          <div className="px-4 py-5">
+            <Link
+              href="/"
+              className="inline-flex rounded-full bg-black/25 px-3 py-2 text-xs font-bold text-white hover:bg-black/40"
+            >
+              ← Voltar
+            </Link>
+          </div>
+        ) : null}
 
       </section>
 
