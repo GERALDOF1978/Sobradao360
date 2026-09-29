@@ -34,18 +34,45 @@ export default function NegociosMarquee() {
 
     async function carregarNegocios() {
       try {
-        const referencia = collection(db, "lojas_parceiras");
+        const [lojasSnapshot, contratosSnapshot] = await Promise.all([
+          getDocs(
+            query(
+              collection(db, "lojas_parceiras"),
+              where("ativo", "==", true)
+            )
+          ),
+          getDocs(
+            query(
+              collection(db, "contratos_anuncio"),
+              where("status", "==", "ativo")
+            )
+          ),
+        ]);
 
-        const consulta = query(
-          referencia,
-          where("ativo", "==", true)
-        );
+        const contratosMarquee = new Set<string>();
 
-        const snapshot = await getDocs(consulta);
+        contratosSnapshot.docs.forEach((contratoDoc) => {
+          const contrato = contratoDoc.data() as Record<string, unknown>;
+          const exibicao =
+            contrato.exibicao && typeof contrato.exibicao === "object"
+              ? (contrato.exibicao as Record<string, unknown>)
+              : {};
+
+          if (
+            exibicao.marquee === true &&
+            typeof contrato.lojaId === "string" &&
+            contrato.lojaId
+          ) {
+            contratosMarquee.add(contrato.lojaId);
+          }
+        });
 
         const lista: Negocio[] = [];
 
-        for (const firestoreDoc of snapshot.docs) {
+        for (const firestoreDoc of lojasSnapshot.docs) {
+          if (!contratosMarquee.has(firestoreDoc.id)) {
+            continue;
+          }
           const dados = firestoreDoc.data() as Record<string, unknown>;
 
           lista.push({
@@ -188,25 +215,11 @@ export default function NegociosMarquee() {
     return null;
   }
 
-  // Mantém sempre pelo menos 4 cards
-  const quantidadeCards = Math.max(4, negocios.length);
-
-  const cards: Negocio[] = Array.from(
-    { length: quantidadeCards },
-    (_, indice) =>
-      negocios[indice] || {
-        id: `cadastro-${indice}`,
-        nome: "ANUNCIE AQUI",
-        titulo: "Seu negócio no Sobradão 360",
-        subtitulo: "Clique e anuncie sua empresa ou serviço",
-        imagemUrl: "",
-        bannerUrl: "",
-        ativo: true,
-      }
-  );
-
-  // Duplica para criar o loop contínuo
-  const itens = [...cards, ...cards];
+  // O Marquee mostra somente lojas com contrato ativo e posição Marquee.
+  // Mesmo com uma única loja, ela continua rodando no loop.
+  const itens = negocios.length > 0
+    ? [...negocios, ...negocios]
+    : [];
 
   return (
     <section className="w-full overflow-hidden">
