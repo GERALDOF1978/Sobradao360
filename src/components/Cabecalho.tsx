@@ -489,20 +489,6 @@ export default function Cabecalho() {
               />
             </button>
 
-            {/* PLANTÃO */}
-
-            <div className="min-w-0 flex-1 px-1">
-              <div className="flex h-10 items-center">
-                <span className="mr-2 shrink-0 text-[8px] font-black tracking-wider text-emerald-700 sm:text-[9px]">
-                  PLANTÃO
-                </span>
-
-                <span className="truncate text-[9px] text-slate-500 sm:text-[10px]">
-                  {plantao[plantaoAtual]}
-                </span>
-              </div>
-            </div>
-
             {/* CLIMA */}
 
             <div className="ml-auto flex items-center">
@@ -601,6 +587,18 @@ export default function Cabecalho() {
               )}
             </button>
 
+          </div>
+
+          {/* PLANTÃO — LINHA EXCLUSIVA */}
+
+          <div className="flex h-7 items-center border-t border-slate-100">
+            <span className="mr-2 shrink-0 text-[8px] font-black tracking-wider text-emerald-700 sm:text-[9px]">
+              PLANTÃO
+            </span>
+
+            <span className="min-w-0 truncate text-[9px] text-slate-500 sm:text-[10px]">
+              {plantao[plantaoAtual]}
+            </span>
           </div>
 
         </div>
