@@ -328,29 +328,35 @@ function formatarAlerta(item: unknown): AlertaNormalizado {
 }
 
 async function buscarFonte(url: string) {
-  const resposta = await fetch(url, {
-    headers: {
-      Accept: "application/json",
-    },
-    cache: "no-store",
-  });
+  const controlador = new AbortController();
 
-  if (!resposta.ok) {
-    throw new Error(
-      `INMET respondeu ${resposta.status}`
-    );
+  const temporizador = setTimeout(() => {
+    controlador.abort();
+  }, 8000);
+
+  try {
+    const resposta = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+      },
+      cache: "no-store",
+      signal: controlador.signal,
+    });
+
+    if (!resposta.ok) {
+      throw new Error(
+        `INMET respondeu ${resposta.status}`
+      );
+    }
+
+    return await resposta.json();
+  } finally {
+    clearTimeout(temporizador);
   }
-
-  return resposta.json();
 }
 
 export async function GET() {
   try {
-    /*
-     * Fonte oficial atual de avisos ativos do INMET.
-     * O retorno pode variar entre versões da API, por isso
-     * a leitura abaixo aceita os formatos mais comuns.
-     */
     const dados = await buscarFonte(
       "https://apiprevmet3.inmet.gov.br/avisos/ativos"
     );
@@ -370,7 +376,7 @@ export async function GET() {
     return NextResponse.json({
       sucesso: true,
       cidade: "Rio Claro",
-      estado: "SP",
+      estado: UF,
       possuiAlerta: alertas.length > 0,
       quantidade: alertas.length,
       alertas,
@@ -387,12 +393,12 @@ export async function GET() {
       {
         sucesso: false,
         cidade: "Rio Claro",
-        estado: "SP",
+        estado: UF,
         possuiAlerta: false,
         quantidade: 0,
         alertas: [],
         erro:
-          "Não foi possível consultar os avisos meteorológicos do INMET.",
+          "Não foi possível consultar os avisos meteorológicos do INMET no momento.",
         fonte: "INMET",
       },
       {
