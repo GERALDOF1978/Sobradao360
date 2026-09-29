@@ -257,6 +257,9 @@ export default function PainelAnunciantePage() {
   const [negocios, setNegocios] =
     useState<Negocio[]>([]);
 
+  const [contratos, setContratos] =
+    useState<Record<string, ContratoAnuncio | null>>({});
+
   const [carregando, setCarregando] =
     useState(true);
 
@@ -1617,12 +1620,14 @@ corMarca:
                               </div>
 
                               <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                                {[
-                                  ["Valor contratado", formatarValor(contrato.valorContratado)],
-                                  ["Duração", `${contrato.duracaoDias} dias`],
-                                  ["Início", formatarData(contrato.inicio)],
-                                  ["Válido até", formatarData(contrato.vencimento)],
-                                ].map(([rotulo, valor]) => (
+                                {(
+                                  [
+                                    ["Valor contratado", formatarValor(contrato.valorContratado)],
+                                    ["Duração", `${contrato.duracaoDias} dias`],
+                                    ["Início", formatarData(contrato.inicio)],
+                                    ["Válido até", formatarData(contrato.vencimento)],
+                                  ] as Array<[string, string]>
+                                ).map(([rotulo, valor]: [string, string]) => (
                                   <div key={rotulo} className="rounded-2xl bg-white p-4 shadow-sm">
                                     <p className="text-[10px] font-black uppercase text-slate-400">{rotulo}</p>
                                     <p className="mt-1 text-base font-black text-slate-900">{valor}</p>
@@ -1635,7 +1640,7 @@ corMarca:
                                   Onde sua publicidade está contratada
                                 </p>
                                 <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                                  {exibicoes.map(([rotulo, ativo]) => (
+                                  {exibicoes.map(([rotulo, ativo]: [string, boolean]) => (
                                     <div
                                       key={rotulo}
                                       className={ativo ? "rounded-xl border border-emerald-200 bg-emerald-50 p-3" : "rounded-xl border border-slate-200 bg-slate-50 p-3"}
