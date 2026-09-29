@@ -527,7 +527,7 @@ export default function LojaPage({
 
         <div className="mx-auto max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm">
 
-          <div className="text-5xl">
+          <div className="text-4xl">
             🏪
           </div>
 
@@ -578,7 +578,7 @@ export default function LojaPage({
       {/* BANNER / IDENTIDADE DO ANUNCIANTE */}
 
       <section
-        className="relative overflow-hidden text-white"
+        className="relative min-h-[230px] overflow-hidden text-white"
         style={{
           backgroundColor: cor,
         }}
@@ -599,7 +599,7 @@ export default function LojaPage({
             </div>
           )}
 
-        <div className="relative mx-auto max-w-5xl px-4 py-5">
+        <div className="relative mx-auto max-w-5xl px-4 py-4">
 
           <Link
             href="/"
@@ -608,13 +608,13 @@ export default function LojaPage({
             ← Sobradão 360
           </Link>
 
-          <div className="mt-8 flex flex-col gap-5 sm:flex-row sm:items-center">
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
 
             <div
               className="
                 flex
-                h-28
-                w-28
+                h-20
+                w-20
                 shrink-0
                 items-center
                 justify-center
@@ -659,18 +659,18 @@ export default function LojaPage({
 
               </div>
 
-              <h1 className="mt-3 text-3xl font-black md:text-4xl">
+              <h1 className="mt-2 text-2xl font-black md:text-3xl">
                 {negocio.titulo}
               </h1>
 
               {negocio.slogan && (
-                <p className="mt-2 text-base font-bold text-white">
+                <p className="mt-1 text-sm font-bold text-white">
                   {negocio.slogan}
                 </p>
               )}
 
               {negocio.subtitulo && (
-                <p className="mt-1 text-sm text-white/80">
+                <p className="mt-1 text-xs text-white/80">
                   {negocio.subtitulo}
                 </p>
               )}
@@ -713,12 +713,12 @@ export default function LojaPage({
             📞 Entre em contato
           </h2>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-2 gap-3">
 
             {telefoneNumero && (
               <a
                 href={`tel:${telefoneNumero}`}
-                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-300 hover:bg-blue-50"
+                className="flex min-w-0 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 transition hover:border-blue-300 hover:bg-blue-50"
               >
 
                 <span className="text-2xl">
@@ -746,7 +746,7 @@ export default function LojaPage({
                     `Olá! Vi a página de ${negocio.nome} no Sobradão 360 e gostaria de mais informações.`
                   )
                 }
-                className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left transition hover:bg-emerald-100"
+                className="flex min-w-0 items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition hover:bg-emerald-100"
               >
 
                 <span className="text-2xl">
@@ -842,7 +842,7 @@ export default function LojaPage({
 
           ) : (
 
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-5 grid grid-cols-2 gap-4">
 
               {produtos.map(
                 (produto) => (
@@ -851,7 +851,7 @@ export default function LojaPage({
                     className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                   >
 
-                    <div className="h-48 bg-slate-100">
+                    <div className="h-40 bg-slate-100">
 
                       {produto.imagemUrl ? (
                         <img
