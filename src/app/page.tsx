@@ -89,7 +89,7 @@ export default function Home() {
         console.log("Lojas ativas encontradas:", lojasSnapshot.size);
         console.log("Contratos ativos encontrados:", contratosSnapshot.size);
         console.table(
-          lojasSnapshot.docs.map((doc) => ({
+          lojasSnapshot.docs.map((doc: (typeof lojasSnapshot.docs)[number]) => ({
             lojaId: doc.id,
             nome: doc.data().nome || "",
             ativo: doc.data().ativo,
