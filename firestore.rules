@@ -222,6 +222,18 @@ service cloud.firestore {
     }
 
 
+
+    // =====================================================
+    // SOLICITAÇÕES DE DIVULGAÇÃO
+    // Formulário público para novos anunciantes.
+    // As solicitações são somente de criação pelo navegador.
+    // A análise/aprovação será feita posteriormente no Master.
+    // =====================================================
+    match /solicitacoes_divulgacao/{solicitacaoId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
     // =====================================================
     // ESTATÍSTICAS PÚBLICAS DA COMUNIDADE
     // =====================================================
