@@ -10,6 +10,8 @@ import {
   serverTimestamp,
   Timestamp,
   updateDoc,
+  type DocumentData,
+  type QueryDocumentSnapshot,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
@@ -178,7 +180,8 @@ export default function ContratosAnuncio({
     ]);
 
     setPacotes(
-      pacotesSnapshot.docs.map((item) => {
+      pacotesSnapshot.docs.map(
+  (item: QueryDocumentSnapshot<DocumentData>) => {
         const d = item.data();
 
         return {
@@ -208,7 +211,8 @@ export default function ContratosAnuncio({
     );
 
     setContratos(
-      contratosSnapshot.docs.map((item) => {
+      contratosSnapshot.docs.map(
+  (item: QueryDocumentSnapshot<DocumentData>) => {
         const d = item.data();
 
         return {
