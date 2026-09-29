@@ -473,90 +473,61 @@ export default function IdentidadeAnunciante({
 
       </div>
 
-      {/* CONFIGURAÇÕES */}
+      {/* EXIBIÇÃO CONTROLADA PELO MASTER */}
 
-      <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-4">
 
-        <h4 className="text-sm font-black text-slate-800">
-          ⚙️ Onde sua identidade aparecerá
+        <h4 className="text-sm font-black text-blue-950">
+          📢 Exibição da publicidade
         </h4>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <p className="mt-2 text-xs leading-5 text-blue-800">
+          A posição da sua publicidade é definida pelo contrato comercial
+          aprovado pelo Sobradão 360. Você não precisa configurar Marquee,
+          Publicidade, Destaques ou Parceiros aqui.
+        </p>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
 
-            <input
-              type="checkbox"
-              checked={mostrarBanner}
-              onChange={(e) =>
-                setMostrarBanner(
-                  e.target.checked
-                )
-              }
-              className="mt-1 h-4 w-4"
-            />
+          <div className="rounded-2xl bg-white p-4">
+            <div className="text-xl">📢</div>
+            <p className="mt-2 text-xs font-black text-slate-800">
+              Marquee
+            </p>
+            <p className="mt-1 text-[10px] text-slate-500">
+              Definido pelo contrato.
+            </p>
+          </div>
 
-            <span>
-              <span className="block text-xs font-black text-slate-800">
-                🖼️ Banner
-              </span>
+          <div className="rounded-2xl bg-white p-4">
+            <div className="text-xl">🖼️</div>
+            <p className="mt-2 text-xs font-black text-slate-800">
+              Publicidade
+            </p>
+            <p className="mt-1 text-[10px] text-slate-500">
+              Definido pelo contrato.
+            </p>
+          </div>
 
-              <span className="mt-1 block text-[10px] leading-4 text-slate-500">
-                Mostrar o banner na página pública.
-              </span>
-            </span>
+          <div className="rounded-2xl bg-white p-4">
+            <div className="text-xl">⭐</div>
+            <p className="mt-2 text-xs font-black text-slate-800">
+              Destaques
+            </p>
+            <p className="mt-1 text-[10px] text-slate-500">
+              Definido pelo contrato.
+            </p>
+          </div>
 
-          </label>
-
-          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-
-            <input
-              type="checkbox"
-              checked={mostrarMarquee}
-              onChange={(e) =>
-                setMostrarMarquee(
-                  e.target.checked
-                )
-              }
-              className="mt-1 h-4 w-4"
-            />
-
-            <span>
-              <span className="block text-xs font-black text-slate-800">
-                📢 Marquee
-              </span>
-
-              <span className="mt-1 block text-[10px] leading-4 text-slate-500">
-                Mostrar seu negócio na faixa de divulgação.
-              </span>
-            </span>
-
-          </label>
-
-          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-
-            <input
-              type="checkbox"
-              checked={mostrarCard}
-              onChange={(e) =>
-                setMostrarCard(
-                  e.target.checked
-                )
-              }
-              className="mt-1 h-4 w-4"
-            />
-
-            <span>
-              <span className="block text-xs font-black text-slate-800">
-                🧾 Card
-              </span>
-
-              <span className="mt-1 block text-[10px] leading-4 text-slate-500">
-                Permitir que o card do negócio apareça no portal.
-              </span>
-            </span>
-
-          </label>
+          <div className="rounded-2xl bg-white p-4">
+            <div className="text-xl">🤝</div>
+            <p className="mt-2 text-xs font-black text-slate-800">
+              Parceiros
+            </p>
+            <p className="mt-1 text-[10px] text-slate-500">
+              Definido pelo contrato.
+            </p>
+          </div>
 
         </div>
 
@@ -571,15 +542,11 @@ export default function IdentidadeAnunciante({
             <input
               type="color"
               value={corMarca}
-              onChange={(e) =>
-                setCorMarca(
-                  e.target.value
-                )
-              }
+              onChange={(e) => setCorMarca(e.target.value)}
               className="h-10 w-14 cursor-pointer rounded-lg border border-slate-200 bg-white p-1"
             />
 
-            <span className="rounded-lg bg-slate-100 px-3 py-2 font-mono text-xs font-bold text-slate-600">
+            <span className="rounded-lg bg-white px-3 py-2 font-mono text-xs font-bold text-slate-600">
               {corMarca}
             </span>
 
@@ -593,9 +560,7 @@ export default function IdentidadeAnunciante({
             disabled={salvando}
             className="rounded-xl bg-blue-900 px-5 py-3 text-xs font-black text-white hover:bg-blue-800 disabled:opacity-50 sm:ml-auto"
           >
-            {salvando
-              ? "Salvando..."
-              : "💾 Salvar configurações"}
+            {salvando ? "Salvando..." : "💾 Salvar identidade"}
           </button>
 
         </div>
