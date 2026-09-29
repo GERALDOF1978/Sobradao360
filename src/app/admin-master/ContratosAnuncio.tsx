@@ -356,6 +356,7 @@ export default function ContratosAnuncio({
         nome: "",
         valor: "",
         duracaoDias: 30,
+        limiteProdutos: 5,
         ativo: true,
         exibicaoPadrao: {
           ...VAZIO,
@@ -461,6 +462,9 @@ export default function ContratosAnuncio({
 
         duracaoDias:
           contrato.duracaoDias,
+
+        limiteProdutos:
+          contrato.limiteProdutos,
 
         inicio:
           Timestamp.fromDate(inicio),
