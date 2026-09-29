@@ -10,7 +10,6 @@ import {
   serverTimestamp,
   updateDoc,
   where,
-  Timestamp,
 } from "firebase/firestore";
 import {
   onAuthStateChanged,
@@ -493,10 +492,9 @@ corMarca:
                   },
                 } satisfies ContratoAnuncio;
               })
-              .sort(
-                (a: ContratoAnuncio, b: ContratoAnuncio) =>
-                  (b.inicio?.getTime() || 0) -
-                  (a.inicio?.getTime() || 0)
+              .sort((a, b) =>
+                (b.inicio?.getTime() || 0) -
+                (a.inicio?.getTime() || 0)
               );
 
             contratosPorLoja[negocio.id] =
@@ -1633,12 +1631,16 @@ corMarca:
                                     ["Início", formatarData(contrato.inicio)],
                                     ["Válido até", formatarData(contrato.vencimento)],
                                   ] as Array<[string, string]>
-                                ).map(([rotulo, valor]: [string, string]) => (
-                                  <div key={rotulo} className="rounded-2xl bg-white p-4 shadow-sm">
-                                    <p className="text-[10px] font-black uppercase text-slate-400">{rotulo}</p>
-                                    <p className="mt-1 text-base font-black text-slate-900">{valor}</p>
-                                  </div>
-                                ))}
+                                ).map((item) => {
+                                  const rotulo = item[0];
+                                  const valor = item[1];
+                                  return (
+                                    <div key={rotulo} className="rounded-2xl bg-white p-4 shadow-sm">
+                                      <p className="text-[10px] font-black uppercase text-slate-400">{rotulo}</p>
+                                      <p className="mt-1 text-base font-black text-slate-900">{valor}</p>
+                                    </div>
+                                  );
+                                })}
                               </div>
 
                               <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
@@ -1646,19 +1648,23 @@ corMarca:
                                   Onde sua publicidade está contratada
                                 </p>
                                 <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                                  {exibicoes.map(([rotulo, ativo]: [string, boolean]) => (
-                                    <div
-                                      key={rotulo}
-                                      className={ativo ? "rounded-xl border border-emerald-200 bg-emerald-50 p-3" : "rounded-xl border border-slate-200 bg-slate-50 p-3"}
-                                    >
-                                      <p className={ativo ? "text-xs font-black text-emerald-800" : "text-xs font-black text-slate-500"}>
-                                        {ativo ? "✓" : "—"} {rotulo}
-                                      </p>
-                                      <p className="mt-1 text-[9px] text-slate-500">
-                                        {ativo ? "Incluído no contrato" : "Não contratado"}
-                                      </p>
-                                    </div>
-                                  ))}
+                                  {exibicoes.map((item) => {
+                                    const rotulo = item[0];
+                                    const ativo = item[1];
+                                    return (
+                                      <div
+                                        key={rotulo}
+                                        className={ativo ? "rounded-xl border border-emerald-200 bg-emerald-50 p-3" : "rounded-xl border border-slate-200 bg-slate-50 p-3"}
+                                      >
+                                        <p className={ativo ? "text-xs font-black text-emerald-800" : "text-xs font-black text-slate-500"}>
+                                          {ativo ? "✓" : "—"} {rotulo}
+                                        </p>
+                                        <p className="mt-1 text-[9px] text-slate-500">
+                                          {ativo ? "Incluído no contrato" : "Não contratado"}
+                                        </p>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             </>
