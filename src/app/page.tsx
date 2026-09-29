@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 import NegociosMarquee from "@/components/NegociosMarquee";
 
@@ -37,7 +40,95 @@ const servicosRapidos = [
   },
 ];
 
+type Exibicao = {
+  marquee?: boolean;
+  publicidade?: boolean;
+  destaques?: boolean;
+  parceiros?: boolean;
+};
+
+type AnuncioHome = {
+  id: string;
+  lojaId: string;
+  nome: string;
+  bannerUrl: string;
+  exibicao: Exibicao;
+};
+
+function dataTimestamp(valor: unknown): Date | null {
+  if (valor && typeof valor === "object" && "toDate" in valor) {
+    const toDate = (valor as { toDate?: () => Date }).toDate;
+    if (typeof toDate === "function") return toDate();
+  }
+  if (valor instanceof Date) return valor;
+  if (typeof valor === "string" || typeof valor === "number") {
+    const data = new Date(valor);
+    return Number.isNaN(data.getTime()) ? null : data;
+  }
+  return null;
+}
+
 export default function Home() {
+  const [anunciosHome, setAnunciosHome] = useState<AnuncioHome[]>([]);
+
+  useEffect(() => {
+    async function carregarAnunciosHome() {
+      try {
+        const [lojasSnapshot, contratosSnapshot] = await Promise.all([
+          getDocs(query(collection(db, "lojas_parceiras"), where("ativo", "==", true))),
+          getDocs(query(collection(db, "contratos_anuncio"), where("status", "==", "ativo"))),
+        ]);
+
+        const lojas = new Map<string, Record<string, unknown>>();
+        lojasSnapshot.docs.forEach((doc) => {
+          lojas.set(doc.id, doc.data() as Record<string, unknown>);
+        });
+
+        const agora = new Date();
+        const lista: AnuncioHome[] = [];
+
+        contratosSnapshot.docs.forEach((doc) => {
+          const contrato = doc.data() as Record<string, unknown>;
+          const lojaId = typeof contrato.lojaId === "string" ? contrato.lojaId : "";
+          const loja = lojas.get(lojaId);
+          if (!loja) return;
+
+          const bannerUrl = typeof loja.bannerUrl === "string" ? loja.bannerUrl : "";
+          if (!bannerUrl) return;
+
+          const inicio = dataTimestamp(contrato.inicio);
+          const vencimento = dataTimestamp(contrato.vencimento);
+          if (inicio && inicio > agora) return;
+          if (vencimento && vencimento < agora) return;
+
+          const exibicao =
+            contrato.exibicao && typeof contrato.exibicao === "object"
+              ? (contrato.exibicao as Exibicao)
+              : {};
+
+          lista.push({
+            id: doc.id,
+            lojaId,
+            nome: typeof loja.nome === "string" ? loja.nome : "",
+            bannerUrl,
+            exibicao,
+          });
+        });
+
+        setAnunciosHome(lista);
+      } catch (erro) {
+        console.error("Erro ao carregar publicidade dos parceiros:", erro);
+        setAnunciosHome([]);
+      }
+    }
+
+    carregarAnunciosHome();
+  }, []);
+
+  const publicidade = anunciosHome.filter((item) => item.exibicao.publicidade);
+  const destaques = anunciosHome.filter((item) => item.exibicao.destaques);
+  const parceiros = anunciosHome.filter((item) => item.exibicao.parceiros);
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-16 font-sans">
 
@@ -132,24 +223,22 @@ export default function Home() {
             className="block w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 hover:shadow-md transition"
           >
 
-            <div className="aspect-[3/1] bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center">
-
-              <div className="text-center px-4">
-
-                <p className="text-[10px] text-amber-300 font-black uppercase tracking-widest">
-                  Banner Retangular
-                </p>
-
-                <p className="text-lg font-black text-white mt-1">
-                  Sua empresa aqui
-                </p>
-
-                <p className="text-[10px] text-blue-100 mt-1">
-                  Clique e saiba como anunciar
-                </p>
-
-              </div>
-
+            <div className="aspect-[3/1] w-full bg-slate-200 overflow-hidden">
+              {publicidade[0] ? (
+                <img
+                  src={publicidade[0].bannerUrl}
+                  alt={publicidade[0].nome || "Publicidade"}
+                  className="block h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-center px-4">
+                  <div>
+                    <p className="text-[10px] text-amber-300 font-black uppercase tracking-widest">Banner Retangular</p>
+                    <p className="text-lg font-black text-white mt-1">Sua empresa aqui</p>
+                    <p className="text-[10px] text-blue-100 mt-1">Clique e saiba como anunciar</p>
+                  </div>
+                </div>
+              )}
             </div>
 
           </Link>
@@ -172,53 +261,27 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-
-            <Link
-              href="/loja-explicativa?anunciante=novo"
-              className="aspect-[3/2] bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 transition"
-            >
-
-              <div className="w-full h-full bg-gradient-to-br from-emerald-700 to-emerald-900 flex items-center justify-center p-3 text-center">
-
-                <div>
-
-                  <p className="text-[9px] text-emerald-100 font-bold uppercase">
-                    Anuncie
-                  </p>
-
-                  <p className="text-sm font-black text-white">
-                    Sua marca
-                  </p>
-
-                </div>
-
-              </div>
-
-            </Link>
-
-            <Link
-              href="/loja-explicativa?anunciante=novo"
-              className="aspect-[3/2] bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 transition"
-            >
-
-              <div className="w-full h-full bg-gradient-to-br from-indigo-700 to-indigo-950 flex items-center justify-center p-3 text-center">
-
-                <div>
-
-                  <p className="text-[9px] text-indigo-100 font-bold uppercase">
-                    Anuncie
-                  </p>
-
-                  <p className="text-sm font-black text-white">
-                    Seu negócio
-                  </p>
-
-                </div>
-
-              </div>
-
-            </Link>
-
+            {[0, 1].map((indice) => {
+              const item = destaques[indice];
+              return (
+                <Link
+                  key={item?.id || `destaque-vazio-${indice}`}
+                  href={item ? `/loja/${item.lojaId}` : "/loja-explicativa?anunciante=novo"}
+                  className="aspect-[3/2] w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 transition"
+                >
+                  {item ? (
+                    <img src={item.bannerUrl} alt={item.nome || "Destaque"} className="block h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-700 to-emerald-900 p-3 text-center">
+                      <div>
+                        <p className="text-[9px] text-emerald-100 font-bold uppercase">Anuncie</p>
+                        <p className="text-sm font-black text-white">Sua marca</p>
+                      </div>
+                    </div>
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
         </section>
@@ -239,30 +302,24 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-4 gap-2">
-
-            {[
-              "Sua marca",
-              "Seu negócio",
-              "Seu serviço",
-              "Anuncie aqui",
-            ].map((titulo) => (
-              <Link
-                key={titulo}
-                href="/loja-explicativa?anunciante=novo"
-                className="aspect-square bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-amber-400 transition"
-              >
-
-                <div className="w-full h-full bg-slate-800 flex items-center justify-center p-2 text-center">
-
-                  <span className="text-[9px] font-black text-white leading-tight">
-                    {titulo}
-                  </span>
-
-                </div>
-
-              </Link>
-            ))}
-
+            {[0, 1, 2, 3].map((indice) => {
+              const item = parceiros[indice];
+              return (
+                <Link
+                  key={item?.id || `parceiro-vazio-${indice}`}
+                  href={item ? `/loja/${item.lojaId}` : "/loja-explicativa?anunciante=novo"}
+                  className="aspect-square w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-amber-400 transition"
+                >
+                  {item ? (
+                    <img src={item.bannerUrl} alt={item.nome || "Parceiro"} className="block h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-slate-800 p-2 text-center">
+                      <span className="text-[9px] font-black text-white leading-tight">Anuncie aqui</span>
+                    </div>
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
         </section>
