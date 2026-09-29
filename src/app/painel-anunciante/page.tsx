@@ -449,20 +449,37 @@ corMarca:
               )
             );
 
-            const listaContratos = snapshotContratos.docs
-              .map((item: (typeof snapshotContratos.docs)[number]) => {
+            const listaContratos: ContratoAnuncio[] = snapshotContratos.docs
+              .map((item: (typeof snapshotContratos.docs)[number]): ContratoAnuncio => {
                 const dados = item.data() as DadosFirestore;
                 const data = (valor: unknown): Date | null => {
-                  if (valor instanceof Timestamp) return valor.toDate();
-                  if (valor instanceof Date) return valor;
-                  if (
-                    valor &&
-                    typeof valor === "object" &&
-                    "toDate" in valor &&
-                    typeof (valor as { toDate?: unknown }).toDate === "function"
-                  ) {
-                    return (valor as { toDate: () => Date }).toDate();
+                  if (valor instanceof Timestamp) {
+                    return valor.toDate();
                   }
+
+                  if (valor instanceof Date) {
+                    return valor;
+                  }
+
+                  if (
+                    typeof valor === "object" &&
+                    valor !== null &&
+                    "toDate" in valor
+                  ) {
+                    const possivelTimestamp = valor as {
+                      toDate?: unknown;
+                    };
+
+                    if (
+                      typeof possivelTimestamp.toDate ===
+                      "function"
+                    ) {
+                      return (
+                        possivelTimestamp.toDate as () => Date
+                      )();
+                    }
+                  }
+
                   return null;
                 };
 
@@ -1585,7 +1602,9 @@ corMarca:
                             (contrato.vencimento !== null &&
                               contrato.vencimento.getTime() < Date.now());
 
-                          const exibicoes = [
+                          const exibicoes: Array<
+                            [string, boolean]
+                          > = [
                             ["Marquee", contrato.exibicao.marquee],
                             ["Publicidade", contrato.exibicao.publicidade],
                             ["Destaques", contrato.exibicao.destaques],
