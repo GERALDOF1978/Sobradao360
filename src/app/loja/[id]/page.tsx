@@ -622,110 +622,52 @@ export default function LojaPage({
 
       </section>
 
-      <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
-
-        {/* SOBRE */}
-
-        <section className="rounded-3xl bg-white p-5 shadow-sm">
-
-          <div className="flex items-center gap-4">
-
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-
-              {negocio.imagemUrl ? (
-                <img
-                  src={negocio.imagemUrl}
-                  alt={"Logo " + negocio.nome}
-                  className="h-full w-full object-contain p-1"
-                />
-              ) : (
-                <span className="text-3xl">
-                  {tipoInfo.icon}
-                </span>
-              )}
-
-            </div>
-
-            <div className="min-w-0">
-
-              <h2 className="text-lg font-black text-slate-900">
-                {negocio.nome}
-              </h2>
-
-              {negocio.titulo && negocio.titulo !== negocio.nome && (
-                <p className="mt-0.5 text-xs font-bold text-slate-500">
-                  {negocio.titulo}
-                </p>
-              )}
-
-              {negocio.slogan && (
-                <p className="mt-1 text-xs italic text-slate-400">
-                  {negocio.slogan}
-                </p>
-              )}
-
-            </div>
-
+      <div className="border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <div className="mx-auto flex max-w-5xl items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+            {negocio.imagemUrl ? (
+              <img
+                src={negocio.imagemUrl}
+                alt={"Logo " + negocio.nome}
+                className="h-full w-full object-contain p-1"
+              />
+            ) : (
+              <span className="text-2xl">
+                {tipoInfo.icon}
+              </span>
+            )}
           </div>
 
-          <div className="mt-4">
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-black text-slate-900">
+              {negocio.nome}
+            </h1>
 
-            <h3 className="text-sm font-black text-slate-800">
-              Sobre o negócio
-            </h3>
-
-            {negocio.descricao ? (
-              <>
-                <p
-                  className={
-                    sobreExpandido
-                      ? "mt-2 whitespace-pre-line text-sm leading-6 text-slate-600"
-                      : "mt-2 whitespace-pre-line text-sm leading-6 text-slate-600 line-clamp-4"
-                  }
-                >
-                  {negocio.descricao}
-                </p>
-
-                {negocio.descricao.length > 260 && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSobreExpandido(
-                        (valor) => !valor
-                      )
-                    }
-                    className="mt-2 text-xs font-black text-blue-700 hover:text-blue-900"
-                  >
-                    {sobreExpandido
-                      ? "Mostrar menos"
-                      : "Ler mais"}
-                  </button>
-                )}
-              </>
-            ) : (
-              <p className="mt-2 text-sm text-slate-400">
-                Este negócio ainda não adicionou uma descrição.
+            {negocio.slogan && (
+              <p className="truncate text-xs text-slate-500">
+                {negocio.slogan}
               </p>
             )}
-
           </div>
+        </div>
+      </div>
 
-        </section>
+      <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
 
         {/* CONTATO */}
 
-        <section className="rounded-3xl bg-white p-5 shadow-sm">
+        <section className="rounded-3xl bg-white p-4 shadow-sm">
 
           <h2 className="text-sm font-black text-slate-900">
             📞 Entre em contato
           </h2>
 
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="mt-3 grid grid-cols-2 gap-2">
 
             {telefoneNumero && (
               <a
                 href={`tel:${telefoneNumero}`}
-                className="flex min-w-0 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 transition hover:border-blue-300 hover:bg-blue-50"
+                className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 transition hover:border-blue-300 hover:bg-blue-50"
               >
 
                 <span className="text-2xl">
@@ -753,7 +695,7 @@ export default function LojaPage({
                     `Olá! Vi a página de ${negocio.nome} no Sobradão 360 e gostaria de mais informações.`
                   )
                 }
-                className="flex min-w-0 items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition hover:bg-emerald-100"
+                className="flex min-w-0 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-left transition hover:bg-emerald-100"
               >
 
                 <span className="text-2xl">
@@ -929,6 +871,94 @@ export default function LojaPage({
             </div>
 
           )}
+
+        </section>
+
+        {/* SOBRE */}
+
+        <section className="rounded-3xl bg-white p-5 shadow-sm">
+
+          <div className="flex items-center gap-4">
+
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+
+              {negocio.imagemUrl ? (
+                <img
+                  src={negocio.imagemUrl}
+                  alt={"Logo " + negocio.nome}
+                  className="h-full w-full object-contain p-1"
+                />
+              ) : (
+                <span className="text-3xl">
+                  {tipoInfo.icon}
+                </span>
+              )}
+
+            </div>
+
+            <div className="min-w-0">
+
+              <h2 className="text-lg font-black text-slate-900">
+                {negocio.nome}
+              </h2>
+
+              {negocio.titulo && negocio.titulo !== negocio.nome && (
+                <p className="mt-0.5 text-xs font-bold text-slate-500">
+                  {negocio.titulo}
+                </p>
+              )}
+
+              {negocio.slogan && (
+                <p className="mt-1 text-xs italic text-slate-400">
+                  {negocio.slogan}
+                </p>
+              )}
+
+            </div>
+
+          </div>
+
+          <div className="mt-4">
+
+            <h3 className="text-sm font-black text-slate-800">
+              Sobre o negócio
+            </h3>
+
+            {negocio.descricao ? (
+              <>
+                <p
+                  className={
+                    sobreExpandido
+                      ? "mt-2 whitespace-pre-line text-sm leading-6 text-slate-600"
+                      : "mt-2 whitespace-pre-line text-sm leading-6 text-slate-600 line-clamp-4"
+                  }
+                >
+                  {negocio.descricao}
+                </p>
+
+                {negocio.descricao.length > 260 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSobreExpandido(
+                        (valor) => !valor
+                      )
+                    }
+                    className="mt-2 text-xs font-black text-blue-700 hover:text-blue-900"
+                  >
+                    {sobreExpandido
+                      ? "Mostrar menos"
+                      : "Ler mais"}
+                  </button>
+                )}
+              </>
+            ) : (
+              <p className="mt-2 text-sm text-slate-400">
+                Este negócio ainda não adicionou uma descrição.
+              </p>
+            )}
+
+          </div>
 
         </section>
 
