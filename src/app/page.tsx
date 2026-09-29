@@ -80,14 +80,14 @@ export default function Home() {
         ]);
 
         const lojas = new Map<string, Record<string, unknown>>();
-        lojasSnapshot.docs.forEach((doc) => {
+        lojasSnapshot.docs.forEach((doc: (typeof lojasSnapshot.docs)[number]) => {
           lojas.set(doc.id, doc.data() as Record<string, unknown>);
         });
 
         const agora = new Date();
         const lista: AnuncioHome[] = [];
 
-        contratosSnapshot.docs.forEach((doc) => {
+        contratosSnapshot.docs.forEach((doc: (typeof contratosSnapshot.docs)[number]) => {
           const contrato = doc.data() as Record<string, unknown>;
           const lojaId = typeof contrato.lojaId === "string" ? contrato.lojaId : "";
           const loja = lojas.get(lojaId);
