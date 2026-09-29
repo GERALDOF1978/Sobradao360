@@ -13,7 +13,9 @@ import {
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
+
 import { db } from "@/lib/firebase";
+import ContratosAnuncio from "./ContratosAnuncio";
 
 type UsuarioFirebase = {
   uid: string;
@@ -574,9 +576,17 @@ export default function AdminMasterPage() {
   return (
     <main className="min-h-screen bg-slate-100 p-4 md:p-6">
 
-      <div className="mx-auto max-w-7xl">
+    <div className="mx-auto max-w-7xl">
 
-        <header className="mb-6">
+      <ContratosAnuncio
+        lojas={lojas.map((loja) => ({
+          id: loja.id,
+          nome: loja.nome,
+          titulo: loja.titulo,
+        }))}
+      />
+
+      <header className="mb-6">
           <div className="rounded-2xl bg-slate-900 p-6 text-white shadow-lg">
 
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
