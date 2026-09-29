@@ -26,6 +26,7 @@ type Pacote = {
   nome: string;
   valor: number;
   duracaoDias: number;
+  limiteProdutos: number;
   exibicaoPadrao: Posicoes;
   ativo: boolean;
 };
@@ -37,6 +38,7 @@ type Contrato = {
   pacoteNome: string;
   valorContratado: number;
   duracaoDias: number;
+  limiteProdutos: number;
   inicio?: unknown;
   vencimento?: unknown;
   status: "ativo" | "expirado" | "cancelado";
@@ -146,6 +148,7 @@ export default function ContratosAnuncio({
     nome: "",
     valor: "",
     duracaoDias: 30,
+    limiteProdutos: 5,
     ativo: true,
     exibicaoPadrao: { ...VAZIO },
   });
@@ -154,6 +157,7 @@ export default function ContratosAnuncio({
     pacoteId: "",
     valor: "",
     duracaoDias: 30,
+    limiteProdutos: 5,
     inicio: new Date()
       .toISOString()
       .slice(0, 10),
@@ -189,6 +193,7 @@ export default function ContratosAnuncio({
           duracaoDias: Number(
             d.duracaoDias || 30
           ),
+          limiteProdutos: Number(d.limiteProdutos || 0),
           ativo: d.ativo !== false,
           exibicaoPadrao: {
             marquee: Boolean(
@@ -226,6 +231,7 @@ export default function ContratosAnuncio({
           duracaoDias: Number(
             d.duracaoDias || 0
           ),
+          limiteProdutos: Number(d.limiteProdutos || 0),
           inicio: d.inicio,
           vencimento: d.vencimento,
           status:
@@ -285,6 +291,7 @@ export default function ContratosAnuncio({
       pacoteId: item.id,
       valor: String(item.valor),
       duracaoDias: item.duracaoDias,
+      limiteProdutos: item.limiteProdutos,
 
       // O pacote marca automaticamente.
       exibicao: {
@@ -314,6 +321,7 @@ export default function ContratosAnuncio({
         nome,
         valor,
         duracaoDias: pacote.duracaoDias,
+        limiteProdutos: pacote.limiteProdutos,
         ativo: pacote.ativo,
         exibicaoPadrao:
           pacote.exibicaoPadrao,
@@ -594,6 +602,28 @@ export default function ContratosAnuncio({
                 className="w-full rounded-xl border p-3"
               />
 
+              <div>
+                <label className="mb-1 block text-sm font-bold">
+                  Limite de produtos
+                </label>
+                <select
+                  value={pacote.limiteProdutos}
+                  onChange={(e) =>
+                    setPacote({
+                      ...pacote,
+                      limiteProdutos: Number(e.target.value),
+                    })
+                  }
+                  className="w-full rounded-xl border bg-white p-3"
+                >
+                  {[5, 10, 15, 20, 25, 30].map((limite) => (
+                    <option key={limite} value={limite}>
+                      {limite} produtos
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <select
                 value={pacote.duracaoDias}
                 onChange={(e) =>
@@ -722,7 +752,7 @@ export default function ContratosAnuncio({
                           item.valor
                         )}{" "}
                         ·{" "}
-                        {item.duracaoDias} dias
+                        {item.duracaoDias} dias · até {item.limiteProdutos || "sem limite"} produtos
                       </div>
 
                       <div className="mt-2 flex flex-wrap gap-1">
