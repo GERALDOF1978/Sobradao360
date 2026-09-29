@@ -213,6 +213,16 @@ service cloud.firestore {
 
 
     // =====================================================
+    // CONTRATOS DE ANÚNCIO
+    // Apenas contratos ativos são consultáveis pela Home.
+    // =====================================================
+    match /contratos_anuncio/{contratoId} {
+      allow read: if resource.data.status == "ativo";
+      allow create, update, delete: if false;
+    }
+
+
+    // =====================================================
     // ESTATÍSTICAS PÚBLICAS DA COMUNIDADE
     // =====================================================
     match /estatisticas/{documentoId} {
