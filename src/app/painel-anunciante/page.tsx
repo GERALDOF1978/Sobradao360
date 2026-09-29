@@ -10,6 +10,7 @@ import {
   serverTimestamp,
   updateDoc,
   where,
+  Timestamp,
 } from "firebase/firestore";
 import {
   onAuthStateChanged,
@@ -85,6 +86,17 @@ corMarca: string;
 };
 
 type DadosFirestore = Record<string, unknown>;
+
+type ContratoAnuncio = {
+  id: string;
+  pacoteNome: string;
+  valorContratado: number;
+  duracaoDias: number;
+  inicio: Date | null;
+  vencimento: Date | null;
+  status: "ativo" | "expirado" | "cancelado";
+  exibicao: { marquee: boolean; publicidade: boolean; destaques: boolean; parceiros: boolean };
+};
 
 const TIPOS: {
   value: TipoNegocio;
@@ -421,6 +433,77 @@ corMarca:
       }
 
       setNegocios(lista);
+
+      const contratosPorLoja: Record<string, ContratoAnuncio | null> = {};
+
+      await Promise.all(
+        lista.map(async (negocio) => {
+          try {
+            const snapshotContratos = await getDocs(
+              query(
+                collection(db, "contratos_anuncio"),
+                where("lojaId", "==", negocio.id)
+              )
+            );
+
+            const listaContratos = snapshotContratos.docs
+              .map((item: (typeof snapshotContratos.docs)[number]) => {
+                const dados = item.data() as DadosFirestore;
+                const data = (valor: unknown): Date | null => {
+                  if (valor instanceof Timestamp) return valor.toDate();
+                  if (valor instanceof Date) return valor;
+                  if (
+                    valor &&
+                    typeof valor === "object" &&
+                    "toDate" in valor &&
+                    typeof (valor as { toDate?: unknown }).toDate === "function"
+                  ) {
+                    return (valor as { toDate: () => Date }).toDate();
+                  }
+                  return null;
+                };
+
+                const exibicao = (dados.exibicao || {}) as DadosFirestore;
+
+                return {
+                  id: item.id,
+                  pacoteNome: texto(dados.pacoteNome) || "Pacote comercial",
+                  valorContratado: numero(dados.valorContratado),
+                  duracaoDias: numero(dados.duracaoDias),
+                  inicio: data(dados.inicio),
+                  vencimento: data(dados.vencimento),
+                  status:
+                    dados.status === "cancelado"
+                      ? "cancelado"
+                      : dados.status === "expirado"
+                        ? "expirado"
+                        : "ativo",
+                  exibicao: {
+                    marquee: booleano(exibicao.marquee),
+                    publicidade: booleano(exibicao.publicidade),
+                    destaques: booleano(exibicao.destaques),
+                    parceiros: booleano(exibicao.parceiros),
+                  },
+                } satisfies ContratoAnuncio;
+              })
+              .sort(
+                (a, b) =>
+                  (b.inicio?.getTime() || 0) -
+                  (a.inicio?.getTime() || 0)
+              );
+
+            contratosPorLoja[negocio.id] =
+              listaContratos.find((item) => item.status === "ativo") ||
+              listaContratos[0] ||
+              null;
+          } catch (error) {
+            console.error("Erro ao carregar contrato:", error);
+            contratosPorLoja[negocio.id] = null;
+          }
+        })
+      );
+
+      setContratos(contratosPorLoja);
     } catch (error) {
       console.error(
         "Erro ao carregar negócios:",
@@ -1464,6 +1547,113 @@ corMarca:
     void carregarNegocios();
   }}
 />
+
+                      <div className="mt-5 rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-blue-50 p-5">
+                        {(() => {
+                          const contrato = contratos[negocio.id];
+
+                          if (!contrato) {
+                            return (
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
+                                  Contrato comercial
+                                </p>
+                                <h4 className="mt-1 text-lg font-black text-slate-900">
+                                  📋 Nenhum contrato encontrado
+                                </h4>
+                                <p className="mt-1 text-xs leading-5 text-slate-500">
+                                  Quando um pacote for contratado e aprovado, os detalhes aparecerão aqui.
+                                </p>
+                              </div>
+                            );
+                          }
+
+                          const formatarData = (data: Date | null) =>
+                            data ? data.toLocaleDateString("pt-BR") : "Não informado";
+
+                          const formatarValor = (valor: number) =>
+                            valor.toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            });
+
+                          const vencido =
+                            contrato.status === "expirado" ||
+                            (contrato.vencimento !== null &&
+                              contrato.vencimento.getTime() < Date.now());
+
+                          const exibicoes = [
+                            ["Marquee", contrato.exibicao.marquee],
+                            ["Publicidade", contrato.exibicao.publicidade],
+                            ["Destaques", contrato.exibicao.destaques],
+                            ["Parceiros", contrato.exibicao.parceiros],
+                          ];
+
+                          return (
+                            <>
+                              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                                <div>
+                                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">
+                                    Seu contrato comercial
+                                  </p>
+                                  <h4 className="mt-1 text-xl font-black text-slate-950">
+                                    📦 {contrato.pacoteNome}
+                                  </h4>
+                                </div>
+
+                                <span className={
+                                  vencido
+                                    ? "w-fit rounded-full bg-red-100 px-3 py-1 text-[10px] font-black text-red-700"
+                                    : contrato.status === "cancelado"
+                                      ? "w-fit rounded-full bg-slate-200 px-3 py-1 text-[10px] font-black text-slate-700"
+                                      : "w-fit rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black text-emerald-700"
+                                }>
+                                  {vencido
+                                    ? "● EXPIRADO"
+                                    : contrato.status === "cancelado"
+                                      ? "● CANCELADO"
+                                      : "● ATIVO"}
+                                </span>
+                              </div>
+
+                              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                {[
+                                  ["Valor contratado", formatarValor(contrato.valorContratado)],
+                                  ["Duração", `${contrato.duracaoDias} dias`],
+                                  ["Início", formatarData(contrato.inicio)],
+                                  ["Válido até", formatarData(contrato.vencimento)],
+                                ].map(([rotulo, valor]) => (
+                                  <div key={rotulo} className="rounded-2xl bg-white p-4 shadow-sm">
+                                    <p className="text-[10px] font-black uppercase text-slate-400">{rotulo}</p>
+                                    <p className="mt-1 text-base font-black text-slate-900">{valor}</p>
+                                  </div>
+                                ))}
+                              </div>
+
+                              <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
+                                <p className="text-[10px] font-black uppercase text-slate-400">
+                                  Onde sua publicidade está contratada
+                                </p>
+                                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                                  {exibicoes.map(([rotulo, ativo]) => (
+                                    <div
+                                      key={rotulo}
+                                      className={ativo ? "rounded-xl border border-emerald-200 bg-emerald-50 p-3" : "rounded-xl border border-slate-200 bg-slate-50 p-3"}
+                                    >
+                                      <p className={ativo ? "text-xs font-black text-emerald-800" : "text-xs font-black text-slate-500"}>
+                                        {ativo ? "✓" : "—"} {rotulo}
+                                      </p>
+                                      <p className="mt-1 text-[9px] text-slate-500">
+                                        {ativo ? "Incluído no contrato" : "Não contratado"}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
 
                       <GerenciadorProdutos
                         lojaId={negocio.id}
