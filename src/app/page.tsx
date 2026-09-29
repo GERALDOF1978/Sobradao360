@@ -255,7 +255,7 @@ export default function Home() {
     indiceDestaques * 6 + 6
   );
 
-  const lojasFiltradas = lojasAtivas.filter((loja) =>
+  const lojasFiltradas = lojasAtivas.filter((loja: LojaHome) =>
     loja.nome.toLocaleLowerCase("pt-BR").includes(buscaLoja.trim().toLocaleLowerCase("pt-BR"))
   );
 
