@@ -448,54 +448,58 @@ corMarca:
               )
             );
 
-            const listaContratos: ContratoAnuncio[] = snapshotContratos.docs
-              .map((item): ContratoAnuncio => {
-                const dados = item.data() as DadosFirestore;
-                const data = (valor: unknown): Date | null => {
-                  if (valor instanceof Date) {
-                    return valor;
+            const listaContratos: ContratoAnuncio[] = [];
+
+            for (const item of snapshotContratos.docs) {
+              const dados = item.data() as DadosFirestore;
+
+              const data = (valor: unknown): Date | null => {
+                if (valor instanceof Date) {
+                  return valor;
+                }
+
+                if (typeof valor === "object" && valor !== null) {
+                  const possivelTimestamp = valor as {
+                    toDate?: () => Date;
+                  };
+
+                  if (typeof possivelTimestamp.toDate === "function") {
+                    return possivelTimestamp.toDate();
                   }
+                }
 
-                  if (typeof valor === "object" && valor !== null) {
-                    const possivelTimestamp = valor as {
-                      toDate?: () => Date;
-                    };
+                return null;
+              };
 
-                    if (typeof possivelTimestamp.toDate === "function") {
-                      return possivelTimestamp.toDate();
-                    }
-                  }
+              const exibicao = (dados.exibicao || {}) as DadosFirestore;
 
-                  return null;
-                };
+              listaContratos.push({
+                id: item.id,
+                pacoteNome: texto(dados.pacoteNome) || "Pacote comercial",
+                valorContratado: numero(dados.valorContratado),
+                duracaoDias: numero(dados.duracaoDias),
+                inicio: data(dados.inicio),
+                vencimento: data(dados.vencimento),
+                status:
+                  dados.status === "cancelado"
+                    ? "cancelado"
+                    : dados.status === "expirado"
+                      ? "expirado"
+                      : "ativo",
+                exibicao: {
+                  marquee: booleano(exibicao.marquee),
+                  publicidade: booleano(exibicao.publicidade),
+                  destaques: booleano(exibicao.destaques),
+                  parceiros: booleano(exibicao.parceiros),
+                },
+              });
+            }
 
-                const exibicao = (dados.exibicao || {}) as DadosFirestore;
-
-                return {
-                  id: item.id,
-                  pacoteNome: texto(dados.pacoteNome) || "Pacote comercial",
-                  valorContratado: numero(dados.valorContratado),
-                  duracaoDias: numero(dados.duracaoDias),
-                  inicio: data(dados.inicio),
-                  vencimento: data(dados.vencimento),
-                  status:
-                    dados.status === "cancelado"
-                      ? "cancelado"
-                      : dados.status === "expirado"
-                        ? "expirado"
-                        : "ativo",
-                  exibicao: {
-                    marquee: booleano(exibicao.marquee),
-                    publicidade: booleano(exibicao.publicidade),
-                    destaques: booleano(exibicao.destaques),
-                    parceiros: booleano(exibicao.parceiros),
-                  },
-                } satisfies ContratoAnuncio;
-              })
-              .sort((a, b) =>
+            listaContratos.sort(
+              (a: ContratoAnuncio, b: ContratoAnuncio) =>
                 (b.inicio?.getTime() || 0) -
                 (a.inicio?.getTime() || 0)
-              );
+            );
 
             contratosPorLoja[negocio.id] =
               listaContratos.find((item) => item.status === "ativo") ||
