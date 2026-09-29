@@ -56,15 +56,28 @@ type AnuncioHome = {
 };
 
 function dataTimestamp(valor: unknown): Date | null {
-  if (valor && typeof valor === "object" && "toDate" in valor) {
-    const toDate = (valor as { toDate?: () => Date }).toDate;
-    if (typeof toDate === "function") return toDate();
-  }
   if (valor instanceof Date) return valor;
+
+  if (valor && typeof valor === "object") {
+    const timestamp = valor as {
+      toDate?: () => Date;
+      toMillis?: () => number;
+    };
+
+    if (typeof timestamp.toDate === "function") {
+      return timestamp.toDate();
+    }
+
+    if (typeof timestamp.toMillis === "function") {
+      return new Date(timestamp.toMillis());
+    }
+  }
+
   if (typeof valor === "string" || typeof valor === "number") {
     const data = new Date(valor);
     return Number.isNaN(data.getTime()) ? null : data;
   }
+
   return null;
 }
 
