@@ -15,6 +15,7 @@ type Negocio = {
   telefone?: string;
   whatsapp?: string;
   imagemUrl?: string;
+  bannerUrl?: string;
   ativo?: boolean;
   status?: string;
   tipoPresenca?: string;
@@ -80,6 +81,10 @@ export default function NegociosMarquee() {
             imagemUrl:
               typeof dados.imagemUrl === "string"
                 ? dados.imagemUrl
+                : "",
+            bannerUrl:
+              typeof dados.bannerUrl === "string"
+                ? dados.bannerUrl
                 : "",
             ativo: dados.ativo === true,
             status:
@@ -195,6 +200,7 @@ export default function NegociosMarquee() {
         titulo: "Seu negócio no Sobradão 360",
         subtitulo: "Clique e anuncie sua empresa ou serviço",
         imagemUrl: "",
+        bannerUrl: "",
         ativo: true,
       }
   );
@@ -251,7 +257,19 @@ export default function NegociosMarquee() {
                     bg-slate-900
                   "
                 >
-                  {negocio.imagemUrl ? (
+                  {negocio.bannerUrl ? (
+                    <img
+                      src={negocio.bannerUrl}
+                      alt={negocio.nome || "Negócio"}
+                      className="
+                        absolute
+                        inset-0
+                        h-full
+                        w-full
+                        object-cover
+                      "
+                    />
+                  ) : negocio.imagemUrl ? (
                     <img
                       src={negocio.imagemUrl}
                       alt={negocio.nome || "Negócio"}
