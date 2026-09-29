@@ -78,7 +78,7 @@ export default function LojaExplicativaPage() {
             </p>
 
             <Link
-              href="/anuncie"
+              href="/quero-divulgar"
               className="mt-5 inline-flex w-full items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-sm px-5 py-3.5 rounded-2xl shadow-md transition"
             >
               📢 Quero divulgar meu negócio
