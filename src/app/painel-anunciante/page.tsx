@@ -461,22 +461,13 @@ corMarca:
                     return valor;
                   }
 
-                  if (
-                    typeof valor === "object" &&
-                    valor !== null &&
-                    "toDate" in valor
-                  ) {
+                  if (typeof valor === "object" && valor !== null) {
                     const possivelTimestamp = valor as {
-                      toDate?: unknown;
+                      toDate?: () => Date;
                     };
 
-                    if (
-                      typeof possivelTimestamp.toDate ===
-                      "function"
-                    ) {
-                      return (
-                        possivelTimestamp.toDate as () => Date
-                      )();
+                    if (typeof possivelTimestamp.toDate === "function") {
+                      return possivelTimestamp.toDate();
                     }
                   }
 
@@ -507,7 +498,7 @@ corMarca:
                 } satisfies ContratoAnuncio;
               })
               .sort(
-                (a, b) =>
+                (a: ContratoAnuncio, b: ContratoAnuncio) =>
                   (b.inicio?.getTime() || 0) -
                   (a.inicio?.getTime() || 0)
               );
