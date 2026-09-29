@@ -453,8 +453,8 @@ corMarca:
               .map((item: (typeof snapshotContratos.docs)[number]): ContratoAnuncio => {
                 const dados = item.data() as DadosFirestore;
                 const data = (valor: unknown): Date | null => {
-                  if (valor instanceof Timestamp) {
-                    return valor.toDate();
+                  if ((valor as object) instanceof Timestamp) {
+                    return (valor as Timestamp).toDate();
                   }
 
                   if (valor instanceof Date) {
