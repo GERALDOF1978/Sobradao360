@@ -1681,7 +1681,7 @@ corMarca:
                       <GerenciadorProdutos
                         lojaId={negocio.id}
                         tipoNegocio={negocio.tipo}
-                        limiteProdutos={contrato?.limiteProdutos || 0}
+                        limiteProdutos={contratos[negocio.id]?.limiteProdutos || 0}
                       />
 
                     </div>
