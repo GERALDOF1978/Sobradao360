@@ -456,8 +456,6 @@ corMarca:
                   if (valor instanceof Date) {
                     return valor;
                   }
-                    return valor;
-                  }
 
                   if (typeof valor === "object" && valor !== null) {
                     const possivelTimestamp = valor as {
