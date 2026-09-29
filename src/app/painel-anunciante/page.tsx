@@ -91,6 +91,7 @@ type ContratoAnuncio = {
   pacoteNome: string;
   valorContratado: number;
   duracaoDias: number;
+  limiteProdutos: number;
   inicio: Date | null;
   vencimento: Date | null;
   status: "ativo" | "expirado" | "cancelado";
@@ -478,6 +479,7 @@ corMarca:
                 pacoteNome: texto(dados.pacoteNome) || "Pacote comercial",
                 valorContratado: numero(dados.valorContratado),
                 duracaoDias: numero(dados.duracaoDias),
+                limiteProdutos: numero(dados.limiteProdutos),
                 inicio: data(dados.inicio),
                 vencimento: data(dados.vencimento),
                 status:
@@ -1678,9 +1680,8 @@ corMarca:
 
                       <GerenciadorProdutos
                         lojaId={negocio.id}
-                        tipoNegocio={
-                          negocio.tipo
-                        }
+                        tipoNegocio={negocio.tipo}
+                        limiteProdutos={contrato?.limiteProdutos || 0}
                       />
 
                     </div>
