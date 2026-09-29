@@ -116,7 +116,7 @@ export default function Home() {
               const nome = typeof dados.nome === "string" ? dados.nome : "";
               return { id: doc.id, nome, bannerUrl };
             })
-            .filter((loja) => loja.nome || loja.bannerUrl)
+            .filter((loja: LojaHome) => loja.nome || loja.bannerUrl)
         );
 
         console.groupCollapsed("[Sobradão 360] Diagnóstico da publicidade da Home");
