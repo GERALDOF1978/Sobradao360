@@ -115,6 +115,9 @@ export default function Cabecalho() {
   const [alertasMeteorologicos, setAlertasMeteorologicos] =
     useState<AlertaMeteorologico[]>([]);
 
+  const [statusAlertas, setStatusAlertas] =
+    useState<"carregando" | "ok" | "erro">("carregando");
+
   const [alertaSelecionado, setAlertaSelecionado] =
     useState<AlertaMeteorologico | null>(null);
 
@@ -196,7 +199,11 @@ export default function Cabecalho() {
           cache: "no-store",
         });
 
-        if (!resposta.ok) return;
+        if (!resposta.ok) {
+          throw new Error(
+            `API de alertas respondeu ${resposta.status}`
+          );
+        }
 
         const dados = await resposta.json();
 
@@ -205,8 +212,10 @@ export default function Cabecalho() {
           Array.isArray(dados.alertas)
         ) {
           setAlertasMeteorologicos(dados.alertas);
+          setStatusAlertas("ok");
         } else {
           setAlertasMeteorologicos([]);
+          setStatusAlertas("erro");
         }
       } catch (erro) {
         console.error(
@@ -215,6 +224,7 @@ export default function Cabecalho() {
         );
 
         setAlertasMeteorologicos([]);
+        setStatusAlertas("erro");
       }
     }
 
@@ -536,7 +546,10 @@ export default function Cabecalho() {
 
               <button
                 type="button"
-                disabled={!alertaPrincipal}
+                disabled={
+                  statusAlertas !== "ok" ||
+                  !alertaPrincipal
+                }
                 onClick={() => {
                   if (alertaPrincipal) {
                     setAlertaSelecionado(
@@ -546,7 +559,11 @@ export default function Cabecalho() {
                 }}
                 className={`ml-1 rounded-lg px-2 py-1 text-[9px] font-black sm:text-[10px] ${estiloAlerta()}`}
               >
-                {alertaPrincipal
+                {statusAlertas === "carregando"
+                  ? "⏳ VERIFICANDO"
+                  : statusAlertas === "erro"
+                  ? "⚠️ INMET INDISPONÍVEL"
+                  : alertaPrincipal
                   ? "⚠️ ALERTA"
                   : "✓ SEM ALERTAS"}
               </button>
