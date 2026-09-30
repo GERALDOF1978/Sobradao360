@@ -25,9 +25,18 @@ service cloud.firestore {
       // O formulário público pode criar solicitações.
       allow create: if true;
 
-      // Somente o Admin Master pode consultar as solicitações.
+      // O Master pode consultar todas.
+      // O anunciante só pode consultar a própria solicitação aprovada,
+      // usando o mesmo e-mail da conta autenticada.
       allow read:
-        if isMaster();
+        if isMaster()
+        ||
+        (
+          request.auth != null
+          && request.auth.token.email != null
+          && request.auth.token.email == resource.data.email
+          && resource.data.status == "APROVADO"
+        );
 
       // Somente o Admin Master pode aprovar ou recusar.
       allow update:
@@ -276,8 +285,27 @@ service cloud.firestore {
       allow create:
         if request.auth != null
         && request.resource.data.uidDono == request.auth.uid
-        && request.resource.data.status == "PENDENTE"
-        && request.resource.data.ativo == false;
+        &&
+        (
+          (
+            request.resource.data.status == "PENDENTE"
+            && request.resource.data.ativo == false
+          )
+          ||
+          (
+            request.resource.data.status == "APROVADO"
+            && request.resource.data.ativo == true
+            && exists(
+              /databases/$(database)/documents/solicitacoes_divulgacao/$(lojaId)
+            )
+            && get(
+              /databases/$(database)/documents/solicitacoes_divulgacao/$(lojaId)
+            ).data.status == "APROVADO"
+            && get(
+              /databases/$(database)/documents/solicitacoes_divulgacao/$(lojaId)
+            ).data.email == request.auth.token.email
+          )
+        );
 
       allow update:
         if isMaster()
@@ -418,7 +446,11 @@ service cloud.firestore {
 
     match /pacotes_anuncio/{pacoteId} {
 
-      allow read, create, update, delete:
+      // Os planos são públicos para o anunciante consultar antes de contratar.
+      allow read:
+        if true;
+
+      allow create, update, delete:
         if isMaster();
     }
 
