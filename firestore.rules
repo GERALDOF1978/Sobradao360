@@ -3,10 +3,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /* =====================================================
-       FUNÇÃO: ADMIN MASTER
-       ===================================================== */
-
     function isMaster() {
       return request.auth != null
         && exists(
@@ -17,17 +13,8 @@ service cloud.firestore {
         ).data.perfil == "master";
     }
 
-    /* =====================================================
-       SOLICITAÇÕES DE DIVULGAÇÃO
-       ===================================================== */
-
     match /solicitacoes_divulgacao/{solicitacaoId} {
-      // O formulário público pode criar solicitações.
       allow create: if true;
-
-      // O Master pode consultar todas.
-      // O anunciante só pode consultar a própria solicitação aprovada,
-      // usando o mesmo e-mail da conta autenticada.
       allow read:
         if isMaster()
         ||
@@ -37,27 +24,15 @@ service cloud.firestore {
           && request.auth.token.email == resource.data.email
           && resource.data.status == "APROVADO"
         );
-
-      // Somente o Admin Master pode aprovar ou recusar.
-      allow update:
-        if isMaster();
-
-      // Solicitações não podem ser excluídas pelo navegador.
+      allow update: if isMaster();
       allow delete: if false;
     }
 
-    /* =====================================================
-       USUÁRIOS / MORADORES
-       ===================================================== */
-
     match /usuarios/{userId} {
-
       allow read: if true;
-
       allow create:
         if request.auth != null
         && request.auth.uid == userId;
-
       allow update:
         if isMaster()
         ||
@@ -67,30 +42,13 @@ service cloud.firestore {
           && request.resource.data.perfil == resource.data.perfil
           && request.resource.data.status == resource.data.status
         );
-
       allow delete: if false;
     }
 
-    /* =====================================================
-       ANÚNCIOS
-       ===================================================== */
-
     match /anuncios/{anuncioId} {
-
       allow read: if true;
-
-      allow create:
-        if request.auth != null;
-
-      allow update:
-        if isMaster()
-        ||
-        (
-          request.auth != null
-          && request.auth.uid == resource.data.autorUid
-        );
-
-      allow delete:
+      allow create: if request.auth != null;
+      allow update, delete:
         if isMaster()
         ||
         (
@@ -99,12 +57,7 @@ service cloud.firestore {
         );
 
       match /privado/{documento} {
-
-        allow read:
-          if isMaster()
-          ||
-          request.auth != null;
-
+        allow read: if isMaster() || request.auth != null;
         allow create, update:
           if isMaster()
           ||
@@ -115,7 +68,6 @@ service cloud.firestore {
                 /databases/$(database)/documents/anuncios/$(anuncioId)
               ).data.autorUid
           );
-
         allow delete:
           if isMaster()
           ||
@@ -129,17 +81,9 @@ service cloud.firestore {
       }
     }
 
-    /* =====================================================
-       EMPREGOS
-       ===================================================== */
-
     match /empregos/{empregoId} {
-
       allow read: if true;
-
-      allow create:
-        if request.auth != null;
-
+      allow create: if request.auth != null;
       allow update, delete:
         if isMaster()
         ||
@@ -149,30 +93,16 @@ service cloud.firestore {
         );
     }
 
-    /* =====================================================
-       VAGAS
-       ===================================================== */
-
     match /vagas/{vagaId} {
-
       allow read: if true;
-
-      allow write:
-        if isMaster();
+      allow write: if isMaster();
     }
 
-    /* =====================================================
-       CURRÍCULOS
-       ===================================================== */
-
     match /curriculos/{curriculoId} {
-
       allow read: if true;
-
       allow create:
         if request.auth != null
         && request.auth.uid == curriculoId;
-
       allow update:
         if isMaster()
         ||
@@ -180,17 +110,10 @@ service cloud.firestore {
           request.auth != null
           && request.auth.uid == curriculoId
         );
-
-      allow delete:
-        if isMaster();
+      allow delete: if isMaster();
 
       match /privado/{documento} {
-
-        allow read:
-          if isMaster()
-          ||
-          request.auth != null;
-
+        allow read: if isMaster() || request.auth != null;
         allow create, update:
           if isMaster()
           ||
@@ -198,23 +121,13 @@ service cloud.firestore {
             request.auth != null
             && request.auth.uid == curriculoId
           );
-
-        allow delete:
-          if isMaster();
+        allow delete: if isMaster();
       }
     }
 
-    /* =====================================================
-       EVENTOS
-       ===================================================== */
-
     match /eventos/{eventoId} {
-
       allow read: if true;
-
-      allow create:
-        if request.auth != null;
-
+      allow create: if request.auth != null;
       allow update, delete:
         if isMaster()
         ||
@@ -223,18 +136,10 @@ service cloud.firestore {
           && request.auth.uid == resource.data.autorUid
         );
     }
-
-    /* =====================================================
-       NOTÍCIAS
-       ===================================================== */
 
     match /noticias/{noticiaId} {
-
       allow read: if true;
-
-      allow create:
-        if request.auth != null;
-
+      allow create: if request.auth != null;
       allow update, delete:
         if isMaster()
         ||
@@ -243,20 +148,10 @@ service cloud.firestore {
           && request.auth.uid == resource.data.autorUid
         );
     }
-
-    /* =====================================================
-       TELEFONES ÚTEIS
-       ===================================================== */
 
     match /telefones/{telefoneId} {
-
       allow read: if true;
-
-      allow create:
-        if isMaster()
-        ||
-        request.auth != null;
-
+      allow create: if isMaster() || request.auth != null;
       allow update, delete:
         if isMaster()
         ||
@@ -266,16 +161,10 @@ service cloud.firestore {
         );
     }
 
-    /* =====================================================
-       LOJAS / ANUNCIANTES
-       ===================================================== */
-
     match /lojas_parceiras/{lojaId} {
-
       allow read:
         if isMaster()
-        ||
-        resource.data.ativo == true
+        || resource.data.ativo == true
         ||
         (
           request.auth != null
@@ -343,141 +232,98 @@ service cloud.firestore {
         );
     }
 
-    /* =====================================================
-       PRODUTOS / SERVIÇOS DOS ANUNCIANTES
-       ===================================================== */
-
     match /produtos/{produtoId} {
-
+      // Produtos ativos são públicos.
+      // O dono da loja pode ler também os produtos ocultos.
+      // A propriedade é conferida na loja, e não em uidDono do produto,
+      // porque produtos antigos podem não possuir esse campo.
       allow read:
         if isMaster()
-        ||
-        resource.data.ativo == true
+        || resource.data.ativo == true
         ||
         (
           request.auth != null
-          && resource.data.uidDono == request.auth.uid
+          && resource.data.lojaId != null
+          && get(
+            /databases/$(database)/documents/lojas_parceiras/$(resource.data.lojaId)
+          ).data.uidDono == request.auth.uid
         );
 
+      // O anunciante só pode criar produto dentro da própria loja.
       allow create:
         if isMaster()
         ||
         (
           request.auth != null
-          && request.resource.data.uidDono == request.auth.uid
           && request.resource.data.lojaId != null
           && get(
             /databases/$(database)/documents/lojas_parceiras/$(request.resource.data.lojaId)
           ).data.uidDono == request.auth.uid
         );
 
+      // O anunciante só pode alterar produto de uma loja que pertence a ele.
       allow update:
         if isMaster()
         ||
         (
           request.auth != null
-          && resource.data.uidDono == request.auth.uid
-          && request.resource.data.uidDono == resource.data.uidDono
+          && resource.data.lojaId != null
           && request.resource.data.lojaId == resource.data.lojaId
           && get(
             /databases/$(database)/documents/lojas_parceiras/$(resource.data.lojaId)
           ).data.uidDono == request.auth.uid
         );
 
+      // O anunciante só pode excluir produto de uma loja que pertence a ele.
       allow delete:
         if isMaster()
         ||
         (
           request.auth != null
-          && resource.data.uidDono == request.auth.uid
+          && resource.data.lojaId != null
           && get(
             /databases/$(database)/documents/lojas_parceiras/$(resource.data.lojaId)
           ).data.uidDono == request.auth.uid
         );
     }
 
-    /* =====================================================
-       DENÚNCIAS
-       ===================================================== */
-
     match /denuncias/{denunciaId} {
-
       allow create:
         if request.auth != null
         && request.resource.data.autorUid == request.auth.uid;
-
       allow read:
         if isMaster()
         ||
         (
           request.auth != null
-          && resource.data.autorUid == request.auth.uid
+          && request.auth.uid == resource.data.autorUid
         );
-
-      allow update, delete:
-        if isMaster();
+      allow update, delete: if isMaster();
     }
-
-    /* =====================================================
-       ESTATÍSTICAS
-       ===================================================== */
 
     match /estatisticas/{documentoId} {
-
       allow read: if true;
-
-      allow write:
-        if isMaster();
+      allow write: if isMaster();
     }
-
-    /* =====================================================
-       CONFIGURAÇÕES DO PORTAL
-       ===================================================== */
 
     match /configuracoes/{documentoId} {
-
       allow read: if true;
-
-      allow write:
-        if isMaster();
+      allow write: if isMaster();
     }
 
-    /* =====================================================
-       PUBLICIDADES
-       ===================================================== */
-
     match /publicidades/{publicidadeId} {
-
       allow read:
         if resource.data.ativo == true
         || isMaster();
-
-      allow create, update, delete:
-        if isMaster();
+      allow create, update, delete: if isMaster();
     }
-
-    /* =====================================================
-       PACOTES DE DIVULGAÇÃO
-       ===================================================== */
 
     match /pacotes_anuncio/{pacoteId} {
-
-      // Os planos são públicos para o anunciante consultar antes de contratar.
-      allow read:
-        if true;
-
-      allow create, update, delete:
-        if isMaster();
+      allow read: if true;
+      allow create, update, delete: if isMaster();
     }
 
-    /* =====================================================
-       CONTRATOS DE DIVULGAÇÃO
-       ===================================================== */
-
     match /contratos_anuncio/{contratoId} {
-
-      // Master pode administrar todos os contratos.
-      // O anunciante pode consultar somente contratos da própria loja.
       allow read:
         if isMaster()
         ||
@@ -488,23 +334,12 @@ service cloud.firestore {
             /databases/$(database)/documents/lojas_parceiras/$(resource.data.lojaId)
           ).data.uidDono == request.auth.uid
         );
-
-      allow create, update, delete:
-        if isMaster();
+      allow create, update, delete: if isMaster();
     }
-
-    /* =====================================================
-       LOGS ADMINISTRATIVOS
-       ===================================================== */
 
     match /logs_admin/{logId} {
-
-      allow read, create:
-        if isMaster();
-
-      allow update, delete:
-        if false;
+      allow read, create: if isMaster();
+      allow update, delete: if false;
     }
-
   }
 }
