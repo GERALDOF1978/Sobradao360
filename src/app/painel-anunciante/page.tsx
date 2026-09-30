@@ -81,6 +81,13 @@ corMarca: string;
   statusPagamento: string;
   valorPlano: number;
 
+  planoEscolhidoId: string;
+  planoEscolhidoNome: string;
+  planoEscolhidoValor: number;
+  planoEscolhidoDuracaoDias: number;
+  planoEscolhidoLimiteProdutos: number;
+  statusPlano: string;
+
   mostrarMarquee: boolean;
   mostrarCard: boolean;
   mostrarBanner: boolean;
@@ -98,6 +105,21 @@ type ContratoAnuncio = {
   vencimento: Date | null;
   status: "ativo" | "expirado" | "cancelado";
   exibicao: { marquee: boolean; publicidade: boolean; destaques: boolean; parceiros: boolean };
+};
+
+type PlanoAnuncio = {
+  id: string;
+  nome: string;
+  valor: number;
+  duracaoDias: number;
+  limiteProdutos: number;
+  exibicaoPadrao: {
+    marquee: boolean;
+    publicidade: boolean;
+    destaques: boolean;
+    parceiros: boolean;
+  };
+  ativo: boolean;
 };
 
 const TIPOS: {
@@ -262,6 +284,9 @@ export default function PainelAnunciantePage() {
   const [contratos, setContratos] =
     useState<Record<string, ContratoAnuncio | null>>({});
 
+  const [planos, setPlanos] =
+    useState<PlanoAnuncio[]>([]);
+
   const [carregando, setCarregando] =
     useState(true);
 
@@ -325,6 +350,37 @@ export default function PainelAnunciantePage() {
     try {
       setCarregando(true);
       setErro("");
+
+      const snapshotPlanos = await getDocs(
+        query(
+          collection(db, "pacotes_anuncio"),
+          where("ativo", "==", true)
+        )
+      );
+
+      const listaPlanos: PlanoAnuncio[] =
+        snapshotPlanos.docs.map((item) => {
+          const dados = item.data() as DadosFirestore;
+          const exibicaoPadrao =
+            (dados.exibicaoPadrao || {}) as DadosFirestore;
+
+          return {
+            id: item.id,
+            nome: texto(dados.nome) || "Plano de divulgação",
+            valor: numero(dados.valor),
+            duracaoDias: numero(dados.duracaoDias),
+            limiteProdutos: numero(dados.limiteProdutos),
+            exibicaoPadrao: {
+              marquee: booleano(exibicaoPadrao.marquee),
+              publicidade: booleano(exibicaoPadrao.publicidade),
+              destaques: booleano(exibicaoPadrao.destaques),
+              parceiros: booleano(exibicaoPadrao.parceiros),
+            },
+            ativo: booleano(dados.ativo),
+          };
+        });
+
+      setPlanos(listaPlanos);
 
       const referencia =
         collection(db, "lojas_parceiras");
@@ -544,6 +600,24 @@ corMarca:
           valorPlano:
             numero(dados.valorPlano),
 
+          planoEscolhidoId:
+            texto(dados.planoEscolhidoId),
+
+          planoEscolhidoNome:
+            texto(dados.planoEscolhidoNome),
+
+          planoEscolhidoValor:
+            numero(dados.planoEscolhidoValor),
+
+          planoEscolhidoDuracaoDias:
+            numero(dados.planoEscolhidoDuracaoDias),
+
+          planoEscolhidoLimiteProdutos:
+            numero(dados.planoEscolhidoLimiteProdutos),
+
+          statusPlano:
+            texto(dados.statusPlano),
+
           mostrarMarquee:
             booleano(dados.mostrarMarquee),
 
@@ -720,6 +794,48 @@ corMarca:
       top: 0,
       behavior: "smooth",
     });
+  }
+
+  async function escolherPlano(
+    negocio: Negocio,
+    plano: PlanoAnuncio
+  ) {
+    if (!usuario) {
+      setErro("Faça login para escolher um plano.");
+      return;
+    }
+
+    try {
+      setSalvando(true);
+      setMensagem("");
+      setErro("");
+
+      await updateDoc(
+        doc(db, "lojas_parceiras", negocio.id),
+        {
+          planoEscolhidoId: plano.id,
+          planoEscolhidoNome: plano.nome,
+          planoEscolhidoValor: plano.valor,
+          planoEscolhidoDuracaoDias: plano.duracaoDias,
+          planoEscolhidoLimiteProdutos: plano.limiteProdutos,
+          statusPlano: "AGUARDANDO_CONFIRMACAO",
+          atualizadoEm: serverTimestamp(),
+        }
+      );
+
+      setMensagem(
+        "Plano "" + plano.nome + "" escolhido. Aguarde a confirmação do Sobradão 360."
+      );
+
+      await carregarNegocios();
+    } catch (error) {
+      console.error("Erro ao escolher plano:", error);
+      setErro(
+        "Não foi possível registrar a escolha do plano."
+      );
+    } finally {
+      setSalvando(false);
+    }
   }
 
   async function salvarNegocio(
@@ -1766,6 +1882,89 @@ corMarca:
     void carregarNegocios();
   }}
 />
+
+                      {!contrato && (
+                        <div className="mt-5 rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-amber-50 p-5">
+                          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">
+                            Plano de divulgação
+                          </p>
+                          <h4 className="mt-1 text-xl font-black text-slate-950">
+                            📢 Escolha seu plano
+                          </h4>
+                          <p className="mt-1 text-xs leading-5 text-slate-600">
+                            Escolha um dos planos definidos pelo Sobradão 360. O plano inclui os dias, a quantidade de produtos/serviços e os espaços de divulgação.
+                          </p>
+
+                          {negocio.statusPlano === "AGUARDANDO_CONFIRMACAO" && (
+                            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                              <p className="text-xs font-black text-amber-900">
+                                ⏳ Plano escolhido: {negocio.planoEscolhidoNome}
+                              </p>
+                              <p className="mt-1 text-[11px] text-amber-800">
+                                {negocio.planoEscolhidoValor.toLocaleString("pt-BR", {
+                                  style: "currency",
+                                  currency: "BRL",
+                                })} · {negocio.planoEscolhidoDuracaoDias} dias · até {negocio.planoEscolhidoLimiteProdutos} produtos/serviços
+                              </p>
+                              <p className="mt-2 text-[11px] font-bold text-amber-800">
+                                Aguardando confirmação do Sobradão 360.
+                              </p>
+                            </div>
+                          )}
+
+                          {negocio.statusPlano !== "AGUARDANDO_CONFIRMACAO" && (
+                            <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                              {planos.map((plano) => {
+                                const ex = plano.exibicaoPadrao;
+                                return (
+                                  <div
+                                    key={plano.id}
+                                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                                  >
+                                    <h5 className="text-base font-black text-slate-900">
+                                      {plano.nome}
+                                    </h5>
+
+                                    <p className="mt-2 text-2xl font-black text-blue-900">
+                                      {plano.valor.toLocaleString("pt-BR", {
+                                        style: "currency",
+                                        currency: "BRL",
+                                      })}
+                                    </p>
+
+                                    <div className="mt-3 space-y-1 text-[11px] text-slate-600">
+                                      <p>📅 {plano.duracaoDias} dias</p>
+                                      <p>📦 Até {plano.limiteProdutos} produtos/serviços</p>
+                                    </div>
+
+                                    <div className="mt-3 flex flex-wrap gap-1">
+                                      {ex.marquee && <span className="rounded-full bg-blue-100 px-2 py-1 text-[9px] font-black text-blue-800">Marquee</span>}
+                                      {ex.publicidade && <span className="rounded-full bg-amber-100 px-2 py-1 text-[9px] font-black text-amber-800">Publicidade</span>}
+                                      {ex.destaques && <span className="rounded-full bg-purple-100 px-2 py-1 text-[9px] font-black text-purple-800">Destaques</span>}
+                                      {ex.parceiros && <span className="rounded-full bg-emerald-100 px-2 py-1 text-[9px] font-black text-emerald-800">Parceiros</span>}
+                                    </div>
+
+                                    <button
+                                      type="button"
+                                      disabled={salvando}
+                                      onClick={() => void escolherPlano(negocio, plano)}
+                                      className="mt-4 w-full rounded-xl bg-blue-900 px-4 py-3 text-xs font-black text-white hover:bg-blue-800 disabled:opacity-50"
+                                    >
+                                      {salvando ? "Registrando..." : "Escolher este plano"}
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {planos.length === 0 && (
+                            <p className="mt-4 rounded-xl bg-white p-4 text-xs font-bold text-slate-500">
+                              Nenhum plano disponível no momento. Aguarde a liberação pelo Sobradão 360.
+                            </p>
+                          )}
+                        </div>
+                      )}
 
                       <div className="mt-5 rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-blue-50 p-5">
                         {(() => {
