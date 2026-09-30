@@ -139,16 +139,18 @@ export default function ComunidadePage() {
     try {
       const snap = await getDocs(
         query(
-          collection(db, "anuncios", publicacaoId, "comentarios"),
+          collection(db, "comentarios_mural"),
           orderBy("createdAt", "asc")
         )
       );
 
+      const lista = snap.docs
+        .map((item: any) => ({ id: item.id, ...item.data() } as Comentario & { anuncioId?: string }))
+        .filter((item: Comentario & { anuncioId?: string }) => item.anuncioId === publicacaoId);
+
       setComentarios((atual) => ({
         ...atual,
-        [publicacaoId]: snap.docs.map(
-          (item: any) => ({ id: item.id, ...item.data() } as Comentario)
-        ),
+        [publicacaoId]: lista,
       }));
     } catch (err) {
       console.error("Erro ao carregar comentários:", err);
