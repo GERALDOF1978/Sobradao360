@@ -5,9 +5,11 @@ import Link from "next/link";
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -332,7 +334,127 @@ export default function PainelAnunciantePage() {
         where("uidDono", "==", usuario.uid)
       );
 
-      const snapshot = await getDocs(consulta);
+      let snapshot = await getDocs(consulta);
+
+      // Se o anunciante foi aprovado e ainda não possui loja,
+      // cria automaticamente a loja vinculada ao UID da conta Google.
+      if (snapshot.empty && usuario.email) {
+        const parametros = new URLSearchParams(
+          window.location.search
+        );
+
+        const solicitacaoId =
+          parametros.get("solicitacao");
+
+        if (solicitacaoId) {
+          const solicitacaoRef = doc(
+            db,
+            "solicitacoes_divulgacao",
+            solicitacaoId
+          );
+
+          const solicitacaoSnapshot =
+            await getDoc(solicitacaoRef);
+
+          if (solicitacaoSnapshot.exists()) {
+            const solicitacao =
+              solicitacaoSnapshot.data() as DadosFirestore;
+
+            const emailSolicitacao =
+              texto(solicitacao.email).trim().toLowerCase();
+
+            const emailUsuario =
+              (usuario.email || "").trim().toLowerCase();
+
+            if (
+              solicitacao.status === "APROVADO" &&
+              emailSolicitacao === emailUsuario
+            ) {
+              const lojaRef = doc(
+                db,
+                "lojas_parceiras",
+                solicitacaoId
+              );
+
+              const lojaSnapshot =
+                await getDoc(lojaRef);
+
+              if (!lojaSnapshot.exists()) {
+                await setDoc(lojaRef, {
+                  uidDono: usuario.uid,
+                  nomeResponsavel:
+                    texto(solicitacao.nomeResponsavel) ||
+                    usuario.displayName ||
+                    "",
+                  emailDono:
+                    emailUsuario,
+                  nome:
+                    texto(solicitacao.nomeNegocio),
+                  titulo:
+                    texto(solicitacao.nomeNegocio),
+                  subtitulo:
+                    texto(solicitacao.tipoNegocio),
+                  descricao:
+                    texto(solicitacao.descricao),
+                  tipo:
+                    tipoValido(
+                      texto(solicitacao.tipoNegocio)
+                        .toLowerCase()
+                        .normalize("NFD")
+                        .replace(/[\u0300-\u036f]/g, "")
+                        .replace(/ç/g, "c")
+                        .replace(/[^a-z]/g, "")
+                    ),
+                  telefone:
+                    texto(solicitacao.telefone),
+                  whatsapp:
+                    texto(solicitacao.whatsapp),
+                  tipoPresenca:
+                    "pagina_sobradao",
+                  destinoDescricao:
+                    "",
+                  siteUrl:
+                    texto(solicitacao.site),
+                  imagemUrl:
+                    "",
+                  bannerUrl:
+                    "",
+                  slogan:
+                    "",
+                  corMarca:
+                    "#0f172a",
+                  ativo:
+                    true,
+                  status:
+                    "APROVADO",
+                  temLojaCriada:
+                    false,
+                  linkLoja:
+                    "",
+                  plano:
+                    "a_definir",
+                  statusPagamento:
+                    "aguardando_pagamento",
+                  valorPlano:
+                    0,
+                  mostrarMarquee:
+                    false,
+                  mostrarCard:
+                    true,
+                  mostrarBanner:
+                    false,
+                  criadoEm:
+                    serverTimestamp(),
+                  atualizadoEm:
+                    serverTimestamp(),
+                });
+              }
+
+              snapshot = await getDocs(consulta);
+            }
+          }
+        }
+      }
 
       const lista: Negocio[] = [];
 
