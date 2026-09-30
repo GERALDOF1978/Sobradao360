@@ -365,8 +365,8 @@ export default function AdminMasterPage() {
         status?: string; exibicao?: { marquee?: boolean; publicidade?: boolean; destaques?: boolean; parceiros?: boolean };
       }> = {};
 
-      snapshot.docs.forEach((item) => {
-        const d = item.data() as any;
+      snapshot.docs.forEach((item: (typeof snapshot.docs)[number]) => {
+        const d = item.data() as Record<string, any>;
         if (!d.lojaId) return;
         if (!mapa[d.lojaId] || String(d.status || "").toLowerCase() === "ativo") {
           mapa[d.lojaId] = d;
