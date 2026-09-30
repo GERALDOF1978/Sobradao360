@@ -443,37 +443,28 @@ export default function PainelAnunciantePage() {
             solicitacaoId
           );
 
-          const lojaSnapshot =
-            await getDoc(lojaRef);
-
-          const dadosLoja = lojaSnapshot.exists()
-            ? (lojaSnapshot.data() as DadosFirestore)
-            : {};
-
+          // Não lemos a loja antiga antes da promoção.
+          // Se ela estiver PENDENTE ou vinculada a outro UID,
+          // essa leitura pode ser bloqueada pelas regras do Firestore.
+          // O merge preserva os demais campos existentes.
           await setDoc(
             lojaRef,
             {
-              ...dadosLoja,
               uidDono: usuario.uid,
               nomeResponsavel:
                 texto(solicitacao.nomeResponsavel) ||
-                texto(dadosLoja.nomeResponsavel) ||
                 usuario.displayName ||
                 "",
               emailDono:
                 emailUsuario,
               nome:
-                texto(solicitacao.nomeNegocio) ||
-                texto(dadosLoja.nome),
+                texto(solicitacao.nomeNegocio),
               titulo:
-                texto(solicitacao.nomeNegocio) ||
-                texto(dadosLoja.titulo),
+                texto(solicitacao.nomeNegocio),
               subtitulo:
-                texto(solicitacao.tipoNegocio) ||
-                texto(dadosLoja.subtitulo),
+                texto(solicitacao.tipoNegocio),
               descricao:
-                texto(solicitacao.descricao) ||
-                texto(dadosLoja.descricao),
+                texto(solicitacao.descricao),
               tipo:
                 tipoValido(
                   texto(solicitacao.tipoNegocio)
@@ -484,50 +475,43 @@ export default function PainelAnunciantePage() {
                     .replace(/[^a-z]/g, "")
                 ),
               telefone:
-                texto(solicitacao.telefone) ||
-                texto(dadosLoja.telefone),
+                texto(solicitacao.telefone),
               whatsapp:
-                texto(solicitacao.whatsapp) ||
-                texto(dadosLoja.whatsapp),
+                texto(solicitacao.whatsapp),
               tipoPresenca:
-                texto(dadosLoja.tipoPresenca) ||
                 "pagina_sobradao",
               destinoDescricao:
-                texto(dadosLoja.destinoDescricao),
+                "" ,
               siteUrl:
-                texto(solicitacao.site) ||
-                texto(dadosLoja.siteUrl),
+                texto(solicitacao.site),
               imagemUrl:
-                texto(dadosLoja.imagemUrl),
+                "" ,
               bannerUrl:
-                texto(dadosLoja.bannerUrl),
+                "" ,
               slogan:
-                texto(dadosLoja.slogan),
+                "" ,
               corMarca:
-                texto(dadosLoja.corMarca) ||
                 "#0f172a",
               ativo:
                 true,
               status:
                 "APROVADO",
               temLojaCriada:
-                booleano(dadosLoja.temLojaCriada),
+                false,
               linkLoja:
-                texto(dadosLoja.linkLoja),
+                "" ,
               plano:
-                texto(dadosLoja.plano) ||
                 "a_definir",
               statusPagamento:
-                texto(dadosLoja.statusPagamento) ||
                 "aguardando_pagamento",
               valorPlano:
-                numero(dadosLoja.valorPlano),
+                0,
               mostrarMarquee:
-                booleano(dadosLoja.mostrarMarquee),
+                false,
               mostrarCard:
                 true,
               mostrarBanner:
-                booleano(dadosLoja.mostrarBanner),
+                false,
               atualizadoEm:
                 serverTimestamp(),
             },
