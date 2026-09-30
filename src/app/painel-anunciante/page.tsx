@@ -824,7 +824,7 @@ corMarca:
       );
 
       setMensagem(
-        "Plano "" + plano.nome + "" escolhido. Aguarde a confirmação do Sobradão 360."
+        "Plano " + plano.nome + " escolhido. Aguarde a confirmação do Sobradão 360."
       );
 
       await carregarNegocios();
