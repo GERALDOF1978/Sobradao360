@@ -49,7 +49,7 @@ export default function PlanosAnunciantePage() {
         );
 
         const lista = snapshot.docs
-          .map((item) => {
+          .map((item: { id: string; data: () => Record<string, unknown> }) => {
             const dados = item.data();
 
             return {
@@ -67,7 +67,7 @@ export default function PlanosAnunciantePage() {
               ativo: dados.ativo !== false,
             };
           })
-          .sort((a, b) => a.valor - b.valor);
+          .sort((a: Plano, b: Plano) => a.valor - b.valor);
 
         setPlanos(lista);
       } catch (error) {
