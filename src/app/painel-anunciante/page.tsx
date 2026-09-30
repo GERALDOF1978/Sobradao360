@@ -216,26 +216,81 @@ function booleano(valor: unknown): boolean {
   return valor === true;
 }
 
-function tipoValido(valor: unknown): TipoNegocio {
-  const tipos: TipoNegocio[] = [
-    "loja",
-    "oficina",
-    "profissional",
-    "alimentacao",
-    "eventos",
-    "empresa",
-    "tecnologia",
-    "outros",
-  ];
+function normalizarTipoNegocio(valor: unknown): TipoNegocio {
+  const bruto = texto(valor)
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\\u0300-\\u036f]/g, "");
+
+  const compacto = bruto.replace(/[^a-z]/g, "");
+
+  if (!compacto) {
+    return "empresa";
+  }
 
   if (
-    typeof valor === "string" &&
-    tipos.includes(valor as TipoNegocio)
+    compacto.includes("tecnologia") ||
+    compacto.includes("informatica") ||
+    compacto.includes("software")
   ) {
-    return valor as TipoNegocio;
+    return "tecnologia";
+  }
+
+  if (
+    compacto.includes("alimentacao") ||
+    compacto.includes("comida") ||
+    compacto.includes("confeitaria") ||
+    compacto.includes("padaria") ||
+    compacto.includes("lanchonete")
+  ) {
+    return "alimentacao";
+  }
+
+  if (
+    compacto.includes("oficina") ||
+    compacto.includes("mecanica") ||
+    compacto.includes("automotivo")
+  ) {
+    return "oficina";
+  }
+
+  if (
+    compacto.includes("profissional") ||
+    compacto.includes("prestador") ||
+    compacto.includes("servico")
+  ) {
+    return "profissional";
+  }
+
+  if (
+    compacto.includes("eventos") ||
+    compacto.includes("evento")
+  ) {
+    return "eventos";
+  }
+
+  if (
+    compacto.includes("loja") ||
+    compacto.includes("comercio") ||
+    compacto.includes("varejo")
+  ) {
+    return "loja";
+  }
+
+  if (compacto.includes("outro")) {
+    return "outros";
+  }
+
+  if (compacto.includes("empresa")) {
+    return "empresa";
   }
 
   return "empresa";
+}
+
+function tipoValido(valor: unknown): TipoNegocio {
+  return normalizarTipoNegocio(valor);
 }
 
 function presencaValida(valor: unknown): TipoPresenca {
@@ -466,13 +521,8 @@ export default function PainelAnunciantePage() {
               descricao:
                 texto(solicitacao.descricao),
               tipo:
-                tipoValido(
-                  texto(solicitacao.tipoNegocio)
-                    .toLowerCase()
-                    .normalize("NFD")
-                    .replace(/[\\u0300-\\u036f]/g, "")
-                    .replace(/ç/g, "c")
-                    .replace(/[^a-z]/g, "")
+                normalizarTipoNegocio(
+                  solicitacao.tipoNegocio
                 ),
               telefone:
                 texto(solicitacao.telefone),
@@ -891,7 +941,16 @@ corMarca:
         descricao:
           descricao.trim(),
 
-        tipo,
+        // O tipo é estrutural: vem do cadastro aprovado e não pode
+        // ser alterado pelo formulário de edição.
+        tipo:
+          negocioEditando
+            ? normalizarTipoNegocio(
+                negocios.find(
+                  (item) => item.id === negocioEditando
+                )?.tipo || tipo
+              )
+            : normalizarTipoNegocio(tipo),
 
         telefone:
           telefone.trim(),
@@ -1444,39 +1503,40 @@ corMarca:
                     Tipo de negócio
                   </label>
 
-                  <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-4">
+                  {(() => {
+                    const tipoInfo =
+                      TIPOS.find(
+                        (item) => item.value === normalizarTipoNegocio(tipo)
+                      ) || TIPOS.find((item) => item.value === "empresa")!;
 
-                    {TIPOS.map(
-                      (item) => (
-                        <button
-                          key={item.value}
-                          type="button"
-                          onClick={() =>
-                            setTipo(
-                              item.value
-                            )
-                          }
-                          className={
-                            tipo ===
-                            item.value
-                              ? "rounded-xl border-2 border-blue-800 bg-white p-3 text-left"
-                              : "rounded-xl border border-slate-200 bg-white p-3 text-left hover:border-blue-300"
-                          }
-                        >
+                    return (
+                      <div className="mt-2 rounded-2xl border-2 border-blue-200 bg-white p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-2xl">
+                            {tipoInfo.icon}
+                          </div>
 
-                          <span className="text-xl">
-                            {item.icon}
+                          <div>
+                            <p className="text-sm font-black text-slate-900">
+                              {tipoInfo.label}
+                            </p>
+                            <p className="mt-1 text-[11px] text-slate-500">
+                              {tipoInfo.descricao}
+                            </p>
+                          </div>
+
+                          <span className="ml-auto rounded-full bg-slate-100 px-3 py-1 text-[9px] font-black uppercase tracking-wide text-slate-500">
+                            Definido no cadastro
                           </span>
+                        </div>
 
-                          <span className="mt-1 block text-xs font-black text-slate-800">
-                            {item.label}
-                          </span>
-
-                        </button>
-                      )
-                    )}
-
-                  </div>
+                        <p className="mt-3 text-[11px] leading-5 text-slate-500">
+                          O tipo do negócio define o ambiente, os campos e o catálogo exibido no Sobradão 360.
+                          Para evitar que sua página fique incompatível com seu cadastro, essa informação não pode ser alterada nesta tela.
+                        </p>
+                      </div>
+                    );
+                  })()}
 
                 </div>
 
