@@ -359,7 +359,7 @@ export default function PainelAnunciantePage() {
       );
 
       const listaPlanos: PlanoAnuncio[] =
-        snapshotPlanos.docs.map((item) => {
+        snapshotPlanos.docs.map((item: (typeof snapshotPlanos.docs)[number]) => {
           const dados = item.data() as DadosFirestore;
           const exibicaoPadrao =
             (dados.exibicaoPadrao || {}) as DadosFirestore;
@@ -1883,7 +1883,7 @@ corMarca:
   }}
 />
 
-                      {!contrato && (
+                      {!contratos[negocio.id] && (
                         <div className="mt-5 rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-amber-50 p-5">
                           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">
                             Plano de divulgação
