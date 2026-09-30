@@ -244,7 +244,7 @@ export default function NegociosMarquee() {
                 onClick={() => abrirNegocio(negocio)}
                 className="
                   flex
-                  w-[160px]
+                  w-[180px]
                   flex-shrink-0
                   flex-col
                   overflow-hidden
@@ -264,7 +264,7 @@ export default function NegociosMarquee() {
                 <div
                   className="
                     relative
-                    h-24
+                    aspect-[3/1]
                     w-full
                     overflow-hidden
                     bg-slate-900
