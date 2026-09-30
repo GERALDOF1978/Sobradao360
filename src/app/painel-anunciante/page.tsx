@@ -1859,6 +1859,8 @@ corMarca:
                       />
                       </div>
 
+                      </div>
+
                     </div>
                   );
                 }
