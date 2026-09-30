@@ -29,8 +29,12 @@ service cloud.firestore {
       allow read:
         if isMaster();
 
-      // Solicitações não podem ser alteradas/excluídas pelo navegador.
-      allow update, delete: if false;
+      // Somente o Admin Master pode aprovar ou recusar.
+      allow update:
+        if isMaster();
+
+      // Solicitações não podem ser excluídas pelo navegador.
+      allow delete: if false;
     }
 
     /* =====================================================
