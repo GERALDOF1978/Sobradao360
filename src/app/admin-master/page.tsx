@@ -82,6 +82,23 @@ interface UsuarioLogado {
   displayName: string | null;
 }
 
+interface SolicitacaoDivulgacao {
+  id: string;
+  nomeResponsavel?: string;
+  email?: string;
+  whatsapp?: string;
+  telefone?: string;
+  nomeNegocio?: string;
+  tipoNegocio?: string;
+  endereco?: string;
+  descricao?: string;
+  instagram?: string;
+  site?: string;
+  observacoes?: string;
+  status?: string;
+  criadoEm?: unknown;
+}
+
 const TIPOS: Record<string, string> = {
   loja: "Loja / Comércio",
   oficina: "Oficina / Assistência",
@@ -158,6 +175,11 @@ export default function AdminMasterPage() {
 
   const [filtro, setFiltro] = useState("todos");
 
+  const [menuAberto, setMenuAberto] = useState("anunciantes");
+
+  const [solicitacoes, setSolicitacoes] =
+    useState<SolicitacaoDivulgacao[]>([]);
+
   useEffect(() => {
     const auth = getAuth();
 
@@ -209,6 +231,7 @@ export default function AdminMasterPage() {
         setAutorizado(true);
 
         await carregarLojas();
+        await carregarSolicitacoes();
       } catch (error: unknown) {
         console.error(
           "Erro ao verificar acesso Master:",
@@ -301,6 +324,29 @@ export default function AdminMasterPage() {
     } catch (error: unknown) {
       console.error(
         "Erro ao carregar lojas parceiras:",
+        error
+      );
+    }
+  }
+
+  async function carregarSolicitacoes() {
+    try {
+      const snapshot = await getDocs(
+        query(
+          collection(db, "solicitacoes_divulgacao"),
+          orderBy("criadoEm", "desc")
+        )
+      );
+
+      setSolicitacoes(
+        snapshot.docs.map((item) => ({
+          id: item.id,
+          ...(item.data() as Omit<SolicitacaoDivulgacao, "id">),
+        }))
+      );
+    } catch (error: unknown) {
+      console.error(
+        "Erro ao carregar solicitações de divulgação:",
         error
       );
     }
@@ -578,14 +624,6 @@ export default function AdminMasterPage() {
 
     <div className="mx-auto max-w-7xl">
 
-      <ContratosAnuncio
-        lojas={lojas.map((loja) => ({
-          id: loja.id,
-          nome: loja.nome,
-          titulo: loja.titulo,
-        }))}
-      />
-
       <header className="mb-6">
           <div className="rounded-2xl bg-slate-900 p-6 text-white shadow-lg">
 
@@ -617,6 +655,147 @@ export default function AdminMasterPage() {
           </div>
         </header>
 
+
+        <section className="mb-6 rounded-2xl bg-white p-4 shadow-sm">
+          <div className="mb-3">
+            <h2 className="text-base font-black text-slate-900">
+              Menu Master
+            </h2>
+            <p className="text-xs text-slate-500">
+              Abra somente a área que você precisa administrar.
+            </p>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["anunciantes", "🏪", "Anunciantes", "Lojas parceiras"],
+              ["solicitacoes", "📨", "Solicitações", solicitacoes.length + " recebida(s)"],
+              ["planos", "💳", "Planos e contratos", "Pacotes e contratos"],
+              ["painel", "👤", "Painel anunciante", "Abrir painel"],
+            ].map(([id, icone, titulo, descricao]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setMenuAberto(id)}
+                className={`rounded-xl border p-3 text-left transition ${
+                  menuAberto === id
+                    ? "border-amber-400 bg-amber-50"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <div className="text-lg">{icone}</div>
+                <div className="mt-1 text-sm font-black text-slate-900">
+                  {titulo}
+                </div>
+                <div className="text-xs text-slate-500">
+                  {descricao}
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="mb-6">
+          {menuAberto === "planos" && (
+            <ContratosAnuncio
+              lojas={lojas.map((loja) => ({
+                id: loja.id,
+                nome: loja.nome,
+                titulo: loja.titulo,
+              }))}
+            />
+          )}
+
+          {menuAberto === "painel" && (
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-black text-slate-900">
+                Painel do anunciante
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Área usada pelo comerciante para administrar a própria página e produtos.
+              </p>
+              <a
+                href="/painel-anunciante"
+                className="mt-4 inline-flex rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white hover:bg-slate-800"
+              >
+                Abrir painel anunciante
+              </a>
+            </div>
+          )}
+
+          {menuAberto === "solicitacoes" && (
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900">
+                    Solicitações de divulgação
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    Pedidos enviados pelo formulário Quero divulgar meu negócio.
+                  </p>
+                </div>
+                <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">
+                  {solicitacoes.length} solicitação(ões)
+                </span>
+              </div>
+
+              {solicitacoes.length === 0 ? (
+                <div className="rounded-xl bg-slate-50 p-8 text-center text-sm text-slate-500">
+                  Nenhuma solicitação recebida.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {solicitacoes.map((item) => (
+                    <article
+                      key={item.id}
+                      className="rounded-xl border border-slate-200 p-4"
+                    >
+                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div>
+                          <h3 className="font-black text-slate-900">
+                            {item.nomeNegocio || "Negócio sem nome"}
+                          </h3>
+                          <p className="text-sm text-slate-600">
+                            Responsável: {item.nomeResponsavel || "Não informado"}
+                          </p>
+                        </div>
+                        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">
+                          {item.status || "PENDENTE"}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
+                        <div><strong>E-mail:</strong> {item.email || "-"}</div>
+                        <div><strong>WhatsApp:</strong> {item.whatsapp || "-"}</div>
+                        <div><strong>Telefone:</strong> {item.telefone || "-"}</div>
+                        <div><strong>Tipo:</strong> {TIPOS[item.tipoNegocio || ""] || item.tipoNegocio || "-"}</div>
+                        <div><strong>Endereço:</strong> {item.endereco || "-"}</div>
+                        <div><strong>Cadastro:</strong> {formatarData(item.criadoEm)}</div>
+                      </div>
+
+                      {item.descricao && (
+                        <p className="mt-3 whitespace-pre-wrap text-sm text-slate-600">
+                          {item.descricao}
+                        </p>
+                      )}
+
+                      {(item.instagram || item.site || item.observacoes) && (
+                        <div className="mt-3 rounded-xl bg-slate-50 p-3 text-sm">
+                          {item.instagram && <div><strong>Instagram:</strong> {item.instagram}</div>}
+                          {item.site && <div><strong>Site:</strong> {item.site}</div>}
+                          {item.observacoes && <div><strong>Observações:</strong> {item.observacoes}</div>}
+                        </div>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
+        {menuAberto === "anunciantes" && (
+          <>
         <section className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
 
           <div className="rounded-2xl bg-white p-5 shadow-sm">
@@ -900,6 +1079,8 @@ export default function AdminMasterPage() {
           )}
 
         </section>
+          </>
+        )}
 
       </div>
 
