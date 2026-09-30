@@ -394,7 +394,7 @@ export default function Home() {
               <Link
                 key={item.id}
                 href={`/loja/${item.lojaId}`}
-                className="aspect-[3/2] w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 transition"
+                className="aspect-[3/1] w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 transition"
               >
                 <img
                   src={item.bannerUrl}
