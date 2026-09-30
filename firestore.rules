@@ -205,6 +205,7 @@ service cloud.firestore {
           && request.resource.data.uidDono == resource.data.uidDono
           && request.resource.data.status == resource.data.status
           && request.resource.data.ativo == resource.data.ativo
+          && request.resource.data.tipo == resource.data.tipo
         )
         ||
         (
