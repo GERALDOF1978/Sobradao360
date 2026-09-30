@@ -27,16 +27,22 @@ const servicosRapidos = [
     link: "/comunidade",
   },
   {
-    titulo: "Notícias",
-    icone: "📰",
-    cor: "bg-teal-600",
-    link: "/noticias",
-  },
-  {
     titulo: "Utilidades",
     icone: "📞",
     cor: "bg-slate-700",
     link: "/utilidades",
+  },
+  {
+    titulo: "Lâmpada Queimada",
+    icone: "💡",
+    cor: "bg-amber-500",
+    link: "/lampada-queimada",
+  },
+  {
+    titulo: "DAAE",
+    icone: "💧",
+    cor: "bg-cyan-600",
+    link: "/daae",
   },
 ];
 
@@ -289,7 +295,7 @@ export default function Home() {
           <div className="px-1">
 
             <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
-              Categorias principais
+              Mural da Comunidade
             </h2>
 
           </div>
@@ -303,16 +309,16 @@ export default function Home() {
                   <Link
                     key={servico.titulo}
                     href={servico.link}
-                    className="bg-white border border-slate-200 rounded-2xl p-2.5 flex flex-col items-center justify-center gap-1.5 shadow-sm hover:border-amber-400 hover:shadow-md transition group w-[78px] min-h-[82px] shrink-0"
+                    className="bg-white border border-slate-200 rounded-2xl p-2.5 flex flex-col items-center justify-center gap-1.5 shadow-sm hover:border-amber-400 hover:shadow-md transition group w-[100px] min-h-[100px] shrink-0"
                   >
 
                     <div
-                      className={`w-9 h-9 rounded-xl ${servico.cor} flex items-center justify-center text-white text-base shadow-md group-hover:scale-110 transition`}
+                      className={`w-11 h-11 rounded-xl ${servico.cor} flex items-center justify-center text-white text-base shadow-md group-hover:scale-110 transition`}
                     >
                       {servico.icone}
                     </div>
 
-                    <span className="text-[9px] font-bold text-slate-700 leading-tight text-center">
+                    <span className="text-[10px] font-bold text-slate-700 leading-tight text-center">
                       {servico.titulo}
                     </span>
 
