@@ -794,6 +794,12 @@ export default function AdminMasterPage() {
                 id: loja.id,
                 nome: loja.nome,
                 titulo: loja.titulo,
+                statusPlano: loja.statusPlano,
+                planoEscolhidoId: loja.planoEscolhidoId,
+                planoEscolhidoNome: loja.planoEscolhidoNome,
+                planoEscolhidoValor: loja.planoEscolhidoValor,
+                planoEscolhidoDuracaoDias: loja.planoEscolhidoDuracaoDias,
+                planoEscolhidoLimiteProdutos: loja.planoEscolhidoLimiteProdutos,
               }))}
             />
           )}
