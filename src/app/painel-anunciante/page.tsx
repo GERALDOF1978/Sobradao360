@@ -385,132 +385,163 @@ export default function PainelAnunciantePage() {
       const referencia =
         collection(db, "lojas_parceiras");
 
+      const parametros = new URLSearchParams(
+        window.location.search
+      );
+
+      const solicitacaoId =
+        parametros.get("solicitacao");
+
+      // Quando o acesso vem pelo link enviado pelo Master,
+      // a solicitação é a fonte de verdade da aprovação.
+      // Mesmo que já exista uma loja PENDENTE, ela deve ser
+      // liberada e vinculada à conta Google correta.
+      if (solicitacaoId && usuario.email) {
+        const solicitacaoRef = doc(
+          db,
+          "solicitacoes_divulgacao",
+          solicitacaoId
+        );
+
+        const solicitacaoSnapshot =
+          await getDoc(solicitacaoRef);
+
+        if (solicitacaoSnapshot.exists()) {
+          const solicitacao =
+            solicitacaoSnapshot.data() as DadosFirestore;
+
+          const emailSolicitacao =
+            texto(solicitacao.email).trim().toLowerCase();
+
+          const emailUsuario =
+            (usuario.email || "").trim().toLowerCase();
+
+          if (emailSolicitacao !== emailUsuario) {
+            setErro(
+              "Entre com o Google usando o mesmo e-mail informado no cadastro."
+            );
+            setNegocios([]);
+            setCarregando(false);
+            return;
+          }
+
+          if (solicitacao.status !== "APROVADO") {
+            setNegocios([]);
+            setContratos({});
+            setMostrarCadastro(false);
+            setNegocioEditando(null);
+            setMensagem(
+              "Seu cadastro foi recebido e está aguardando a liberação do Sobradão 360."
+            );
+            setCarregando(false);
+            return;
+          }
+
+          const lojaRef = doc(
+            db,
+            "lojas_parceiras",
+            solicitacaoId
+          );
+
+          const lojaSnapshot =
+            await getDoc(lojaRef);
+
+          const dadosLoja = lojaSnapshot.exists()
+            ? (lojaSnapshot.data() as DadosFirestore)
+            : {};
+
+          await setDoc(
+            lojaRef,
+            {
+              ...dadosLoja,
+              uidDono: usuario.uid,
+              nomeResponsavel:
+                texto(solicitacao.nomeResponsavel) ||
+                texto(dadosLoja.nomeResponsavel) ||
+                usuario.displayName ||
+                "",
+              emailDono:
+                emailUsuario,
+              nome:
+                texto(solicitacao.nomeNegocio) ||
+                texto(dadosLoja.nome),
+              titulo:
+                texto(solicitacao.nomeNegocio) ||
+                texto(dadosLoja.titulo),
+              subtitulo:
+                texto(solicitacao.tipoNegocio) ||
+                texto(dadosLoja.subtitulo),
+              descricao:
+                texto(solicitacao.descricao) ||
+                texto(dadosLoja.descricao),
+              tipo:
+                tipoValido(
+                  texto(solicitacao.tipoNegocio)
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\\u0300-\\u036f]/g, "")
+                    .replace(/ç/g, "c")
+                    .replace(/[^a-z]/g, "")
+                ),
+              telefone:
+                texto(solicitacao.telefone) ||
+                texto(dadosLoja.telefone),
+              whatsapp:
+                texto(solicitacao.whatsapp) ||
+                texto(dadosLoja.whatsapp),
+              tipoPresenca:
+                texto(dadosLoja.tipoPresenca) ||
+                "pagina_sobradao",
+              destinoDescricao:
+                texto(dadosLoja.destinoDescricao),
+              siteUrl:
+                texto(solicitacao.site) ||
+                texto(dadosLoja.siteUrl),
+              imagemUrl:
+                texto(dadosLoja.imagemUrl),
+              bannerUrl:
+                texto(dadosLoja.bannerUrl),
+              slogan:
+                texto(dadosLoja.slogan),
+              corMarca:
+                texto(dadosLoja.corMarca) ||
+                "#0f172a",
+              ativo:
+                true,
+              status:
+                "APROVADO",
+              temLojaCriada:
+                booleano(dadosLoja.temLojaCriada),
+              linkLoja:
+                texto(dadosLoja.linkLoja),
+              plano:
+                texto(dadosLoja.plano) ||
+                "a_definir",
+              statusPagamento:
+                texto(dadosLoja.statusPagamento) ||
+                "aguardando_pagamento",
+              valorPlano:
+                numero(dadosLoja.valorPlano),
+              mostrarMarquee:
+                booleano(dadosLoja.mostrarMarquee),
+              mostrarCard:
+                true,
+              mostrarBanner:
+                booleano(dadosLoja.mostrarBanner),
+              atualizadoEm:
+                serverTimestamp(),
+            },
+            { merge: true }
+          );
+        }
+      }
+
       const consulta = query(
         referencia,
         where("uidDono", "==", usuario.uid)
       );
 
-      let snapshot = await getDocs(consulta);
-
-      // Se o anunciante foi aprovado e ainda não possui loja,
-      // cria automaticamente a loja vinculada ao UID da conta Google.
-      if (snapshot.empty && usuario.email) {
-        const parametros = new URLSearchParams(
-          window.location.search
-        );
-
-        const solicitacaoId =
-          parametros.get("solicitacao");
-
-        if (solicitacaoId) {
-          const solicitacaoRef = doc(
-            db,
-            "solicitacoes_divulgacao",
-            solicitacaoId
-          );
-
-          const solicitacaoSnapshot =
-            await getDoc(solicitacaoRef);
-
-          if (solicitacaoSnapshot.exists()) {
-            const solicitacao =
-              solicitacaoSnapshot.data() as DadosFirestore;
-
-            const emailSolicitacao =
-              texto(solicitacao.email).trim().toLowerCase();
-
-            const emailUsuario =
-              (usuario.email || "").trim().toLowerCase();
-
-            if (
-              solicitacao.status === "APROVADO" &&
-              emailSolicitacao === emailUsuario
-            ) {
-              const lojaRef = doc(
-                db,
-                "lojas_parceiras",
-                solicitacaoId
-              );
-
-              const lojaSnapshot =
-                await getDoc(lojaRef);
-
-              if (!lojaSnapshot.exists()) {
-                await setDoc(lojaRef, {
-                  uidDono: usuario.uid,
-                  nomeResponsavel:
-                    texto(solicitacao.nomeResponsavel) ||
-                    usuario.displayName ||
-                    "",
-                  emailDono:
-                    emailUsuario,
-                  nome:
-                    texto(solicitacao.nomeNegocio),
-                  titulo:
-                    texto(solicitacao.nomeNegocio),
-                  subtitulo:
-                    texto(solicitacao.tipoNegocio),
-                  descricao:
-                    texto(solicitacao.descricao),
-                  tipo:
-                    tipoValido(
-                      texto(solicitacao.tipoNegocio)
-                        .toLowerCase()
-                        .normalize("NFD")
-                        .replace(/[\u0300-\u036f]/g, "")
-                        .replace(/ç/g, "c")
-                        .replace(/[^a-z]/g, "")
-                    ),
-                  telefone:
-                    texto(solicitacao.telefone),
-                  whatsapp:
-                    texto(solicitacao.whatsapp),
-                  tipoPresenca:
-                    "pagina_sobradao",
-                  destinoDescricao:
-                    "",
-                  siteUrl:
-                    texto(solicitacao.site),
-                  imagemUrl:
-                    "",
-                  bannerUrl:
-                    "",
-                  slogan:
-                    "",
-                  corMarca:
-                    "#0f172a",
-                  ativo:
-                    true,
-                  status:
-                    "APROVADO",
-                  temLojaCriada:
-                    false,
-                  linkLoja:
-                    "",
-                  plano:
-                    "a_definir",
-                  statusPagamento:
-                    "aguardando_pagamento",
-                  valorPlano:
-                    0,
-                  mostrarMarquee:
-                    false,
-                  mostrarCard:
-                    true,
-                  mostrarBanner:
-                    false,
-                  criadoEm:
-                    serverTimestamp(),
-                  atualizadoEm:
-                    serverTimestamp(),
-                });
-              }
-
-              snapshot = await getDocs(consulta);
-            }
-          }
-        }
-      }
+      const snapshot = await getDocs(consulta);
 
       const lista: Negocio[] = [];
 
@@ -632,25 +663,6 @@ corMarca:
       }
 
       setNegocios(lista);
-
-      // Quando o anunciante chega pelo link de aprovação enviado pelo WhatsApp,
-      // abre automaticamente a página já preenchida com os dados da solicitação.
-      const parametrosPagina = new URLSearchParams(
-        window.location.search
-      );
-      const solicitacaoIdPagina =
-        parametrosPagina.get("solicitacao");
-
-      if (solicitacaoIdPagina) {
-        const negocioAprovado =
-          lista.find(
-            (item) => item.id === solicitacaoIdPagina
-          ) || lista[0];
-
-        if (negocioAprovado) {
-          preencherFormulario(negocioAprovado);
-        }
-      }
 
       const contratosPorLoja: Record<string, ContratoAnuncio | null> = {};
 
