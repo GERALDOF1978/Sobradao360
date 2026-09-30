@@ -49,6 +49,12 @@ type Loja = {
   id: string;
   nome?: string;
   titulo?: string;
+  statusPlano?: string;
+  planoEscolhidoId?: string;
+  planoEscolhidoNome?: string;
+  planoEscolhidoValor?: number;
+  planoEscolhidoDuracaoDias?: number;
+  planoEscolhidoLimiteProdutos?: number;
 };
 
 const DURACOES = [
@@ -258,6 +264,79 @@ export default function ContratosAnuncio({
   useEffect(() => {
     void carregar();
   }, []);
+
+  const planosPendentes = useMemo(
+    () =>
+      lojas.filter(
+        (loja) =>
+          loja.statusPlano === "AGUARDANDO_CONFIRMACAO" &&
+          loja.planoEscolhidoId &&
+          loja.planoEscolhidoNome
+      ),
+    [lojas]
+  );
+
+  async function ativarPlanoEscolhido(loja: Loja) {
+    if (!loja.planoEscolhidoId || !loja.planoEscolhidoNome) {
+      alert("Esta escolha de plano está incompleta.");
+      return;
+    }
+
+    const pacoteSelecionado = pacotes.find(
+      (item) => item.id === loja.planoEscolhidoId
+    );
+
+    if (!pacoteSelecionado) {
+      alert("O pacote escolhido não está mais disponível.");
+      return;
+    }
+
+    if (!confirm("Confirmar a contratação deste plano para " + (loja.nome || loja.titulo || "este anunciante") + "?")) {
+      return;
+    }
+
+    setSalvando(true);
+
+    try {
+      const inicio = new Date();
+      const vencimento = new Date(inicio);
+      vencimento.setDate(vencimento.getDate() + pacoteSelecionado.duracaoDias);
+
+      await addDoc(collection(db, "contratos_anuncio"), {
+        lojaId: loja.id,
+        pacoteId: pacoteSelecionado.id,
+        pacoteNome: pacoteSelecionado.nome,
+        valorContratado: pacoteSelecionado.valor,
+        duracaoDias: pacoteSelecionado.duracaoDias,
+        limiteProdutos: pacoteSelecionado.limiteProdutos,
+        inicio: Timestamp.fromDate(inicio),
+        vencimento: Timestamp.fromDate(vencimento),
+        status: "ativo",
+        exibicao: { ...pacoteSelecionado.exibicaoPadrao },
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      await updateDoc(doc(db, "lojas_parceiras", loja.id), {
+        plano: pacoteSelecionado.nome,
+        valorPlano: pacoteSelecionado.valor,
+        statusPlano: "ATIVO",
+        statusPagamento: "CONFIRMADO",
+        mostrarMarquee: pacoteSelecionado.exibicaoPadrao.marquee,
+        mostrarCard: pacoteSelecionado.exibicaoPadrao.parceiros,
+        mostrarBanner: pacoteSelecionado.exibicaoPadrao.publicidade,
+        atualizadoEm: serverTimestamp(),
+      });
+
+      await carregar();
+      alert("Plano ativado e contrato criado com sucesso.");
+    } catch (error) {
+      console.error("Erro ao ativar plano escolhido:", error);
+      alert("Não foi possível ativar este plano.");
+    } finally {
+      setSalvando(false);
+    }
+  }
 
   const contratosLoja = useMemo(
     () =>
@@ -819,6 +898,45 @@ export default function ContratosAnuncio({
           </div>
 
         </div>
+      </div>
+
+      {/* ============================= */}
+      {/* ESCOLHAS DE PLANO PENDENTES */}
+      {/* ============================= */}
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-xl font-bold text-amber-950">🔔 Planos escolhidos pelos anunciantes</h2>
+          <p className="text-sm text-amber-800">
+            A escolha feita pelo anunciante aparece aqui automaticamente. O Master confere e pode ativar o contrato sem redigitar os dados.
+          </p>
+        </div>
+
+        {planosPendentes.length === 0 ? (
+          <div className="rounded-xl bg-white p-4 text-sm text-slate-500">
+            Nenhuma escolha de plano aguardando confirmação.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {planosPendentes.map((loja) => (
+              <div key={loja.id} className="rounded-2xl border border-amber-200 bg-white p-4">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base font-black text-slate-900">{loja.nome || loja.titulo || "Anunciante"}</h3>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                      <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase text-slate-400">Plano</p><p className="mt-1 text-xs font-black text-slate-800">{loja.planoEscolhidoNome}</p></div>
+                      <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase text-slate-400">Valor</p><p className="mt-1 text-xs font-black text-slate-800">{dinheiro(Number(loja.planoEscolhidoValor || 0))}</p></div>
+                      <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase text-slate-400">Duração</p><p className="mt-1 text-xs font-black text-slate-800">{loja.planoEscolhidoDuracaoDias || 0} dias</p></div>
+                      <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase text-slate-400">Produtos</p><p className="mt-1 text-xs font-black text-slate-800">Até {loja.planoEscolhidoLimiteProdutos || 0}</p></div>
+                    </div>
+                  </div>
+                  <button type="button" disabled={salvando} onClick={() => void ativarPlanoEscolhido(loja)} className="shrink-0 rounded-xl bg-emerald-700 px-5 py-3 text-xs font-black text-white hover:bg-emerald-800 disabled:opacity-50">
+                    {salvando ? "Ativando..." : "✓ Ativar plano e criar contrato"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ============================= */}
