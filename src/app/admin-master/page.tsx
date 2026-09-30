@@ -60,6 +60,13 @@ interface LojaParceira {
   statusPagamento?: string;
   valorPlano?: number;
 
+  planoEscolhidoId?: string;
+  planoEscolhidoNome?: string;
+  planoEscolhidoValor?: number;
+  planoEscolhidoDuracaoDias?: number;
+  planoEscolhidoLimiteProdutos?: number;
+  statusPlano?: string;
+
   mostrarMarquee?: boolean;
   mostrarCard?: boolean;
   mostrarBanner?: boolean;
