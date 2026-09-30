@@ -83,6 +83,13 @@ export default function LojaExplicativaPage() {
             >
               📢 Quero divulgar meu negócio
             </Link>
+
+            <Link
+              href="/planos-anunciante"
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/30 bg-white/10 px-5 py-3 text-sm font-black text-white hover:bg-white/20"
+            >
+              💳 Ver planos e condições
+            </Link>
           </div>
         </section>
 
