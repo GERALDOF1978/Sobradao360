@@ -230,8 +230,17 @@ service cloud.firestore {
     // A análise/aprovação será feita posteriormente no Master.
     // =====================================================
     match /solicitacoes_divulgacao/{solicitacaoId} {
+      // O formulário público pode criar solicitações.
       allow create: if true;
-      allow read, update, delete: if false;
+
+      // Somente o usuário Master pode consultar as solicitações.
+      allow read:
+        if request.auth != null
+        && get(
+          /databases/$(database)/documents/usuarios/$(request.auth.uid)
+        ).data.perfil == "master";
+
+      allow update, delete: if false;
     }
 
     // =====================================================
