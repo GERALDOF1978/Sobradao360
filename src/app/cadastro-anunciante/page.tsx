@@ -125,6 +125,7 @@ export default function CadastroAnunciantePage() {
 
   const [salvando, setSalvando] = useState(false);
   const [mensagem, setMensagem] = useState("");
+  const [enviado, setEnviado] = useState(false);
 
   async function cadastrar() {
     if (!user) {
@@ -291,10 +292,7 @@ export default function CadastroAnunciantePage() {
       setMensagem(
         "Cadastro enviado com sucesso! Aguarde a aprovação do Sobradão 360."
       );
-
-      setTimeout(() => {
-        router.push("/painel-anunciante");
-      }, 1500);
+      setEnviado(true);
     } catch (error) {
       console.error(
         "Erro ao cadastrar anunciante:",
@@ -353,6 +351,46 @@ export default function CadastroAnunciantePage() {
             className="mt-5 inline-block text-xs font-bold text-blue-700"
           >
             ← Voltar para o Sobradão 360
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (enviado) {
+    return (
+      <main className="min-h-screen bg-slate-100 px-4 py-10">
+        <div className="mx-auto max-w-xl rounded-3xl bg-white p-8 text-center shadow-xl">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-50 text-4xl">
+            ✅
+          </div>
+
+          <h1 className="mt-5 text-2xl font-black text-blue-950">
+            Cadastro enviado!
+          </h1>
+
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Recebemos os dados do seu negócio. Agora o Sobradão 360
+            fará a análise e a liberação da divulgação.
+          </p>
+
+          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-left">
+            <p className="text-sm font-black text-blue-950">
+              ⏳ Aguarde a liberação
+            </p>
+            <p className="mt-2 text-xs leading-5 text-slate-600">
+              Quando seu cadastro for aprovado, você receberá o link
+              para entrar no painel do anunciante. Se abrir o mesmo
+              link depois da aprovação, ele levará você diretamente
+              para o painel.
+            </p>
+          </div>
+
+          <Link
+            href="/"
+            className="mt-6 inline-block rounded-xl bg-blue-900 px-5 py-3 text-xs font-black text-white hover:bg-blue-800"
+          >
+            Voltar para o Sobradão 360
           </Link>
         </div>
       </main>
