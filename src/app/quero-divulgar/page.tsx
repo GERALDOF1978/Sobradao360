@@ -288,6 +288,17 @@ export default function QueroDivulgarPage() {
                 </div>
               </section>
 
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-950">
+                <strong>Antes de enviar:</strong> consulte os planos de divulgação,
+                limites de produtos e formas de contratação.
+                <a
+                  href="/planos-anunciante"
+                  className="ml-1 font-black underline"
+                >
+                  Ver planos e condições
+                </a>
+              </div>
+
               <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-xs leading-5 text-blue-900">
                 <strong>Como funciona:</strong> esta é apenas uma solicitação
                 de divulgação. Depois da análise, o Sobradão 360 entrará em
