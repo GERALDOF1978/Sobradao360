@@ -316,6 +316,22 @@ service cloud.firestore {
           && request.resource.data.uidDono == resource.data.uidDono
           && request.resource.data.status == resource.data.status
           && request.resource.data.ativo == resource.data.ativo
+        )
+        ||
+        (
+          request.auth != null
+          && request.resource.data.uidDono == request.auth.uid
+          && request.resource.data.status == "APROVADO"
+          && request.resource.data.ativo == true
+          && exists(
+            /databases/$(database)/documents/solicitacoes_divulgacao/$(lojaId)
+          )
+          && get(
+            /databases/$(database)/documents/solicitacoes_divulgacao/$(lojaId)
+          ).data.status == "APROVADO"
+          && get(
+            /databases/$(database)/documents/solicitacoes_divulgacao/$(lojaId)
+          ).data.email == request.auth.token.email
         );
 
       allow delete:
