@@ -51,6 +51,7 @@ export default function PlanosAnunciantePage() {
         const lista = snapshot.docs
           .map((item: { id: string; data: () => Record<string, unknown> }) => {
             const dados = item.data();
+            const exibicao = (dados.exibicaoPadrao ?? {}) as Record<string, unknown>;
 
             return {
               id: item.id,
@@ -59,10 +60,10 @@ export default function PlanosAnunciantePage() {
               duracaoDias: Number(dados.duracaoDias || 0),
               limiteProdutos: Number(dados.limiteProdutos || 0),
               exibicaoPadrao: {
-                marquee: dados.exibicaoPadrao?.marquee === true,
-                publicidade: dados.exibicaoPadrao?.publicidade === true,
-                destaques: dados.exibicaoPadrao?.destaques === true,
-                parceiros: dados.exibicaoPadrao?.parceiros === true,
+                marquee: exibicao.marquee === true,
+                publicidade: exibicao.publicidade === true,
+                destaques: exibicao.destaques === true,
+                parceiros: exibicao.parceiros === true,
               },
               ativo: dados.ativo !== false,
             };
