@@ -476,7 +476,20 @@ service cloud.firestore {
 
     match /contratos_anuncio/{contratoId} {
 
-      allow read, create, update, delete:
+      // Master pode administrar todos os contratos.
+      // O anunciante pode consultar somente contratos da própria loja.
+      allow read:
+        if isMaster()
+        ||
+        (
+          request.auth != null
+          && resource.data.lojaId != null
+          && get(
+            /databases/$(database)/documents/lojas_parceiras/$(resource.data.lojaId)
+          ).data.uidDono == request.auth.uid
+        );
+
+      allow create, update, delete:
         if isMaster();
     }
 
