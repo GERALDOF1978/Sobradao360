@@ -559,6 +559,25 @@ corMarca:
 
       setNegocios(lista);
 
+      // Quando o anunciante chega pelo link de aprovação enviado pelo WhatsApp,
+      // abre automaticamente a página já preenchida com os dados da solicitação.
+      const parametrosPagina = new URLSearchParams(
+        window.location.search
+      );
+      const solicitacaoIdPagina =
+        parametrosPagina.get("solicitacao");
+
+      if (solicitacaoIdPagina) {
+        const negocioAprovado =
+          lista.find(
+            (item) => item.id === solicitacaoIdPagina
+          ) || lista[0];
+
+        if (negocioAprovado) {
+          preencherFormulario(negocioAprovado);
+        }
+      }
+
       const contratosPorLoja: Record<string, ContratoAnuncio | null> = {};
 
       await Promise.all(
@@ -1238,6 +1257,22 @@ corMarca:
                     aparecerão para os moradores.
                   </p>
 
+                </div>
+
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                  <label className="text-xs font-black text-amber-900">
+                    E-mail da conta
+                  </label>
+
+                  <input
+                    value={usuario?.email || ""}
+                    readOnly
+                    className="mt-1 w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none"
+                  />
+
+                  <p className="mt-1 text-[11px] text-amber-800">
+                    Este e-mail está vinculado à sua conta de acesso e não pode ser alterado aqui.
+                  </p>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
