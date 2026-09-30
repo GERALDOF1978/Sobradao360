@@ -181,6 +181,17 @@ export default function AdminMasterPage() {
 
   const [lojas, setLojas] = useState<LojaParceira[]>([]);
 
+  const [contratosMaster, setContratosMaster] = useState<Record<string, {
+    pacoteNome?: string;
+    valorContratado?: number;
+    duracaoDias?: number;
+    limiteProdutos?: number;
+    inicio?: unknown;
+    vencimento?: unknown;
+    status?: string;
+    exibicao?: { marquee?: boolean; publicidade?: boolean; destaques?: boolean; parceiros?: boolean };
+  }>>({});
+
   const [selecionada, setSelecionada] =
     useState<LojaParceira | null>(null);
 
@@ -246,6 +257,7 @@ export default function AdminMasterPage() {
         setAutorizado(true);
 
         await carregarLojas();
+        await carregarContratosMaster();
         await carregarSolicitacoes();
       } catch (error: unknown) {
         console.error(
@@ -341,6 +353,28 @@ export default function AdminMasterPage() {
         "Erro ao carregar lojas parceiras:",
         error
       );
+    }
+  }
+
+  async function carregarContratosMaster() {
+    try {
+      const snapshot = await getDocs(collection(db, "contratos_anuncio"));
+      const mapa: Record<string, {
+        pacoteNome?: string; valorContratado?: number; duracaoDias?: number;
+        limiteProdutos?: number; inicio?: unknown; vencimento?: unknown;
+        status?: string; exibicao?: { marquee?: boolean; publicidade?: boolean; destaques?: boolean; parceiros?: boolean };
+      }> = {};
+
+      snapshot.docs.forEach((item) => {
+        const d = item.data() as any;
+        if (!d.lojaId) return;
+        if (!mapa[d.lojaId] || String(d.status || "").toLowerCase() === "ativo") {
+          mapa[d.lojaId] = d;
+        }
+      });
+      setContratosMaster(mapa);
+    } catch (error) {
+      console.error("Erro ao carregar contratos para o Master:", error);
     }
   }
 
@@ -1304,6 +1338,46 @@ export default function AdminMasterPage() {
 
             <div className="space-y-4 text-sm">
 
+              {(() => {
+                const contrato = contratosMaster[selecionada.id];
+                const valor = contrato?.valorContratado ?? selecionada.valorPlano;
+                return (
+                  <>
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-black uppercase tracking-wider text-amber-700">Plano / contrato</p>
+                          <h3 className="mt-1 text-xl font-black text-slate-900">
+                            {contrato?.pacoteNome || selecionada.plano || "Sem contrato"}
+                          </h3>
+                        </div>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-700">
+                          {contrato?.status || selecionada.statusPlano || "Sem contrato"}
+                        </span>
+                      </div>
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div><span className="text-xs text-slate-500">Valor</span><div className="font-black">{valor != null ? Number(valor).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : "-"}</div></div>
+                        <div><span className="text-xs text-slate-500">Início</span><div className="font-bold">{formatarData(contrato?.inicio)}</div></div>
+                        <div><span className="text-xs text-slate-500">Válido até</span><div className="font-bold">{formatarData(contrato?.vencimento)}</div></div>
+                        <div><span className="text-xs text-slate-500">Produtos</span><div className="font-bold">Até {contrato?.limiteProdutos ?? selecionada.planoEscolhidoLimiteProdutos ?? "-"}</div></div>
+                      </div>
+                      <div className="mt-4 border-t border-amber-200 pt-3">
+                        <p className="mb-2 text-xs font-black uppercase text-slate-500">Onde será anunciado</p>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            ["Marquee", contrato?.exibicao?.marquee ?? selecionada.mostrarMarquee],
+                            ["Banner", contrato?.exibicao?.publicidade ?? selecionada.mostrarBanner],
+                            ["Destaques", contrato?.exibicao?.destaques],
+                            ["Parceiros", contrato?.exibicao?.parceiros ?? selecionada.mostrarCard],
+                          ].map(([nome, ativo]) => (
+                            <span key={String(nome)} className={ativo ? "rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700" : "rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-400"}>
+                              {ativo ? "✓ " : "○ "}{String(nome)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
               <div className="rounded-xl bg-slate-50 p-4">
 
                 <h3 className="mb-2 font-bold text-slate-800">
@@ -1402,6 +1476,10 @@ export default function AdminMasterPage() {
 
                 </div>
               )}
+
+                  </>
+                );
+              })()}
 
             </div>
 
