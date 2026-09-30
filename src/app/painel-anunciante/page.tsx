@@ -1132,6 +1132,52 @@ corMarca:
 
         </section>
 
+        {negocios.length > 0 && (
+          <nav
+            aria-label="Menu do anunciante"
+            className="sticky top-2 z-20 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-lg backdrop-blur"
+          >
+            <div className="flex gap-2 overflow-x-auto">
+              <a
+                href="#minha-empresa"
+                className="shrink-0 rounded-xl bg-blue-900 px-4 py-2.5 text-xs font-black text-white"
+              >
+                🏠 Início
+              </a>
+              <a
+                href="#minha-pagina"
+                className="shrink-0 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-200"
+              >
+                ✏️ Minha página
+              </a>
+              <a
+                href="#identidade"
+                className="shrink-0 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-200"
+              >
+                🎨 Identidade
+              </a>
+              <a
+                href="#contrato"
+                className="shrink-0 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-200"
+              >
+                📋 Contrato
+              </a>
+              <a
+                href="#catalogo"
+                className="shrink-0 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-200"
+              >
+                {negocios[0]?.tipo === "loja" || negocios[0]?.tipo === "alimentacao" ? "🛍️ Produtos" : "🔧 Serviços"}
+              </a>
+              <a
+                href="#divulgacao"
+                className="shrink-0 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-200"
+              >
+                📢 Divulgação
+              </a>
+            </div>
+          </nav>
+        )}
+
         {mensagem && (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-800">
             {mensagem}
@@ -1144,7 +1190,10 @@ corMarca:
           </div>
         )}
 
-        <section className="rounded-3xl bg-white p-5 shadow-sm">
+        <section
+          id="minha-empresa"
+          className="rounded-3xl bg-white p-5 shadow-sm"
+        >
 
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 
@@ -1173,6 +1222,7 @@ corMarca:
           {mostrarCadastro &&
             negocioEditando && (
               <form
+                id="minha-pagina"
                 onSubmit={salvarNegocio}
                 className="mt-5 space-y-5 rounded-2xl border border-blue-100 bg-blue-50 p-5"
               >
@@ -1661,6 +1711,7 @@ corMarca:
                         )}
 
                       </div>
+                      <div id={negocio.id === negocios[0]?.id ? "identidade" : undefined}>
                       <IdentidadeAnunciante
   lojaId={negocio.id}
   nome={negocio.nome}
@@ -1800,11 +1851,13 @@ corMarca:
                         })()}
                       </div>
 
+                      <div id={negocio.id === negocios[0]?.id ? "catalogo" : undefined}>
                       <GerenciadorProdutos
                         lojaId={negocio.id}
                         tipoNegocio={negocio.tipo}
                         limiteProdutos={contratos[negocio.id]?.limiteProdutos || 0}
                       />
+                      </div>
 
                     </div>
                   );
@@ -1817,7 +1870,10 @@ corMarca:
 
         </section>
 
-        <section className="rounded-3xl border border-blue-100 bg-blue-50 p-5">
+        <section
+          id="divulgacao"
+          className="rounded-3xl border border-blue-100 bg-blue-50 p-5"
+        >
 
           <h2 className="text-sm font-black text-blue-950">
             🚀 Área comercial
