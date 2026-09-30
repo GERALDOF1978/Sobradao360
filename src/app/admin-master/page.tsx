@@ -123,6 +123,13 @@ const FILTROS = [
   { valor: "SUSPENSO", texto: "Suspensos" },
 ];
 
+const FILTROS_SOLICITACOES = [
+  { valor: "todos", texto: "Todas" },
+  { valor: "PENDENTE", texto: "Pendentes" },
+  { valor: "APROVADO", texto: "Aprovadas" },
+  { valor: "RECUSADO", texto: "Recusadas" },
+];
+
 function formatarData(valor: unknown): string {
   if (!valor) {
     return "-";
@@ -174,6 +181,7 @@ export default function AdminMasterPage() {
     useState<string | null>(null);
 
   const [filtro, setFiltro] = useState("todos");
+  const [filtroSolicitacao, setFiltroSolicitacao] = useState("todos");
 
   const [menuAberto, setMenuAberto] = useState("anunciantes");
 
@@ -349,6 +357,37 @@ export default function AdminMasterPage() {
         "Erro ao carregar solicitações de divulgação:",
         error
       );
+    }
+  }
+
+  async function atualizarStatusSolicitacao(
+    id: string,
+    status: "APROVADO" | "RECUSADO"
+  ) {
+    setProcessando(id);
+
+    try {
+      const solicitacaoRef = doc(
+        db,
+        "solicitacoes_divulgacao",
+        id
+      );
+
+      await updateDoc(solicitacaoRef, {
+        status,
+        atualizadoEm: serverTimestamp(),
+      });
+
+      setSolicitacoes((lista) =>
+        lista.map((item) =>
+          item.id === id ? { ...item, status } : item
+        )
+      );
+    } catch (error: unknown) {
+      console.error("Erro ao atualizar solicitação:", error);
+      alert("Não foi possível atualizar esta solicitação.");
+    } finally {
+      setProcessando(null);
     }
   }
 
@@ -734,9 +773,30 @@ export default function AdminMasterPage() {
                     Pedidos enviados pelo formulário Quero divulgar meu negócio.
                   </p>
                 </div>
-                <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">
-                  {solicitacoes.length} solicitação(ões)
-                </span>
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">
+                    {solicitacoes.filter((item) => (item.status || "PENDENTE") === "PENDENTE").length} pendente(s)
+                  </span>
+                  <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-black text-green-700">
+                    {solicitacoes.filter((item) => item.status === "APROVADO").length} aprovada(s)
+                  </span>
+                  <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-black text-red-700">
+                    {solicitacoes.filter((item) => item.status === "RECUSADO").length} recusada(s)
+                  </span>
+                </div>
+              </div>
+
+              <div className="mb-4 flex flex-wrap gap-2">
+                {FILTROS_SOLICITACOES.map((filtroItem) => (
+                  <button
+                    key={filtroItem.valor}
+                    type="button"
+                    onClick={() => setFiltroSolicitacao(filtroItem.valor)}
+                    className={`rounded-xl px-4 py-2 text-xs font-bold transition ${filtroSolicitacao === filtroItem.valor ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                  >
+                    {filtroItem.texto}
+                  </button>
+                ))}
               </div>
 
               {solicitacoes.length === 0 ? (
@@ -745,7 +805,13 @@ export default function AdminMasterPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {solicitacoes.map((item) => (
+                  {solicitacoes
+                    .filter((item) =>
+                      filtroSolicitacao === "todos"
+                        ? true
+                        : (item.status || "PENDENTE") === filtroSolicitacao
+                    )
+                    .map((item) => (
                     <article
                       key={item.id}
                       className="rounded-xl border border-slate-200 p-4"
@@ -786,6 +852,30 @@ export default function AdminMasterPage() {
                           {item.observacoes && <div><strong>Observações:</strong> {item.observacoes}</div>}
                         </div>
                       )}
+
+                      <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+                        {item.status !== "APROVADO" && (
+                          <button
+                            type="button"
+                            disabled={processando === item.id}
+                            onClick={() => atualizarStatusSolicitacao(item.id, "APROVADO")}
+                            className="rounded-xl bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+                          >
+                            {processando === item.id ? "..." : "✓ Aprovar solicitação"}
+                          </button>
+                        )}
+
+                        {item.status !== "RECUSADO" && (
+                          <button
+                            type="button"
+                            disabled={processando === item.id}
+                            onClick={() => atualizarStatusSolicitacao(item.id, "RECUSADO")}
+                            className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                          >
+                            {processando === item.id ? "..." : "✕ Recusar"}
+                          </button>
+                        )}
+                      </div>
                     </article>
                   ))}
                 </div>
