@@ -347,7 +347,7 @@ export default function AdminMasterPage() {
       );
 
       setSolicitacoes(
-        snapshot.docs.map((item) => ({
+        snapshot.docs.map((item: (typeof snapshot.docs)[number]) => ({
           id: item.id,
           ...(item.data() as Omit<SolicitacaoDivulgacao, "id">),
         }))
