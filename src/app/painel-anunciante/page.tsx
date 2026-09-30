@@ -480,38 +480,12 @@ export default function PainelAnunciantePage() {
                 texto(solicitacao.whatsapp),
               tipoPresenca:
                 "pagina_sobradao",
-              destinoDescricao:
-                "" ,
               siteUrl:
                 texto(solicitacao.site),
-              imagemUrl:
-                "" ,
-              bannerUrl:
-                "" ,
-              slogan:
-                "" ,
-              corMarca:
-                "#0f172a",
               ativo:
                 true,
               status:
                 "APROVADO",
-              temLojaCriada:
-                false,
-              linkLoja:
-                "" ,
-              plano:
-                "a_definir",
-              statusPagamento:
-                "aguardando_pagamento",
-              valorPlano:
-                0,
-              mostrarMarquee:
-                false,
-              mostrarCard:
-                true,
-              mostrarBanner:
-                false,
               atualizadoEm:
                 serverTimestamp(),
             },
