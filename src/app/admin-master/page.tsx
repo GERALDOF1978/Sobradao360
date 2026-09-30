@@ -391,6 +391,59 @@ export default function AdminMasterPage() {
     }
   }
 
+  function enviarAprovacaoWhatsApp(item: SolicitacaoDivulgacao) {
+    const numero = limparWhatsapp(item.whatsapp || "");
+
+    if (!numero) {
+      alert("Esta solicitação não possui um WhatsApp válido.");
+      return;
+    }
+
+    const origem =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "https://sobradao360-sgvm.vercel.app";
+
+    const linkPainel =
+      origem + "/painel-anunciante?solicitacao=" + encodeURIComponent(item.id);
+
+    const linkPlanos =
+      origem + "/planos-anunciante";
+
+    const mensagem = [
+      "Olá, " + (item.nomeResponsavel || "") + "!",
+      "",
+      "Sua solicitação para divulgar o negócio " +
+        (item.nomeNegocio || "") +
+        " no Sobradão 360 foi APROVADA. ✅",
+      "",
+      "Para continuar:",
+      "1. Acesse o painel do anunciante pelo link abaixo.",
+      "2. Entre com o Google usando o MESMO e-mail informado no cadastro.",
+      "3. Depois do acesso, sua página será vinculada ao seu painel.",
+      "4. No painel você poderá completar os dados do negócio e cadastrar produtos ou serviços.",
+      "",
+      "🔐 Painel do anunciante:",
+      linkPainel,
+      "",
+      "💳 Veja os planos, limites e condições:",
+      linkPlanos,
+      "",
+      "O pagamento e a ativação comercial serão tratados conforme o plano escolhido.",
+      "",
+      "Sobradão 360"
+    ].join("\n");
+
+    window.open(
+      "https://wa.me/55" +
+        numero +
+        "?text=" +
+        encodeURIComponent(mensagem),
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+
   async function aprovarLoja(id: string) {
     setProcessando(id);
 
@@ -874,6 +927,27 @@ export default function AdminMasterPage() {
                           >
                             {processando === item.id ? "..." : "✕ Recusar"}
                           </button>
+                        )}
+
+                        {item.status === "APROVADO" && (
+                          <button
+                            type="button"
+                            onClick={() => enviarAprovacaoWhatsApp(item)}
+                            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700"
+                          >
+                            📲 Enviar aprovação pelo WhatsApp
+                          </button>
+                        )}
+
+                        {item.status === "APROVADO" && (
+                          <a
+                            href="/planos-anunciante"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-xl bg-amber-100 px-4 py-2 text-sm font-bold text-amber-900 hover:bg-amber-200"
+                          >
+                            💳 Ver planos
+                          </a>
                         )}
                       </div>
                     </article>
