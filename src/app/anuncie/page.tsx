@@ -418,12 +418,11 @@ export default function AnunciePage() {
       return;
     }
 
-    if (
-      modo === "anuncio" &&
-      !subCategoria
-    ) {
+    if (!subCategoria) {
       alert(
-        "Escolha uma categoria para o anúncio."
+        modo === "post"
+          ? "Escolha uma categoria para sua publicação."
+          : "Escolha uma categoria para o anúncio."
       );
       return;
     }
@@ -442,10 +441,7 @@ export default function AnunciePage() {
     setSalvando(true);
 
     try {
-      const categoriaPublicacao =
-        modo === "post"
-          ? "Notícias"
-          : subCategoria;
+      const categoriaPublicacao = subCategoria;
 
       const anuncioRef =
         await addDoc(
@@ -923,6 +919,29 @@ export default function AnunciePage() {
                 >
 
                   {/* TÍTULO */}
+
+                  {modo === "post" && (
+                    <div>
+                      <label className="text-xs font-black text-slate-700">
+                        Categoria da publicação
+                      </label>
+                      <select
+                        value={subCategoria}
+                        onChange={(e) => setSubCategoria(e.target.value)}
+                        className="w-full mt-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-3 text-sm text-slate-900 focus:outline-none focus:border-amber-400"
+                      >
+                        <option value="">Selecione uma categoria</option>
+                        {subcategorias.map((cat) => (
+                          <option key={cat.id} value={cat.nome}>
+                            {cat.icone} {cat.nome}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-[10px] text-slate-500">
+                        A mesma categoria será usada no Mural da Comunidade para facilitar a busca.
+                      </p>
+                    </div>
+                  )}
 
                   <div>
 
