@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { collection, getDocs, query, orderBy, updateDoc, doc, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, getDoc, getDocs, query, orderBy, updateDoc, doc, addDoc, serverTimestamp } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "@/lib/firebase";
 
@@ -18,6 +18,7 @@ type Solicitacao = {
   instagram?: string;
   site?: string;
   autorNome?: string;
+  autorUid?: string;
   status?: string;
   createdAt?: unknown;
 };
@@ -47,9 +48,8 @@ export default function TelefonesMasterPage() {
         return;
       }
       try {
-        const usuarioDoc = await getDocs(query(collection(db, "usuarios")));
-        const encontrado = usuarioDoc.docs.find((item) => item.id === usuario.uid);
-        if (encontrado?.data()?.perfil === "master") {
+        const encontrado = await getDoc(doc(db, "usuarios", usuario.uid));
+        if (encontrado.exists() && encontrado.data()?.perfil === "master") {
           setAutorizado(true);
           await carregar();
         }
