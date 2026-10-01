@@ -27,40 +27,21 @@ export default function MiniCardsAnuncio() {
   useEffect(() => {
     async function carregar() {
       try {
-        const [lojasSnapshot, contratosSnapshot] = await Promise.all([
-          getDocs(query(collection(db, "lojas_parceiras"), where("ativo", "==", true))),
-          getDocs(query(collection(db, "contratos_anuncio"), where("status", "==", "ativo"))),
-        ]);
+        const lojasSnapshot = await getDocs(
+          query(collection(db, "lojas_parceiras"), where("ativo", "==", true))
+        );
 
-        const lojas = new Map<string, Record<string, unknown>>();
-        lojasSnapshot.docs.forEach((item) => lojas.set(item.id, item.data() as Record<string, unknown>));
-
-        const agora = new Date();
-        const lista: CardAnuncio[] = [];
-
-        contratosSnapshot.docs.forEach((item) => {
-          const contrato = item.data() as Record<string, unknown>;
-          const lojaId = typeof contrato.lojaId === "string" ? contrato.lojaId : "";
-          const loja = lojas.get(lojaId);
-          if (!loja) return;
-
-          const bannerUrl = typeof loja.bannerUrl === "string" ? loja.bannerUrl : "";
-          const nome = typeof loja.nome === "string" ? loja.nome : "";
-          if (!bannerUrl && !nome) return;
-
-          const inicio = dataTimestamp(contrato.inicio);
-          const vencimento = dataTimestamp(contrato.vencimento);
-          if (inicio && inicio > agora) return;
-          if (vencimento && vencimento < agora) return;
-
-          const exibicao = contrato.exibicao;
-          if (exibicao && typeof exibicao === "object") {
-            const dados = exibicao as Record<string, unknown>;
-            if (dados.publicidade !== true && dados.destaques !== true && dados.parceiros !== true) return;
-          }
-
-          lista.push({ id: item.id, lojaId, nome, bannerUrl });
-        });
+        const lista: CardAnuncio[] = lojasSnapshot.docs
+          .map((item) => {
+            const loja = item.data() as Record<string, unknown>;
+            return {
+              id: item.id,
+              lojaId: item.id,
+              nome: typeof loja.nome === "string" ? loja.nome : "",
+              bannerUrl: typeof loja.bannerUrl === "string" ? loja.bannerUrl : "",
+            };
+          })
+          .filter((item) => item.nome || item.bannerUrl);
 
         setCards(lista.slice(0, 4));
       } catch (erro) {
