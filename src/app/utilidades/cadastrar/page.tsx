@@ -8,9 +8,8 @@ type AuthUsuario = {
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 
 const CATEGORIAS = ["Serviços","Comércio","Alimentação","Construção e Reformas","Automotivo","Saúde e Bem-estar","Pet","Beleza","Educação","Tecnologia","Eventos","Profissional","Outros"];
 
@@ -36,17 +35,25 @@ export default function CadastrarContatoPage() {
     if (!form.nome.trim() || !form.servico.trim() || !form.telefone.trim()) { setMensagem("Preencha nome/empresa, serviço e telefone."); return; }
     setEnviando(true);
     try {
-      await addDoc(collection(db,"solicitacoes_telefones"), {
-        nome:form.nome.trim(), servico:form.servico.trim(), categoria:form.categoria,
-        telefone:form.telefone.trim(), whatsapp:form.whatsapp, bairro:form.bairro.trim(),
-        descricao:form.descricao.trim(), instagram:form.instagram.trim(), site:form.site.trim(),
-        autorUid:uid, autorNome:nomeUsuario, status:"PENDENTE", createdAt:serverTimestamp()
+      const usuario = auth.currentUser;
+      if (!usuario) throw new Error("Sessão não encontrada. Entre novamente.");
+      const token = await usuario.getIdToken();
+      const resposta = await fetch("/api/telefones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(form),
       });
+      const texto = await resposta.text();
+      let resultado: { success?: boolean; error?: string } = {};
+      try { resultado = texto ? JSON.parse(texto) : {}; } catch {}
+      if (!resposta.ok || !resultado.success) {
+        throw new Error(resultado.error || `Erro HTTP ${resposta.status} ao cadastrar.`);
+      }
       setForm({nome:"",servico:"",categoria:"Serviços",telefone:"",whatsapp:false,bairro:"",descricao:"",instagram:"",site:""});
       setMensagem("Cadastro enviado! Ele ficará aguardando aprovação antes de aparecer nos Telefones Úteis.");
     } catch (error) {
       console.error("Erro ao cadastrar contato:",error);
-      setMensagem("Não foi possível enviar o cadastro. Tente novamente.");
+      setMensagem(error instanceof Error ? error.message : "Não foi possível enviar o cadastro. Tente novamente.");
     } finally { setEnviando(false); }
   }
 

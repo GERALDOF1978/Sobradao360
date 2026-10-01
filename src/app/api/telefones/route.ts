@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 export async function GET() {
   try {
@@ -683,24 +684,29 @@ export async function GET() {
       }
     ];
 
-    const comunidadeSnapshot = await adminDb
-      .collection("telefones")
-      .where("status", "==", "APROVADO")
-      .get();
+    // A lista oficial fixa deve continuar funcionando mesmo se o Firestore
+    // estiver temporariamente indisponível.
+    try {
+      const comunidadeSnapshot = await adminDb
+        .collection("telefones")
+        .where("status", "==", "APROVADO")
+        .get();
 
-    comunidadeSnapshot.docs.forEach((doc) => {
-      const dados = doc.data();
-
-      telefonesUteis.push({
-        id: doc.id,
-        titulo: dados.nome || "Contato da comunidade",
-        categoria: dados.categoria || "Serviços",
-        telefone: dados.telefone || "",
-        horario: dados.horario || "—",
-        icone: dados.icone || "📞",
-        isWhatsapp: dados.whatsapp === true,
+      comunidadeSnapshot.docs.forEach((doc) => {
+        const dados = doc.data();
+        telefonesUteis.push({
+          id: doc.id,
+          titulo: dados.nome || "Contato da comunidade",
+          categoria: dados.categoria || "Serviços",
+          telefone: dados.telefone || "",
+          horario: dados.horario || "—",
+          icone: dados.icone || "📞",
+          isWhatsapp: dados.whatsapp === true,
+        });
       });
-    });
+    } catch (firestoreError) {
+      console.error("Erro ao carregar telefones aprovados do Firestore:", firestoreError);
+    }
 
     return NextResponse.json({
       success: true,
@@ -718,5 +724,48 @@ export async function GET() {
         status: 500
       }
     );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const autorizacao = request.headers.get("authorization") || "";
+    if (!autorizacao.startsWith("Bearer ")) {
+      return NextResponse.json({ success: false, error: "Entre na sua conta para cadastrar." }, { status: 401 });
+    }
+
+    const decoded = await adminAuth.verifyIdToken(autorizacao.slice(7).trim());
+    const dados = await request.json();
+    const nome = String(dados.nome || "").trim();
+    const servico = String(dados.servico || "").trim();
+    const telefone = String(dados.telefone || "").trim();
+
+    if (!nome || !servico || !telefone) {
+      return NextResponse.json({ success: false, error: "Preencha nome/empresa, serviço e telefone." }, { status: 400 });
+    }
+
+    const ref = await adminDb.collection("solicitacoes_telefones").add({
+      nome,
+      servico,
+      categoria: String(dados.categoria || "Serviços"),
+      telefone,
+      whatsapp: dados.whatsapp === true,
+      bairro: String(dados.bairro || "").trim(),
+      descricao: String(dados.descricao || "").trim(),
+      instagram: String(dados.instagram || "").trim(),
+      site: String(dados.site || "").trim(),
+      autorUid: decoded.uid,
+      autorNome: decoded.name || decoded.email?.split("@")[0] || "Morador",
+      status: "PENDENTE",
+      createdAt: FieldValue.serverTimestamp(),
+    });
+
+    return NextResponse.json({ success: true, id: ref.id });
+  } catch (error) {
+    console.error("Erro no cadastro de telefone:", error);
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : "Não foi possível cadastrar o telefone.",
+    }, { status: 500 });
   }
 }

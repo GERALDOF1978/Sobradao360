@@ -313,7 +313,7 @@ export default function AdminMasterPage() {
 
       if (!response.ok || !resultado.success) {
         throw new Error(
-          resultado.mensagem || "Não foi possível atualizar as vagas."
+          resultado.erro || resultado.mensagem || "Não foi possível atualizar as vagas."
         );
       }
 
