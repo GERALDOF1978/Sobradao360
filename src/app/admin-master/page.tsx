@@ -11,7 +11,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, type User } from "firebase/auth";
 
 
 import { db } from "@/lib/firebase";

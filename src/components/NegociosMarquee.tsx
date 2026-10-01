@@ -51,7 +51,7 @@ export default function NegociosMarquee() {
 
         const contratosMarquee = new Set<string>();
 
-        contratosSnapshot.docs.forEach((contratoDoc: typeof contratosSnapshot.docs[number]) => {
+        contratosSnapshot.docs.forEach((contratoDoc) => {
           const contrato = contratoDoc.data() as Record<string, unknown>;
           const exibicao =
             contrato.exibicao && typeof contrato.exibicao === "object"
