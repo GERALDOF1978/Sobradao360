@@ -8,8 +8,8 @@ export default function Page() {
         <article className="mt-4 rounded-3xl bg-white p-5 shadow-sm sm:p-8">
           <div className="border-b border-slate-100 pb-5">
             <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Sobradão 360</div>
-            <h1 className="mt-1 text-2xl font-black text-slate-900">{title}</h1>
-            <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
+            <h1 className="mt-1 text-2xl font-black text-slate-900">Regras da Comunidade</h1>
+            <p className="mt-2 text-sm text-slate-500">Orientações para manter o Mural da Comunidade útil e respeitoso.</p>
           </div>
           <div className="mt-6 space-y-6 text-sm leading-7 text-slate-600">
             <section><h2 className="mb-2 text-base font-black text-slate-800">1. Respeito</h2><p className="whitespace-pre-line">Não publique ameaças, perseguição, assédio, discriminação, ofensas ou conteúdo destinado a intimidar outras pessoas.</p></section>
