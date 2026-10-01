@@ -198,6 +198,9 @@ export default function AdminMasterPage() {
   const [processando, setProcessando] =
     useState<string | null>(null);
 
+  const [sincronizandoVagas, setSincronizandoVagas] =
+    useState(false);
+
   const [filtro, setFiltro] = useState("todos");
   const [filtroSolicitacao, setFiltroSolicitacao] = useState("todos");
 
@@ -273,6 +276,53 @@ export default function AdminMasterPage() {
 
     return () => cancelar();
   }, []);
+
+  async function sincronizarVagasTrampolim() {
+    if (sincronizandoVagas) return;
+
+    setSincronizandoVagas(true);
+
+    try {
+      const auth = getAuth();
+      const usuario = auth.currentUser;
+
+      if (!usuario) {
+        alert("Sessão do Master não encontrada. Entre novamente.");
+        return;
+      }
+
+      const token = await usuario.getIdToken();
+
+      const response = await fetch("/api/sincronizar-vagas", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const resultado = await response.json();
+
+      if (!response.ok || !resultado.success) {
+        throw new Error(
+          resultado.mensagem || "Não foi possível atualizar as vagas."
+        );
+      }
+
+      alert(
+        `Trampolim atualizado com sucesso!\\n\\nNovas: ${resultado.novas}\\nAtualizadas: ${resultado.atualizadas}\\nIgnoradas: ${resultado.ignoradas}`
+      );
+    } catch (error) {
+      console.error("Erro ao sincronizar vagas do Trampolim:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível atualizar as vagas do Trampolim."
+      );
+    } finally {
+      setSincronizandoVagas(false);
+    }
+  }
 
   async function carregarLojas() {
     try {
@@ -825,6 +875,27 @@ export default function AdminMasterPage() {
                 </div>
               </button>
             ))}
+          </div>
+        </section>
+
+        <section className="mb-6">
+          <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="text-sm font-black text-indigo-950">💼 Atualização de vagas</div>
+                <p className="mt-1 text-xs leading-relaxed text-indigo-800">
+                  Atualize manualmente as vagas do Trampolim / PAT. A integração já está preparada para futuramente ser automatizada pelo n8n.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={sincronizarVagasTrampolim}
+                disabled={sincronizandoVagas}
+                className="rounded-xl bg-indigo-700 px-4 py-2.5 text-xs font-black text-white shadow-sm hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {sincronizandoVagas ? "⏳ Atualizando..." : "🔄 Atualizar Trampolim"}
+              </button>
+            </div>
           </div>
         </section>
 
