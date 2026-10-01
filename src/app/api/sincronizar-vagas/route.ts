@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminAuth, adminDb } from "@/lib/firebase-admin";
 
 const TRAMPOLIM_API =
   "https://www.trampolim.sp.gov.br/api/v1/vacancy-allowany/search/";
@@ -9,7 +9,7 @@ const COLECAO = "vagas";
 
 const PAGE_LIMIT = 50;
 
-export async function GET() {
+async function executarSincronizacao() {
   const inicio = Date.now();
 
   let pagina = 1;
@@ -249,6 +249,47 @@ export async function GET() {
       {
         status: 500,
       }
+    );
+  }
+}
+
+export async function GET() {
+  return executarSincronizacao();
+}
+
+export async function POST(request: Request) {
+  try {
+    const autorizacao = request.headers.get("authorization") || "";
+
+    if (!autorizacao.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { success: false, mensagem: "Autenticação necessária." },
+        { status: 401 }
+      );
+    }
+
+    const token = autorizacao.slice("Bearer ".length).trim();
+    const decoded = await adminAuth.verifyIdToken(token);
+
+    const usuarioMaster = await adminDb
+      .collection("usuarios")
+      .doc(decoded.uid)
+      .get();
+
+    if (!usuarioMaster.exists || usuarioMaster.data()?.perfil !== "master") {
+      return NextResponse.json(
+        { success: false, mensagem: "Acesso permitido somente ao Master." },
+        { status: 403 }
+      );
+    }
+
+    return executarSincronizacao();
+  } catch (error) {
+    console.error("Erro ao autorizar sincronização manual:", error);
+
+    return NextResponse.json(
+      { success: false, mensagem: "Não foi possível autorizar a sincronização." },
+      { status: 401 }
     );
   }
 }
