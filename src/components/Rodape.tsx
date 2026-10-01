@@ -48,7 +48,7 @@ export default function Rodape() {
                 💬 Falar pelo WhatsApp
               </a>
               <a
-                href="mailto:sobradoa360@gmail.com"
+                href="mailto:sobradao360@gmail.com"
                 className="hover:text-white"
               >
                 ✉️ sobradao360@gmail.com
@@ -72,7 +72,7 @@ export default function Rodape() {
               💬 WhatsApp
             </a>
             <a
-              href="mailto:sobradoa360@gmail.com"
+              href="mailto:sobradao360@gmail.com"
               className="rounded-xl border border-slate-700 px-4 py-2 text-[11px] font-black text-slate-200 hover:bg-slate-900"
             >
               ✉️ E-mail
