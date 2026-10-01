@@ -39,6 +39,21 @@ const subcategorias = [
   },
 ];
 
+const categoriasBairro = [
+  { id: "buraco-rua", nome: "Buraco / Rua", icone: "🕳️" },
+  { id: "iluminacao", nome: "Iluminação pública", icone: "💡" },
+  { id: "falta-agua", nome: "Falta de água", icone: "💧" },
+  { id: "internet-telefonia", nome: "Internet / Telefonia", icone: "📡" },
+  { id: "cata-entulho-lixo", nome: "Cata-entulho / Lixo", icone: "🚛" },
+  { id: "transito-sinalizacao", nome: "Trânsito / Sinalização", icone: "🚦" },
+  { id: "abandono-imovel", nome: "Abandono / Imóvel", icone: "🏚️" },
+  { id: "arvore-praca", nome: "Árvore / Praça", icone: "🌳" },
+  { id: "barulho", nome: "Barulho / Perturbação", icone: "🔊" },
+  { id: "animais", nome: "Animais", icone: "🐕" },
+  { id: "seguranca-alerta", nome: "Segurança / Alerta", icone: "⚠️" },
+  { id: "outros-bairro", nome: "Outros assuntos do bairro", icone: "🏘️" },
+];
+
 /* =========================================================
    COMPACTAR IMAGEM
    ========================================================= */
@@ -921,14 +936,14 @@ export default function AnunciePage() {
                         className="w-full mt-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-3 text-sm text-slate-900 focus:outline-none focus:border-amber-400"
                       >
                         <option value="">Selecione uma categoria</option>
-                        {subcategorias.map((cat) => (
+                        {categoriasBairro.map((cat) => (
                           <option key={cat.id} value={cat.nome}>
                             {cat.icone} {cat.nome}
                           </option>
                         ))}
                       </select>
                       <p className="mt-1 text-[10px] text-slate-500">
-                        A mesma categoria será usada no Mural da Comunidade para facilitar a busca.
+                        A categoria será exibida no Mural da Comunidade e ajuda a organizar os assuntos do bairro.
                       </p>
                     </div>
                   )}
