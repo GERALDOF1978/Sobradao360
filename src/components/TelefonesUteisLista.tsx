@@ -45,7 +45,6 @@ export default function TelefonesUteisLista() {
       item.telefone.includes(busca);
 
     if (filtroAtivo === "Todos") return correspondeBusca;
-    if (filtroAtivo === "WhatsApp") return correspondeBusca && item.isWhatsapp;
     return correspondeBusca && item.categoria.toLowerCase().includes(filtroAtivo.toLowerCase());
   });
 
@@ -68,7 +67,10 @@ export default function TelefonesUteisLista() {
             {cat === "Internet" && "🌐 "}
             {cat === "Saúde" && "🏥 "}
             {cat === "Emergência" && "🚨 "}
-            {cat === "WhatsApp" && "💬 "}
+            {cat === "Prefeitura" && "🏛️ "}
+            {cat === "Segurança" && "🛡️ "}
+            {cat === "Transporte" && "🚌 "}
+            {cat === "Social" && "🤝 "}
             {cat}
           </button>
         ))}
@@ -124,6 +126,9 @@ export default function TelefonesUteisLista() {
                         }`}>
                           {`🕒 ${item.horario}`}
                         </span>
+                      )}
+                      {item.isWhatsapp && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-800">💬 WhatsApp</span>
                       )}
                     </div>
                   </div>
