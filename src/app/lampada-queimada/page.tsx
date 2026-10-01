@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import MiniCardsAnuncio from "@/components/MiniCardsAnuncio";
 
 const OCORRENCIAS_URL = "https://ip.somasig.com.br/ocorrencias/rioclaro";
 
@@ -8,19 +9,23 @@ export default function LampadaQueimadaPage() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <section className="bg-gradient-to-br from-amber-500 via-amber-400 to-orange-500 text-white">
-        <div className="mx-auto max-w-3xl px-4 py-8">
-          <Link href="/" className="inline-flex mb-5 text-sm font-semibold text-white/90 hover:text-white">
-            ← Voltar para o Sobradão 360
-          </Link>
-          <div className="text-5xl mb-3">💡</div>
-          <h1 className="text-3xl font-black">Lâmpada Queimada</h1>
-          <p className="mt-2 text-sm leading-6 text-white/90">
-            Solicite atendimento para iluminação pública com acesso organizado pelo Sobradão 360.
+        <div className="mx-auto max-w-2xl px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <Link href="/" className="text-xs font-bold text-white/90 hover:text-white">← Início</Link>
+            <div className="text-center">
+              <div className="text-2xl">💡</div>
+              <h1 className="text-xl font-black">Lâmpada Queimada</h1>
+            </div>
+            <span className="rounded-lg bg-white/20 px-2 py-1 text-[9px] font-black">Rio Claro</span>
+          </div>
+          <p className="mt-2 text-center text-[11px] leading-4 text-white/90">
+            Solicite reparo da iluminação pública.
           </p>
         </div>
       </section>
 
-      <section className="mx-auto max-w-2xl px-4 py-6 space-y-4">
+      <section className="mx-auto max-w-2xl px-4 py-3 space-y-4">
+        <MiniCardsAnuncio />
         <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
           <div className="text-4xl">💡</div>
           <h2 className="mt-3 text-xl font-black">Lâmpada apagada na rua?</h2>
