@@ -1,5 +1,11 @@
 "use client";
 
+type AuthUsuario = {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+};
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
@@ -17,7 +23,7 @@ export default function CadastrarVagaPage() {
     experiencia: "", quantidadeVagas: "1", prazo: "", contato: "", descricao: "",
   });
 
-  useEffect(() => onAuthStateChanged(auth, (u) => {
+  useEffect(() => onAuthStateChanged(auth, (u: AuthUsuario | null) => {
     setUid(u?.uid || null);
     setCarregando(false);
   }), []);

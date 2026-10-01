@@ -1,5 +1,11 @@
 "use client";
 
+type AuthUsuario = {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+};
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { collection, getDoc, getDocs, query, orderBy, updateDoc, doc, addDoc, serverTimestamp } from "firebase/firestore";
@@ -42,7 +48,7 @@ export default function TelefonesMasterPage() {
 
   useEffect(() => {
     const auth = getAuth();
-    return onAuthStateChanged(auth, async (usuario) => {
+    return onAuthStateChanged(auth, async (usuario: AuthUsuario | null) => {
       if (!usuario) {
         setCarregando(false);
         return;

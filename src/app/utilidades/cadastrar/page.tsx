@@ -1,5 +1,11 @@
 "use client";
 
+type AuthUsuario = {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+};
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
@@ -16,7 +22,7 @@ export default function CadastrarContatoPage() {
   const [mensagem, setMensagem] = useState("");
   const [form, setForm] = useState({nome:"",servico:"",categoria:"Serviços",telefone:"",whatsapp:false,bairro:"",descricao:"",instagram:"",site:""});
 
-  useEffect(() => onAuthStateChanged(auth, (usuario) => {
+  useEffect(() => onAuthStateChanged(auth, (usuario: AuthUsuario | null) => {
     setUid(usuario?.uid || "");
     setNomeUsuario(usuario?.displayName || usuario?.email?.split("@")[0] || "Morador");
     setCarregando(false);

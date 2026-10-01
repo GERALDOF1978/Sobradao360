@@ -1,5 +1,11 @@
 "use client";
 
+type AuthUsuario = {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+};
+
 import { useEffect, useState } from "react";
 import {
   collection,
@@ -213,7 +219,7 @@ export default function AdminMasterPage() {
     const auth = getAuth();
 
     const cancelar = auth.onAuthStateChanged(
-  async (usuario) => {
+  async (usuario: AuthUsuario | null) => {
       if (!usuario) {
         setUser(null);
         setAutorizado(false);
