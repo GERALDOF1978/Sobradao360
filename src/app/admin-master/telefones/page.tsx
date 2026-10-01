@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { collection, getDoc, getDocs, query, orderBy, updateDoc, doc, addDoc, serverTimestamp } from "firebase/firestore";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
 import { db } from "@/lib/firebase";
 
 type Solicitacao = {
@@ -42,7 +42,7 @@ export default function TelefonesMasterPage() {
 
   useEffect(() => {
     const auth = getAuth();
-    return onAuthStateChanged(auth, async (usuario) => {
+    return onAuthStateChanged(auth, async (usuario: FirebaseUser | null) => {
       if (!usuario) {
         setCarregando(false);
         return;
