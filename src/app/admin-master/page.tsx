@@ -899,6 +899,19 @@ export default function AdminMasterPage() {
           </div>
         </section>
 
+        <div className="mb-6">
+          <a
+            href="/admin-master/telefones"
+            className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 hover:bg-amber-100"
+          >
+            <span className="text-2xl">📞</span>
+            <span>
+              <span className="block text-sm font-black text-slate-900">Contatos e Serviços</span>
+              <span className="block text-xs text-slate-500">Aprovar cadastros enviados pela comunidade</span>
+            </span>
+          </a>
+        </div>
+
         <section className="mb-6">
           {menuAberto === "planos" && (
             <ContratosAnuncio
