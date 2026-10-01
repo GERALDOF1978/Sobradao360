@@ -42,7 +42,7 @@ export default function TelefonesMasterPage() {
 
   useEffect(() => {
     const auth = getAuth();
-    return onAuthStateChanged(auth, async (usuario) => {
+    return onAuthStateChanged(auth, async (usuario: import("firebase/auth").User | null) => {
       if (!usuario) {
         setCarregando(false);
         return;
