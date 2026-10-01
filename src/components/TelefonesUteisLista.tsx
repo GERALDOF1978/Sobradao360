@@ -36,7 +36,7 @@ export default function TelefonesUteisLista() {
   }, []);
 
   // Botões de filtro rápido no cabeçalho
-  const categoriasFiltro = ["Todos", "Água", "Energia", "Internet", "Saúde", "Emergência", "WhatsApp"];
+  const categoriasFiltro = ["Todos", "Água", "Energia", "Internet", "Saúde", "Emergência", "Prefeitura", "Segurança", "Transporte", "Social"];
 
   const telefonesFiltrados = telefones.filter((item) => {
     const correspondeBusca =
@@ -120,9 +120,9 @@ export default function TelefonesUteisLista() {
                       </span>
                       {item.horario && item.horario !== "—" && (
                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                          item.horario === "24h" ? "bg-emerald-100 text-emerald-800" : item.horario === "WhatsApp" ? "bg-green-100 text-green-800" : "bg-blue-50 text-blue-700"
+                          item.horario === "24h" ? "bg-emerald-100 text-emerald-800" : "bg-blue-50 text-blue-700"
                         }`}>
-                          {item.horario === "WhatsApp" ? "💬 WhatsApp" : `🕒 ${item.horario}`}
+                          {`🕒 ${item.horario}`}
                         </span>
                       )}
                     </div>
