@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import MiniCardsAnuncio from "@/components/MiniCardsAnuncio";
 
 const WHATSAPP = "https://wa.me/5508000190505";
 const AGENCIA_VIRTUAL = "https://rioclarodaae.eportal.net.br/agencia/index.html#/login";
@@ -23,19 +24,23 @@ export default function DaaePage() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <section className="bg-gradient-to-br from-cyan-700 via-cyan-600 to-blue-700 text-white">
-        <div className="mx-auto max-w-3xl px-4 py-8">
-          <Link href="/" className="inline-flex mb-5 text-sm font-semibold text-white/90 hover:text-white">
-            ← Voltar para o Sobradão 360
-          </Link>
-          <div className="text-5xl mb-3">💧</div>
-          <h1 className="text-3xl font-black">DAAE Rio Claro</h1>
-          <p className="mt-2 text-sm leading-6 text-white/90">
-            Central de atendimento do DAAE dentro do Sobradão 360.
+        <div className="mx-auto max-w-3xl px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <Link href="/" className="text-xs font-bold text-white/90 hover:text-white">← Início</Link>
+            <div className="text-center">
+              <div className="text-2xl">💧</div>
+              <h1 className="text-xl font-black">DAAE Rio Claro</h1>
+            </div>
+            <span className="rounded-lg bg-white/20 px-2 py-1 text-[9px] font-black">Atendimento</span>
+          </div>
+          <p className="mt-2 text-center text-[11px] leading-4 text-white/90">
+            Água, esgoto, contas e canais de atendimento.
           </p>
         </div>
       </section>
 
-      <section className="mx-auto max-w-3xl px-4 py-6 space-y-4">
+      <section className="mx-auto max-w-3xl px-4 py-3 space-y-4">
+        <MiniCardsAnuncio />
         <div className="grid grid-cols-2 gap-3">
           <a href="tel:08000190505" className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm hover:border-cyan-400 transition">
             <div className="text-2xl">📞</div>
