@@ -11,7 +11,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
-import { getAuth, type User } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 
 import { db } from "@/lib/firebase";
@@ -213,7 +213,7 @@ export default function AdminMasterPage() {
     const auth = getAuth();
 
     const cancelar = auth.onAuthStateChanged(
-  async (usuario: UsuarioFirebase | null) => {
+  async (usuario) => {
       if (!usuario) {
         setUser(null);
         setAutorizado(false);

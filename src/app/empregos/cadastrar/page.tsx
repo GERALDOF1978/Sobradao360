@@ -17,7 +17,7 @@ export default function CadastrarVagaPage() {
     experiencia: "", quantidadeVagas: "1", prazo: "", contato: "", descricao: "",
   });
 
-  useEffect(() => onAuthStateChanged(auth, (u: import("firebase/auth").User | null) => {
+  useEffect(() => onAuthStateChanged(auth, (u) => {
     setUid(u?.uid || null);
     setCarregando(false);
   }), []);

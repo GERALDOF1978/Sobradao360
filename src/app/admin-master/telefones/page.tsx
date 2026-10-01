@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { collection, getDoc, getDocs, query, orderBy, updateDoc, doc, addDoc, serverTimestamp } from "firebase/firestore";
-import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "@/lib/firebase";
 
 type Solicitacao = {
@@ -34,7 +34,7 @@ export default function TelefonesMasterPage() {
       const snapshot = await getDocs(
         query(collection(db, "solicitacoes_telefones"), orderBy("createdAt", "desc"))
       );
-      setItens(snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as Omit<Solicitacao, "id">) })));
+      setItens(snapshot.docs.map((item: { id: string; data: () => Record<string, unknown> }) => ({ id: item.id, ...(item.data() as Omit<Solicitacao, "id">) })));
     } catch (error) {
       console.error("Erro ao carregar solicitações de telefones:", error);
     }
@@ -42,7 +42,7 @@ export default function TelefonesMasterPage() {
 
   useEffect(() => {
     const auth = getAuth();
-    return onAuthStateChanged(auth, async (usuario: User | null) => {
+    return onAuthStateChanged(auth, async (usuario) => {
       if (!usuario) {
         setCarregando(false);
         return;

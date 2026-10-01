@@ -16,7 +16,7 @@ export default function CadastrarContatoPage() {
   const [mensagem, setMensagem] = useState("");
   const [form, setForm] = useState({nome:"",servico:"",categoria:"Serviços",telefone:"",whatsapp:false,bairro:"",descricao:"",instagram:"",site:""});
 
-  useEffect(() => onAuthStateChanged(auth, (usuario: import("firebase/auth").User | null) => {
+  useEffect(() => onAuthStateChanged(auth, (usuario) => {
     setUid(usuario?.uid || "");
     setNomeUsuario(usuario?.displayName || usuario?.email?.split("@")[0] || "Morador");
     setCarregando(false);
