@@ -2,7 +2,7 @@
 
 > O seu bairro, em todas as direções. Um portal comunitário moderno para conectar vizinhos, divulgar o comércio local e centralizar notícias da região do Sobradão e arredores.
 
-## 🚀 Sobre o Projeto 02
+## 🚀 Sobre o Projeto 01
 
 O **Sobradão 360** nasce com o objetivo de unificar a comunicação de múltiplos bairros ao redor do ponto de referência Sobradão Eventos. A plataforma foi desenvolvida para ser rápida, responsiva (ótima para celulares) e totalmente voltada para a comunidade.
 
