@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
+import MiniCardsAnuncio from "@/components/MiniCardsAnuncio";
 import { useAuth } from "@/context/AuthContext";
 
 interface Publicacao {
@@ -47,12 +48,18 @@ interface Comentario {
 
 const CATEGORIAS = [
   { nome: "Todas", icone: "🏘️" },
-  { nome: "Compra & Venda", icone: "🛒" },
-  { nome: "Serviços & Reformas", icone: "🛠️" },
-  { nome: "Casa & Aluguel", icone: "🏠" },
-  { nome: "Pet & Saúde", icone: "🐾" },
-  { nome: "Eventos", icone: "🎉" },
-  { nome: "Doações", icone: "❤️" },
+  { nome: "Buraco / Rua", icone: "🕳️" },
+  { nome: "Iluminação pública", icone: "💡" },
+  { nome: "Falta de água", icone: "💧" },
+  { nome: "Internet / Telefonia", icone: "📡" },
+  { nome: "Cata-entulho / Lixo", icone: "🚛" },
+  { nome: "Trânsito / Sinalização", icone: "🚦" },
+  { nome: "Abandono / Imóvel", icone: "🏚️" },
+  { nome: "Árvore / Praça", icone: "🌳" },
+  { nome: "Barulho / Perturbação", icone: "🔊" },
+  { nome: "Animais", icone: "🐕" },
+  { nome: "Segurança / Alerta", icone: "⚠️" },
+  { nome: "Outros assuntos do bairro", icone: "🏘️" },
 ];
 
 const IMAGEM_PADRAO = "/imagens/post-padrao.svg";
@@ -248,37 +255,33 @@ export default function ComunidadePage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <section className="bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-600 text-white">
-        <div className="mx-auto max-w-5xl px-4 py-8">
-          <Link href="/" className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-white/90 hover:text-white">
-            ← Voltar para o Sobradão 360
-          </Link>
-
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="mb-2 text-4xl">🏘️</div>
-              <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Mural da Comunidade</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">
-                Notícias, avisos, pedidos, acontecimentos e informações compartilhadas pelos moradores.
-              </p>
+        <div className="mx-auto max-w-3xl px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <Link href="/" className="text-xs font-bold text-white/90 hover:text-white">← Início</Link>
+            <div className="text-center">
+              <div className="text-2xl">🏘️</div>
+              <h1 className="text-xl font-black">Mural da Comunidade</h1>
             </div>
-
             <Link
               href="/anuncie?modo=post"
-              className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 font-bold text-emerald-700 shadow-lg transition hover:bg-emerald-50"
+              className="rounded-xl bg-white px-3 py-2 text-[10px] font-black text-emerald-700 shadow"
             >
               💬 Publicar
             </Link>
           </div>
+          <p className="mt-2 text-center text-[11px] leading-4 text-white/90">
+            Notícias, avisos, pedidos, acontecimentos e informações dos moradores.
+          </p>
         </div>
       </section>
 
-      <section className="mx-auto max-w-3xl px-4 py-5">
-        <div className="mb-5 rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
-          <h2 className="font-bold text-slate-800">O que está acontecendo no bairro?</h2>
-          <p className="mt-1 text-sm leading-5 text-slate-600">
-            Escolha uma categoria, publique sua informação e converse com outros moradores.
-          </p>
+      <section className="mx-auto max-w-3xl px-3 py-3">
+        <div className="mb-3 rounded-xl bg-emerald-50 px-3 py-2 text-center">
+          <h2 className="text-xs font-black text-emerald-900">O que está acontecendo no bairro?</h2>
+          <p className="mt-0.5 text-[10px] text-emerald-800">Escolha uma categoria, publique e converse com outros moradores.</p>
         </div>
+
+        <MiniCardsAnuncio />
 
         <div className="mb-6 overflow-x-auto scrollbar-hide">
           <div className="flex min-w-max gap-2">
@@ -368,7 +371,14 @@ export default function ComunidadePage() {
                   </div>
 
                   <div className="mt-4 border-y border-slate-100 bg-slate-50">
-                    <img src={imagem} alt={titulo || "Imagem da publicação"} className="max-h-[600px] w-full object-contain" />
+                    {textoSeguro(publicacao.imagemUrl).trim() ? (
+                      <img src={imagem} alt={titulo || "Imagem da publicação"} className="max-h-[600px] w-full object-contain" />
+                    ) : (
+                      <div className="flex min-h-[180px] w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-50 to-slate-50 px-4 text-center">
+                        <span className="text-6xl">{CATEGORIAS.find((item) => item.nome.toLowerCase() === categoria.toLowerCase())?.icone || "🏘️"}</span>
+                        <span className="text-sm font-black text-emerald-800">{categoria}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="px-5 py-3">
