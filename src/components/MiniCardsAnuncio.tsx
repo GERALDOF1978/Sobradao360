@@ -12,15 +12,6 @@ type CardAnuncio = {
   bannerUrl: string;
 };
 
-function dataTimestamp(valor: unknown): Date | null {
-  if (valor && typeof valor === "object") {
-    const item = valor as { toDate?: () => Date; toMillis?: () => number };
-    if (typeof item.toDate === "function") return item.toDate();
-    if (typeof item.toMillis === "function") return new Date(item.toMillis());
-  }
-  return null;
-}
-
 export default function MiniCardsAnuncio() {
   const [cards, setCards] = useState<CardAnuncio[]>([]);
 
