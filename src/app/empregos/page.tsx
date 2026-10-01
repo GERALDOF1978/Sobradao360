@@ -10,6 +10,7 @@ import {
 } from "firebase/firestore";
 import Curriculos from "@/components/Curriculos";
 import { db } from "@/lib/firebase";
+import MiniCardsAnuncio from "@/components/MiniCardsAnuncio";
 
 interface Vaga {
   id: string;
@@ -915,45 +916,24 @@ export default function EmpregosPage() {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-16 font-sans">
       {/* HEADER */}
-      <header className="bg-gradient-to-r from-blue-800 via-blue-900 to-blue-800 border-b border-blue-900 sticky top-0 z-40 shadow-md">
-        <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-white text-xs font-bold hover:text-amber-400"
-          >
-            ← Início
-          </Link>
-
-          <h1 className="font-black text-sm text-white">
-            💼 Empregos
-          </h1>
-
-          <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-lg">
-            Rio Claro
-          </span>
+      <header className="bg-gradient-to-r from-indigo-700 via-blue-700 to-indigo-700 text-white shadow-md">
+        <div className="max-w-md mx-auto px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <Link href="/" className="text-xs font-bold text-white/90 hover:text-white">← Início</Link>
+            <div className="text-center">
+              <div className="text-2xl">💼</div>
+              <h1 className="text-xl font-black">Empregos</h1>
+            </div>
+            <span className="rounded-lg bg-amber-400 px-2 py-1 text-[9px] font-black text-slate-950">Rio Claro</span>
+          </div>
+          <p className="mt-2 text-center text-[11px] leading-4 text-white/90">
+            Vagas, oportunidades e currículos da comunidade.
+          </p>
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 py-4 space-y-4">
-
-        {/* INTRODUÇÃO */}
-        <section className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-100 flex items-center justify-center text-2xl">
-              💼
-            </div>
-
-            <div>
-              <h2 className="font-black text-lg">
-                Oportunidades de emprego
-              </h2>
-
-              <p className="text-xs text-slate-500 mt-1">
-                Vagas e currículos da comunidade.
-              </p>
-            </div>
-          </div>
-        </section>
+      <main className="max-w-md mx-auto px-4 py-3 space-y-4">
+        <MiniCardsAnuncio />
 
         {/* SUBMENU */}
         <section className="bg-white border border-slate-200 rounded-3xl p-3 shadow-sm">
