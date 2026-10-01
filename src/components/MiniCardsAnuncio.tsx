@@ -23,7 +23,7 @@ export default function MiniCardsAnuncio() {
         );
 
         const lista: CardAnuncio[] = lojasSnapshot.docs
-          .map((item) => {
+          .map((item: (typeof lojasSnapshot.docs)[number]) => {
             const loja = item.data() as Record<string, unknown>;
             return {
               id: item.id,
@@ -32,7 +32,7 @@ export default function MiniCardsAnuncio() {
               bannerUrl: typeof loja.bannerUrl === "string" ? loja.bannerUrl : "",
             };
           })
-          .filter((item) => item.nome || item.bannerUrl);
+          .filter((item: CardAnuncio) => item.nome || item.bannerUrl);
 
         setCards(lista.slice(0, 4));
       } catch (erro) {
