@@ -41,7 +41,7 @@ type Contrato = {
   limiteProdutos: number;
   inicio?: unknown;
   vencimento?: unknown;
-  status: "ativo" | "expirado" | "cancelado";
+  status: "ativo" | "inativo" | "expirado" | "cancelado";
   exibicao: Posicoes;
 };
 
@@ -603,6 +603,16 @@ export default function ContratosAnuncio({
     } finally {
       setSalvando(false);
     }
+  }
+
+  async function alternarStatusContrato(item: Contrato) {
+    const novoStatus = item.status === "ativo" ? "inativo" : "ativo";
+    const acao = novoStatus === "inativo" ? "desativar" : "reativar";
+    if (!confirm(`Deseja ${acao} este contrato? O histórico e as posições serão preservados.`)) return;
+    setSalvando(true);
+    try { await updateDoc(doc(db,"contratos_anuncio",item.id),{status:novoStatus,updatedAt:serverTimestamp()}); await carregar(); }
+    catch(error){console.error("Erro ao alterar status do contrato:",error);alert("Não foi possível alterar o status do contrato.");}
+    finally{setSalvando(false);}
   }
 
   function editarContrato(item: Contrato) {
@@ -1252,17 +1262,11 @@ export default function ContratosAnuncio({
                           </div>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            editarContrato(
-                              item
-                            )
-                          }
-                          className="h-fit rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white"
-                        >
-                          Editar
-                        </button>
+                        <div className="flex flex-col gap-2">
+                          <span className={item.status === "ativo" ? "rounded-full bg-emerald-100 px-3 py-1 text-center text-xs font-bold text-emerald-700" : "rounded-full bg-slate-100 px-3 py-1 text-center text-xs font-bold text-slate-500"}>{item.status === "ativo" ? "ATIVO" : item.status.toUpperCase()}</span>
+                          <button type="button" disabled={salvando} onClick={() => void alternarStatusContrato(item)} className={item.status === "ativo" ? "h-fit rounded-xl bg-red-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50" : "h-fit rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"}>{item.status === "ativo" ? "Desativar" : "Reativar"}</button>
+                          <button type="button" onClick={() => editarContrato(item)} className="h-fit rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white">Editar</button>
+                        </div>
 
                       </div>
 

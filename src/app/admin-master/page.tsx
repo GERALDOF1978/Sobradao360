@@ -306,7 +306,10 @@ export default function AdminMasterPage() {
         },
       });
 
-      const resultado = await response.json();
+      const textoResposta = await response.text();
+      let resultado: any = {};
+      try { resultado = textoResposta ? JSON.parse(textoResposta) : {}; }
+      catch { throw new Error(`O servidor respondeu sem JSON válido (HTTP ${response.status}).`); }
 
       if (!response.ok || !resultado.success) {
         throw new Error(
@@ -315,7 +318,7 @@ export default function AdminMasterPage() {
       }
 
       alert(
-        `Trampolim atualizado com sucesso!\\n\\nNovas: ${resultado.novas}\\nAtualizadas: ${resultado.atualizadas}\\nIgnoradas: ${resultado.ignoradas}`
+        `Trampolim atualizado com sucesso!\\n\\nEncontradas: ${resultado.encontradas}\\nExcluídas antigas: ${resultado.excluidas}\\nImportadas: ${resultado.importadas}`
       );
     } catch (error) {
       console.error("Erro ao sincronizar vagas do Trampolim:", error);

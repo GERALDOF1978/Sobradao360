@@ -17,6 +17,8 @@ export default function CadastrarVagaPage() {
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [mensagem, setMensagem] = useState("");
+  const [imagem, setImagem] = useState<File | null>(null);
+  const [previewImagem, setPreviewImagem] = useState("");
   const [form, setForm] = useState({
     titulo: "", empresa: "", cidade: "Rio Claro", bairro: "", salario: "",
     tipoContrato: "", turno: "", formatoTrabalho: "", escolaridade: "",
@@ -32,6 +34,24 @@ export default function CadastrarVagaPage() {
     setForm((atual) => ({ ...atual, [campo]: valor }));
   }
 
+  function selecionarImagem(arquivo: File | null) {
+    setImagem(arquivo);
+    if (previewImagem) URL.revokeObjectURL(previewImagem);
+    setPreviewImagem(arquivo ? URL.createObjectURL(arquivo) : "");
+  }
+
+  async function enviarImagem(): Promise<string> {
+    if (!imagem) return "";
+    const dados = new FormData();
+    dados.append("file", imagem);
+    const resposta = await fetch("/api/upload-image", { method: "POST", body: dados });
+    const texto = await resposta.text();
+    let resultado: { success?: boolean; url?: string; error?: string } = {};
+    try { resultado = texto ? JSON.parse(texto) : {}; } catch {}
+    if (!resposta.ok || !resultado.success || !resultado.url) throw new Error(resultado.error || "Não foi possível enviar a imagem da vaga.");
+    return resultado.url;
+  }
+
   async function salvar(e: React.FormEvent) {
     e.preventDefault();
     setMensagem("");
@@ -41,6 +61,7 @@ export default function CadastrarVagaPage() {
     }
     setSalvando(true);
     try {
+      const imagemUrl = await enviarImagem();
       await addDoc(collection(db, "anuncios"), {
         ...form,
         titulo: form.titulo.trim(),
@@ -52,9 +73,11 @@ export default function CadastrarVagaPage() {
         origem: "manual",
         autorUid: uid,
         autorNome: auth.currentUser?.displayName || "Usuário",
+        imagemUrl: imagemUrl || null,
         createdAt: serverTimestamp(),
       });
       setMensagem("Vaga cadastrada com sucesso!");
+      selecionarImagem(null);
       setForm({
         titulo: "", empresa: "", cidade: "Rio Claro", bairro: "", salario: "",
         tipoContrato: "", turno: "", formatoTrabalho: "", escolaridade: "",
@@ -114,6 +137,12 @@ export default function CadastrarVagaPage() {
                 <input value={form[campo]} onChange={(e) => alterar(campo, e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
             ))}
+          </div>
+          <div className="rounded-2xl border border-dashed border-indigo-200 bg-indigo-50/50 p-4">
+            <label className="text-xs font-black text-slate-700">Arte / imagem da vaga (opcional)</label>
+            <p className="mt-1 text-[11px] text-slate-500">Se a empresa já tiver um post pronto, pode anexar aqui. JPG, PNG ou WebP, até 10 MB.</p>
+            <input type="file" accept="image/*" onChange={(e) => selecionarImagem(e.target.files?.[0] || null)} className="mt-3 block w-full text-xs text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:font-bold file:text-white" />
+            {previewImagem && <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white"><img src={previewImagem} alt="Prévia da arte da vaga" className="max-h-96 w-full object-contain" /><button type="button" onClick={() => selecionarImagem(null)} className="w-full border-t px-3 py-2 text-xs font-bold text-red-600">Remover imagem</button></div>}
           </div>
           <div>
             <label className="text-xs font-black text-slate-700">Descrição da vaga *</label>

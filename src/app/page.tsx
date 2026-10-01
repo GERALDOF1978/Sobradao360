@@ -27,7 +27,7 @@ const servicosRapidos = [
     link: "/comunidade",
   },
   {
-    titulo: "Utilidades",
+    titulo: "Telefones Úteis",
     icone: "📞",
     cor: "bg-slate-700",
     link: "/utilidades",
@@ -125,19 +125,6 @@ export default function Home() {
             .filter((loja: LojaHome) => loja.nome || loja.bannerUrl)
         );
 
-        console.groupCollapsed("[Sobradão 360] Diagnóstico da publicidade da Home");
-        console.log("Lojas ativas encontradas:", lojasSnapshot.size);
-        console.log("Contratos ativos encontrados:", contratosSnapshot.size);
-        console.table(
-          lojasSnapshot.docs.map((doc: (typeof lojasSnapshot.docs)[number]) => ({
-            lojaId: doc.id,
-            nome: doc.data().nome || "",
-            ativo: doc.data().ativo,
-            bannerUrl: doc.data().bannerUrl || "",
-            uidDono: doc.data().uidDono || "",
-          }))
-        );
-
         const agora = new Date();
         const lista: AnuncioHome[] = [];
 
@@ -146,46 +133,21 @@ export default function Home() {
           const lojaId = typeof contrato.lojaId === "string" ? contrato.lojaId : "";
           const loja = lojas.get(lojaId);
 
-          console.log("[Contrato]", {
-            contratoId: doc.id,
-            lojaIdContrato: lojaId,
-            lojaEncontrada: Boolean(loja),
-            status: contrato.status,
-            inicio: contrato.inicio,
-            vencimento: contrato.vencimento,
-            exibicao: contrato.exibicao,
-          });
-
           if (!loja) {
-            console.warn("[Contrato descartado] lojaId não corresponde a uma loja ativa:", lojaId);
             return;
           }
 
           const bannerUrl = typeof loja.bannerUrl === "string" ? loja.bannerUrl : "";
           if (!bannerUrl) {
-            console.warn("[Contrato descartado] a loja não possui bannerUrl:", {
-              lojaId,
-              nome: loja.nome || "",
-            });
             return;
           }
 
           const inicio = dataTimestamp(contrato.inicio);
           const vencimento = dataTimestamp(contrato.vencimento);
           if (inicio && inicio > agora) {
-            console.warn("[Contrato descartado] início ainda não chegou:", {
-              lojaId,
-              inicio,
-              agora,
-            });
             return;
           }
           if (vencimento && vencimento < agora) {
-            console.warn("[Contrato descartado] contrato vencido:", {
-              lojaId,
-              vencimento,
-              agora,
-            });
             return;
           }
 
@@ -203,11 +165,6 @@ export default function Home() {
           });
         });
 
-        console.log("Anúncios aprovados para a Home:", lista);
-        console.log("Publicidade:", lista.filter((item) => item.exibicao.publicidade));
-        console.log("Destaques:", lista.filter((item) => item.exibicao.destaques));
-        console.log("Parceiros:", lista.filter((item) => item.exibicao.parceiros));
-        console.groupEnd();
 
         setAnunciosHome(lista);
       } catch (erro) {
