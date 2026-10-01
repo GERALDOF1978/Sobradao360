@@ -176,6 +176,38 @@ service cloud.firestore {
         );
     }
 
+    match /solicitacoes_telefones/{solicitacaoId} {
+      allow create:
+        if request.auth != null
+        && request.resource.data.autorUid == request.auth.uid
+        && request.resource.data.status == "PENDENTE";
+      allow read:
+        if isMaster()
+        ||
+        (
+          request.auth != null
+          && request.auth.uid == resource.data.autorUid
+        );
+      allow update:
+        if isMaster()
+        ||
+        (
+          request.auth != null
+          && request.auth.uid == resource.data.autorUid
+          && resource.data.status == "PENDENTE"
+          && request.resource.data.autorUid == resource.data.autorUid
+          && request.resource.data.status == "PENDENTE"
+        );
+      allow delete:
+        if isMaster()
+        ||
+        (
+          request.auth != null
+          && request.auth.uid == resource.data.autorUid
+          && resource.data.status == "PENDENTE"
+        );
+    }
+
     match /telefones/{telefoneId} {
       allow read: if true;
       allow create: if isMaster() || request.auth != null;
