@@ -937,9 +937,17 @@ export default function EmpregosPage() {
 
         {/* SUBMENU */}
         <section className="bg-white border border-slate-200 rounded-3xl p-3 shadow-sm">
-          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1 mb-2">
-            Empregos
-          </p>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1">
+              Empregos
+            </p>
+            <Link
+              href="/empregos/cadastrar"
+              className="rounded-xl bg-emerald-600 px-3 py-2 text-[10px] font-black text-white shadow-sm hover:bg-emerald-700"
+            >
+              ➕ Cadastrar vaga
+            </Link>
+          </div>
 
           <div className="grid grid-cols-3 gap-2">
 
