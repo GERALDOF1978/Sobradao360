@@ -24,7 +24,7 @@ export default function CadastrarContatoPage() {
 
   function atualizar(campo:string, valor:string|boolean) { setForm(atual => ({...atual,[campo]:valor})); }
 
-  async function enviar(e:React.FormEvent) {
+  async function enviar(e:import("react").FormEvent) {
     e.preventDefault(); setMensagem("");
     if (!uid) { setMensagem("Você precisa entrar na sua conta para cadastrar um contato."); return; }
     if (!form.nome.trim() || !form.servico.trim() || !form.telefone.trim()) { setMensagem("Preencha nome/empresa, serviço e telefone."); return; }
