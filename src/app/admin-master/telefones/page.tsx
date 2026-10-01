@@ -34,7 +34,7 @@ export default function TelefonesMasterPage() {
       const snapshot = await getDocs(
         query(collection(db, "solicitacoes_telefones"), orderBy("createdAt", "desc"))
       );
-      setItens(snapshot.docs.map((item: (typeof snapshot.docs)[number]) => => ({ id: item.id, ...(item.data() as Omit<Solicitacao, "id">) })));
+      setItens(snapshot.docs.map((item) => ({ id: item.id, ...(item.data() as Omit<Solicitacao, "id">) })));
     } catch (error) {
       console.error("Erro ao carregar solicitações de telefones:", error);
     }
