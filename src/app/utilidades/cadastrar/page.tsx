@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 
 const CATEGORIAS = ["Serviços","Comércio","Alimentação","Construção e Reformas","Automotivo","Saúde e Bem-estar","Pet","Beleza","Educação","Tecnologia","Eventos","Profissional","Outros"];
@@ -16,7 +16,7 @@ export default function CadastrarContatoPage() {
   const [mensagem, setMensagem] = useState("");
   const [form, setForm] = useState({nome:"",servico:"",categoria:"Serviços",telefone:"",whatsapp:false,bairro:"",descricao:"",instagram:"",site:""});
 
-  useEffect(() => onAuthStateChanged(auth, (usuario: FirebaseUser | null) => {
+  useEffect(() => onAuthStateChanged(auth, (usuario) => {
     setUid(usuario?.uid || "");
     setNomeUsuario(usuario?.displayName || usuario?.email?.split("@")[0] || "Morador");
     setCarregando(false);

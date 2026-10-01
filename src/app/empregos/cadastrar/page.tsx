@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 
 export default function CadastrarVagaPage() {
@@ -17,7 +17,7 @@ export default function CadastrarVagaPage() {
     experiencia: "", quantidadeVagas: "1", prazo: "", contato: "", descricao: "",
   });
 
-  useEffect(() => onAuthStateChanged(auth, (u: FirebaseUser | null) => {
+  useEffect(() => onAuthStateChanged(auth, (u) => {
     setUid(u?.uid || null);
     setCarregando(false);
   }), []);
