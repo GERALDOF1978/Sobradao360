@@ -169,6 +169,7 @@ export default function ContratosAnuncio({
       .slice(0, 10),
     status: "ativo" as
       | "ativo"
+      | "inativo"
       | "expirado"
       | "cancelado",
     exibicao: { ...VAZIO },

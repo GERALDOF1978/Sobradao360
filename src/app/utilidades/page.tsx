@@ -28,6 +28,18 @@ export default function UtilidadesPage() {
       <main className="max-w-md mx-auto px-4 py-3 space-y-4">
         <MiniCardsAnuncio />
 
+        <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black text-slate-800">Conhece um telefone útil?</p>
+              <p className="mt-0.5 text-[10px] text-slate-500">Envie as informações básicas para aprovação.</p>
+            </div>
+            <Link href="/utilidades/cadastrar" className="shrink-0 rounded-xl bg-amber-500 px-3 py-2 text-[10px] font-black text-white shadow-sm hover:bg-amber-600">
+              ➕ Cadastrar telefone
+            </Link>
+          </div>
+        </section>
+
         {/* MENU DE FILTROS
             O componente TelefonesUteisLista já possui
             o menu de categorias. Portanto, não criamos
