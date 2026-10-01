@@ -8,8 +8,8 @@ export default function Page() {
         <article className="mt-4 rounded-3xl bg-white p-5 shadow-sm sm:p-8">
           <div className="border-b border-slate-100 pb-5">
             <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Sobradão 360</div>
-            <h1 className="mt-1 text-2xl font-black text-slate-900">{title}</h1>
-            <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
+            <h1 className="mt-1 text-2xl font-black text-slate-900">Responsabilidades e Limitações</h1>
+            <p className="mt-2 text-sm text-slate-500">Como funciona a plataforma e quais responsabilidades pertencem a usuários, anunciantes e terceiros.</p>
           </div>
           <div className="mt-6 space-y-6 text-sm leading-7 text-slate-600">
             <section><h2 className="mb-2 text-base font-black text-slate-800">1. Papel da plataforma</h2><p className="whitespace-pre-line">O Sobradão 360 atua como plataforma de informação, publicação e conexão. O portal não substitui órgãos públicos, profissionais habilitados, empresas prestadoras de serviços, anunciantes ou autoridades competentes.</p></section>
