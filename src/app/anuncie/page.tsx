@@ -28,19 +28,9 @@ const subcategorias = [
     icone: "🛠️",
   },
   {
-    id: "casa-aluguel",
-    nome: "Casa & Aluguel",
-    icone: "🏠",
-  },
-  {
-    id: "pet-saude",
-    nome: "Pet & Saúde",
-    icone: "🐾",
-  },
-  {
-    id: "eventos",
-    nome: "Eventos",
-    icone: "🎉",
+    id: "aluguel-eventos",
+    nome: "Aluguel & Eventos",
+    icone: "🏠🎉",
   },
   {
     id: "doacoes",
