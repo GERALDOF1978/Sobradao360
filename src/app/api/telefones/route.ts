@@ -109,11 +109,11 @@ export async function GET() {
       },
       {
         id: "13",
-        titulo: "Iluminação Pública – WhatsApp",
+        titulo: "Iluminação Pública",
         categoria: "Iluminação",
         telefone: "(19) 99495-9124",
-        horario: "WhatsApp",
-        icone: "💬",
+        horario: "Atendimento digital",
+        icone: "📞",
         isWhatsapp: true
       },
       {
@@ -214,10 +214,10 @@ export async function GET() {
       },
       {
         id: "26",
-        titulo: "Direitos da Pessoa com Deficiência – WhatsApp",
+        titulo: "Direitos da Pessoa com Deficiência",
         categoria: "Inclusão",
         telefone: "(19) 98911-8607",
-        horario: "WhatsApp",
+        horario: "Atendimento digital",
         icone: "💬",
         isWhatsapp: true
       },
@@ -231,10 +231,10 @@ export async function GET() {
       },
       {
         id: "28",
-        titulo: "Sala do Empreendedor – WhatsApp",
+        titulo: "Sala do Empreendedor",
         categoria: "Empreendedorismo",
         telefone: "(19) 2112-5029",
-        horario: "WhatsApp",
+        horario: "Atendimento digital",
         icone: "💬",
         isWhatsapp: true
       },
@@ -256,37 +256,37 @@ export async function GET() {
       },
       {
         id: "31",
-        titulo: "Fundo Social de Solidariedade – WhatsApp",
+        titulo: "Fundo Social de Solidariedade",
         categoria: "Social",
         telefone: "(19) 99439-4433",
-        horario: "WhatsApp",
+        horario: "Atendimento digital",
         icone: "💬",
         isWhatsapp: true
       },
       {
         id: "32",
-        titulo: "Centro de Qualificação Profissional – WhatsApp",
+        titulo: "Centro de Qualificação Profissional",
         categoria: "Cursos",
         telefone: "(19) 98912-1015",
-        horario: "WhatsApp",
+        horario: "Atendimento digital",
         icone: "💬",
         isWhatsapp: true
       },
       {
         id: "33",
-        titulo: "Vigilância Epidemiológica – WhatsApp",
+        titulo: "Vigilância Epidemiológica",
         categoria: "Saúde",
         telefone: "(19) 98277-0204",
-        horario: "WhatsApp",
+        horario: "Atendimento digital",
         icone: "💬",
         isWhatsapp: true
       },
       {
         id: "34",
-        titulo: "Cidade Empreendedora – WhatsApp",
+        titulo: "Cidade Empreendedora",
         categoria: "Empreendedorismo",
         telefone: "(19) 99934-5906",
-        horario: "WhatsApp",
+        horario: "Atendimento digital",
         icone: "💬",
         isWhatsapp: true
       },
@@ -313,10 +313,10 @@ export async function GET() {
       },
       {
         id: "37",
-        titulo: "Secretaria da Mulher – WhatsApp",
+        titulo: "Secretaria da Mulher",
         categoria: "Mulher",
         telefone: "(19) 99956-3042",
-        horario: "WhatsApp",
+        horario: "Atendimento digital",
         icone: "💜",
         isWhatsapp: true
       },
@@ -392,10 +392,10 @@ export async function GET() {
       },
       {
         id: "46",
-        titulo: "Neoenergia Elektro – WhatsApp",
+        titulo: "Neoenergia Elektro",
         categoria: "Energia",
         telefone: "(19) 2122-1696",
-        horario: "WhatsApp",
+        horario: "Atendimento digital",
         icone: "💬",
         isWhatsapp: true
       },
