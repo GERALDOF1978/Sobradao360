@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 
 const CATEGORIAS = ["Serviços","Comércio","Alimentação","Construção e Reformas","Automotivo","Saúde e Bem-estar","Pet","Beleza","Educação","Tecnologia","Eventos","Profissional","Outros"];
