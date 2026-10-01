@@ -66,10 +66,10 @@ const POSICOES: Array<{
   chave: keyof Posicoes;
   nome: string;
 }> = [
-  { chave: "marquee", nome: "Marquee" },
-  { chave: "publicidade", nome: "Publicidade" },
+  { chave: "marquee", nome: "Vitrine de Lojas" },
+  { chave: "publicidade", nome: "Banner Publicitário" },
   { chave: "destaques", nome: "Destaques" },
-  { chave: "parceiros", nome: "Parceiros" },
+  { chave: "parceiros", nome: "Todas as Lojas" },
 ];
 
 const VAZIO: Posicoes = {

@@ -21,10 +21,10 @@ type Plano = {
 };
 
 const POSICOES = [
-  ["marquee", "Marquee"],
-  ["publicidade", "Publicidade"],
+  ["marquee", "Vitrine de Lojas"],
+  ["publicidade", "Banner Publicitário"],
   ["destaques", "Destaques"],
-  ["parceiros", "Parceiros"],
+  ["parceiros", "Todas as Lojas"],
 ] as const;
 
 function dinheiro(valor: number) {
@@ -93,7 +93,7 @@ export default function PlanosAnunciantePage() {
           </Link>
 
           <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-amber-300">
-            SOBRADÃO 360
+            PORTAL SOBRADÃO 360
           </p>
 
           <h1 className="mt-2 text-3xl font-black md:text-4xl">
@@ -102,7 +102,7 @@ export default function PlanosAnunciantePage() {
 
           <p className="mt-3 max-w-3xl text-sm leading-6 text-blue-100">
             Conheça as opções disponíveis para colocar seu negócio em
-            destaque dentro do portal da comunidade.
+            destaque no Portal Sobradão 360 e veja com clareza onde sua marca pode aparecer.
           </p>
         </header>
 

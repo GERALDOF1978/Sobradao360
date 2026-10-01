@@ -28,7 +28,7 @@ interface AlertaMeteorologico {
 }
 
 const LOGO =
-  "https://i.ibb.co/xqw1GRhg/file-0000000053bc81fd859392bfffad0801.png";
+  "https://i.ibb.co/357pp0LQ/logo-sobradao-webp.webp";
 
 const plantao = [
   "📢 Bem-vindo ao Sobradão 360",
@@ -466,7 +466,7 @@ export default function Cabecalho() {
           CABEÇALHO COMPACTO
           ===================================================== */}
 
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+      <header className="sticky top-0 z-50 border-b border-blue-100 bg-gradient-to-r from-blue-50/95 via-white/95 to-amber-50/90 shadow-sm backdrop-blur">
 
         <div className="mx-auto max-w-7xl px-2 sm:px-4">
 
@@ -591,7 +591,7 @@ export default function Cabecalho() {
 
           {/* PLANTÃO — LINHA EXCLUSIVA */}
 
-          <div className="flex h-7 items-center border-t border-slate-100">
+          <div className="flex h-7 items-center border-t border-blue-100/70">
             <span className="mr-2 shrink-0 text-[8px] font-black tracking-wider text-emerald-700 sm:text-[9px]">
               PLANTÃO
             </span>

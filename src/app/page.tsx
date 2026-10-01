@@ -278,7 +278,7 @@ export default function Home() {
         <section className="w-full overflow-hidden rounded-3xl shadow-xl border border-slate-200 bg-white">
 
           <img
-            src="https://i.ibb.co/zTTKfgLt/banner-s360-webp.webp"
+            src="https://i.ibb.co/nM8R8VKy/banner-sobradao-webp.webp"
             alt="Banner Sobradão 360"
             className="w-full h-auto object-cover block"
           />
