@@ -13,6 +13,7 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  where,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
@@ -140,13 +141,17 @@ export default function ComunidadePage() {
       const snap = await getDocs(
         query(
           collection(db, "comentarios_mural"),
-          orderBy("createdAt", "asc")
+          where("anuncioId", "==", publicacaoId)
         )
       );
 
       const lista = snap.docs
-        .map((item: any) => ({ id: item.id, ...item.data() } as Comentario & { anuncioId?: string }))
-        .filter((item: Comentario & { anuncioId?: string }) => item.anuncioId === publicacaoId);
+        .map((item: any) => ({ id: item.id, ...item.data() } as Comentario))
+        .sort((a: Comentario, b: Comentario) => {
+          const aTime = a.createdAt?.toMillis?.() || 0;
+          const bTime = b.createdAt?.toMillis?.() || 0;
+          return aTime - bTime;
+        });
 
       setComentarios((atual) => ({
         ...atual,
@@ -178,7 +183,8 @@ export default function ComunidadePage() {
     setComentando(publicacaoId);
 
     try {
-      await addDoc(collection(db, "anuncios", publicacaoId, "comentarios"), {
+      await addDoc(collection(db, "comentarios_mural"), {
+        anuncioId: publicacaoId,
         texto,
         autorUid: user.uid,
         autorNome: user.displayName || "Morador",
