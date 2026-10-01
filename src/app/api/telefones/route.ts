@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase-admin";
 
 export async function GET() {
   try {
@@ -681,6 +682,25 @@ export async function GET() {
         icone: "📦"
       }
     ];
+
+    const comunidadeSnapshot = await adminDb
+      .collection("telefones")
+      .where("status", "==", "APROVADO")
+      .get();
+
+    comunidadeSnapshot.docs.forEach((doc) => {
+      const dados = doc.data();
+
+      telefonesUteis.push({
+        id: doc.id,
+        titulo: dados.nome || "Contato da comunidade",
+        categoria: dados.categoria || "Serviços",
+        telefone: dados.telefone || "",
+        horario: dados.horario || "—",
+        icone: dados.icone || "📞",
+        isWhatsapp: dados.whatsapp === true,
+      });
+    });
 
     return NextResponse.json({
       success: true,
