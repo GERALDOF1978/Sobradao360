@@ -11,7 +11,7 @@ import Link from "next/link";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
-const CATEGORIAS = ["Serviços","Comércio","Alimentação","Construção e Reformas","Automotivo","Saúde e Bem-estar","Pet","Beleza","Educação","Tecnologia","Eventos","Profissional","Outros"];
+const CATEGORIAS = ["Casa e Construção","Automotivo","Transporte e Motoristas","Limpeza e Cuidados","Saúde e Bem-estar","Beleza","Alimentação","Comércio","Pet","Educação","Tecnologia","Eventos","Outros"];
 
 export default function CadastrarContatoPage() {
   const [uid, setUid] = useState("");
@@ -19,7 +19,7 @@ export default function CadastrarContatoPage() {
   const [carregando, setCarregando] = useState(true);
   const [enviando, setEnviando] = useState(false);
   const [mensagem, setMensagem] = useState("");
-  const [form, setForm] = useState({nome:"",servico:"",categoria:"Serviços",telefone:"",whatsapp:false,bairro:"",descricao:"",instagram:"",site:""});
+  const [form, setForm] = useState({nome:"",servico:"",categoria:"Casa e Construção",telefone:"",whatsapp:false,bairro:"",descricao:"",instagram:"",site:""});
 
   useEffect(() => onAuthStateChanged(auth, (usuario: AuthUsuario | null) => {
     setUid(usuario?.uid || "");
@@ -49,8 +49,8 @@ export default function CadastrarContatoPage() {
       if (!resposta.ok || !resultado.success) {
         throw new Error(resultado.error || `Erro HTTP ${resposta.status} ao cadastrar.`);
       }
-      setForm({nome:"",servico:"",categoria:"Serviços",telefone:"",whatsapp:false,bairro:"",descricao:"",instagram:"",site:""});
-      setMensagem("Cadastro enviado! Ele ficará aguardando aprovação antes de aparecer nos Telefones Úteis.");
+      setForm({nome:"",servico:"",categoria:"Casa e Construção",telefone:"",whatsapp:false,bairro:"",descricao:"",instagram:"",site:""});
+      setMensagem("Cadastro enviado! Ele ficará aguardando aprovação antes de aparecer nos Telefones e Serviços.");
     } catch (error) {
       console.error("Erro ao cadastrar contato:",error);
       setMensagem(error instanceof Error ? error.message : "Não foi possível enviar o cadastro. Tente novamente.");
@@ -62,7 +62,7 @@ export default function CadastrarContatoPage() {
   if (!uid) return (
     <main className="min-h-screen bg-slate-100 px-4 py-8">
       <div className="mx-auto max-w-md rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
-        <Link href="/utilidades" className="text-xs font-bold text-slate-600">← Voltar para Telefones Úteis</Link>
+        <Link href="/utilidades" className="text-xs font-bold text-slate-600">← Voltar para Telefones e Serviços</Link>
         <div className="mt-6 text-center"><div className="text-4xl">📞</div>
           <h1 className="mt-2 text-xl font-black text-slate-900">Cadastrar contato ou serviço</h1>
           <p className="mt-2 text-xs leading-5 text-slate-500">Entre na sua conta para enviar um contato. O cadastro será analisado antes da publicação.</p>
@@ -74,7 +74,7 @@ export default function CadastrarContatoPage() {
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-5 pb-12"><div className="mx-auto max-w-md">
-      <Link href="/utilidades" className="text-xs font-bold text-slate-600">← Telefones Úteis</Link>
+      <Link href="/utilidades" className="text-xs font-bold text-slate-600">← Telefones e Serviços</Link>
       <div className="mt-3 rounded-3xl bg-gradient-to-r from-slate-700 to-slate-800 p-5 text-white shadow-md">
         <div className="text-3xl">📞</div><h1 className="mt-1 text-xl font-black">Cadastrar contato ou serviço</h1>
         <p className="mt-1 text-xs leading-5 text-white/80">Ajude a ampliar o diretório da comunidade. Todos os cadastros passam por aprovação.</p>

@@ -15,12 +15,12 @@ export default function UtilidadesPage() {
             <Link href="/" className="text-xs font-bold text-white/90 hover:text-white">← Início</Link>
             <div className="text-center">
               <div className="text-2xl">📞</div>
-              <h1 className="text-xl font-black">Telefones Úteis</h1>
+              <h1 className="text-xl font-black">Telefones e Serviços</h1>
             </div>
             <span className="rounded-lg bg-amber-400 px-2 py-1 text-[9px] font-black text-slate-950">Rio Claro</span>
           </div>
           <p className="mt-2 text-center text-[11px] leading-4 text-white/90">
-            Telefones e canais de atendimento de Rio Claro em um só lugar.
+            Telefones públicos, profissionais e serviços da nossa região em um só lugar.
           </p>
         </div>
       </header>
@@ -31,11 +31,11 @@ export default function UtilidadesPage() {
         <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-black text-slate-800">Conhece um telefone útil?</p>
+              <p className="text-xs font-black text-slate-800">Conhece um profissional ou serviço?</p>
               <p className="mt-0.5 text-[10px] text-slate-500">Envie as informações básicas para aprovação.</p>
             </div>
             <Link href="/utilidades/cadastrar" className="shrink-0 rounded-xl bg-amber-500 px-3 py-2 text-[10px] font-black text-white shadow-sm hover:bg-amber-600">
-              ➕ Cadastrar telefone
+              ➕ Cadastrar contato
             </Link>
           </div>
         </section>
@@ -50,7 +50,7 @@ export default function UtilidadesPage() {
         {/* RODAPÉ */}
         <div className="text-center pt-2">
           <p className="text-[10px] text-slate-400">
-            Sobradão 360 • Telefones Úteis
+            Sobradão 360 • Telefones e Serviços
           </p>
         </div>
 

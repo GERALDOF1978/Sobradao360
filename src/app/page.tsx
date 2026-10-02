@@ -27,7 +27,7 @@ const servicosRapidos = [
     link: "/comunidade",
   },
   {
-    titulo: "Telefones Úteis",
+    titulo: "Telefones e Serviços",
     icone: "📞",
     cor: "bg-slate-700",
     link: "/utilidades",

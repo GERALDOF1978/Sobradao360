@@ -36,7 +36,7 @@ export default function TelefonesUteisLista() {
   }, []);
 
   // Botões de filtro rápido no cabeçalho
-  const categoriasFiltro = ["Todos", "Água", "Energia", "Internet", "Saúde", "Emergência", "Prefeitura", "Segurança", "Transporte", "Social"];
+  const categoriasFiltro = ["Todos", "Casa e Construção", "Automotivo", "Transporte", "Limpeza e Cuidados", "Saúde", "Beleza", "Alimentação", "Comércio", "Pet", "Emergência", "Serviços Públicos"];
 
   const telefonesFiltrados = telefones.filter((item) => {
     const correspondeBusca =
@@ -45,7 +45,14 @@ export default function TelefonesUteisLista() {
       item.telefone.includes(busca);
 
     if (filtroAtivo === "Todos") return correspondeBusca;
-    return correspondeBusca && item.categoria.toLowerCase().includes(filtroAtivo.toLowerCase());
+
+    const categoria = item.categoria.toLowerCase();
+    if (filtroAtivo === "Serviços Públicos") {
+      const categoriasPublicas = ["água", "esgoto", "energia", "internet", "prefeitura", "segurança", "social", "assistência", "iluminação", "obras públicas", "trânsito", "meio ambiente", "lixo", "inclusão", "previdência", "encomendas", "reclamação", "direitos", "governo", "administração", "planejamento", "agricultura", "educação", "turismo", "cursos", "empreendedorismo", "inovação", "celular"];
+      return correspondeBusca && categoriasPublicas.some((cat) => categoria.includes(cat));
+    }
+
+    return correspondeBusca && categoria.includes(filtroAtivo.toLowerCase());
   });
 
   return (
@@ -62,15 +69,17 @@ export default function TelefonesUteisLista() {
                 : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
             }`}
           >
-            {cat === "Água" && "💧 "}
-            {cat === "Energia" && "⚡ "}
-            {cat === "Internet" && "🌐 "}
+            {cat === "Casa e Construção" && "🏠 "}
+            {cat === "Automotivo" && "🚗 "}
+            {cat === "Transporte" && "🚕 "}
+            {cat === "Limpeza e Cuidados" && "🧹 "}
             {cat === "Saúde" && "🏥 "}
+            {cat === "Beleza" && "✂️ "}
+            {cat === "Alimentação" && "🍴 "}
+            {cat === "Comércio" && "🛍️ "}
+            {cat === "Pet" && "🐾 "}
             {cat === "Emergência" && "🚨 "}
-            {cat === "Prefeitura" && "🏛️ "}
-            {cat === "Segurança" && "🛡️ "}
-            {cat === "Transporte" && "🚌 "}
-            {cat === "Social" && "🤝 "}
+            {cat === "Serviços Públicos" && "🏛️ "}
             {cat}
           </button>
         ))}
