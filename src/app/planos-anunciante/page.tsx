@@ -11,6 +11,7 @@ type Plano = {
   valor: number;
   duracaoDias: number;
   limiteProdutos: number;
+  carrinhoCompras: boolean;
   exibicaoPadrao: {
     marquee: boolean;
     publicidade: boolean;
@@ -59,6 +60,7 @@ export default function PlanosAnunciantePage() {
               valor: Number(dados.valor || 0),
               duracaoDias: Number(dados.duracaoDias || 0),
               limiteProdutos: Number(dados.limiteProdutos || 0),
+              carrinhoCompras: dados.carrinhoCompras === true,
               exibicaoPadrao: {
                 marquee: exibicao.marquee === true,
                 publicidade: exibicao.publicidade === true,
@@ -150,6 +152,13 @@ export default function PlanosAnunciantePage() {
                     {plano.limiteProdutos > 0
                       ? "Até " + plano.limiteProdutos + " produtos ou serviços cadastrados."
                       : "Sem limite definido de produtos ou serviços."}
+                  </div>
+                </div>
+
+                <div className={`mt-4 rounded-2xl p-4 ${plano.carrinhoCompras ? "bg-emerald-50" : "bg-slate-50"}`}>
+                  <div className="text-sm font-black text-slate-900">🛒 Carrinho de compras</div>
+                  <div className="mt-1 text-xs text-slate-600">
+                    {plano.carrinhoCompras ? "Incluso — o cliente pode montar o pedido e enviar pelo WhatsApp." : "Não incluso neste plano."}
                   </div>
                 </div>
 

@@ -27,6 +27,7 @@ type Pacote = {
   valor: number;
   duracaoDias: number;
   limiteProdutos: number;
+  carrinhoCompras: boolean;
   exibicaoPadrao: Posicoes;
   ativo: boolean;
 };
@@ -39,6 +40,7 @@ type Contrato = {
   valorContratado: number;
   duracaoDias: number;
   limiteProdutos: number;
+  carrinhoCompras: boolean;
   inicio?: unknown;
   vencimento?: unknown;
   status: "ativo" | "inativo" | "expirado" | "cancelado";
@@ -155,6 +157,7 @@ export default function ContratosAnuncio({
     valor: "",
     duracaoDias: 30,
     limiteProdutos: 5,
+    carrinhoCompras: false,
     ativo: true,
     exibicaoPadrao: { ...VAZIO },
   });
@@ -164,6 +167,7 @@ export default function ContratosAnuncio({
     valor: "",
     duracaoDias: 30,
     limiteProdutos: 5,
+    carrinhoCompras: false,
     inicio: new Date()
       .toISOString()
       .slice(0, 10),
@@ -201,6 +205,7 @@ export default function ContratosAnuncio({
             d.duracaoDias || 30
           ),
           limiteProdutos: Number(d.limiteProdutos || 0),
+          carrinhoCompras: d.carrinhoCompras === true,
           ativo: d.ativo !== false,
           exibicaoPadrao: {
             marquee: Boolean(
@@ -239,6 +244,7 @@ export default function ContratosAnuncio({
             d.duracaoDias || 0
           ),
           limiteProdutos: Number(d.limiteProdutos || 0),
+          carrinhoCompras: d.carrinhoCompras === true,
           inicio: d.inicio,
           vencimento: d.vencimento,
           status:
@@ -310,6 +316,7 @@ export default function ContratosAnuncio({
         valorContratado: pacoteSelecionado.valor,
         duracaoDias: pacoteSelecionado.duracaoDias,
         limiteProdutos: pacoteSelecionado.limiteProdutos,
+        carrinhoCompras: pacoteSelecionado.carrinhoCompras,
         inicio: Timestamp.fromDate(inicio),
         vencimento: Timestamp.fromDate(vencimento),
         status: "ativo",
@@ -326,6 +333,7 @@ export default function ContratosAnuncio({
         mostrarMarquee: pacoteSelecionado.exibicaoPadrao.marquee,
         mostrarCard: pacoteSelecionado.exibicaoPadrao.parceiros,
         mostrarBanner: pacoteSelecionado.exibicaoPadrao.publicidade,
+        carrinhoCompras: pacoteSelecionado.carrinhoCompras,
         atualizadoEm: serverTimestamp(),
       });
 
@@ -372,6 +380,7 @@ export default function ContratosAnuncio({
       valor: String(item.valor),
       duracaoDias: item.duracaoDias,
       limiteProdutos: item.limiteProdutos,
+      carrinhoCompras: item.carrinhoCompras,
 
       // O pacote marca automaticamente.
       exibicao: {
@@ -402,6 +411,7 @@ export default function ContratosAnuncio({
         valor,
         duracaoDias: pacote.duracaoDias,
         limiteProdutos: pacote.limiteProdutos,
+        carrinhoCompras: pacote.carrinhoCompras,
         ativo: pacote.ativo,
         exibicaoPadrao:
           pacote.exibicaoPadrao,
@@ -437,6 +447,7 @@ export default function ContratosAnuncio({
         valor: "",
         duracaoDias: 30,
         limiteProdutos: 5,
+        carrinhoCompras: false,
         ativo: true,
         exibicaoPadrao: {
           ...VAZIO,
@@ -478,6 +489,7 @@ export default function ContratosAnuncio({
       valor: String(item.valor),
       duracaoDias: item.duracaoDias,
       limiteProdutos: item.limiteProdutos || 5,
+      carrinhoCompras: item.carrinhoCompras,
       ativo: item.ativo,
       exibicaoPadrao: {
         ...item.exibicaoPadrao,
@@ -547,6 +559,9 @@ export default function ContratosAnuncio({
         limiteProdutos:
           contrato.limiteProdutos,
 
+        carrinhoCompras:
+          contrato.carrinhoCompras,
+
         inicio:
           Timestamp.fromDate(inicio),
 
@@ -589,6 +604,11 @@ export default function ContratosAnuncio({
         );
       }
 
+      await updateDoc(doc(db, "lojas_parceiras", lojaId), {
+        carrinhoCompras: contrato.status === "ativo" && contrato.carrinhoCompras,
+        atualizadoEm: serverTimestamp(),
+      });
+
       setContratoEditando(null);
 
       await carregar();
@@ -611,7 +631,7 @@ export default function ContratosAnuncio({
     const acao = novoStatus === "inativo" ? "desativar" : "reativar";
     if (!confirm(`Deseja ${acao} este contrato? O histórico e as posições serão preservados.`)) return;
     setSalvando(true);
-    try { await updateDoc(doc(db,"contratos_anuncio",item.id),{status:novoStatus,updatedAt:serverTimestamp()}); await carregar(); }
+    try { await updateDoc(doc(db,"contratos_anuncio",item.id),{status:novoStatus,updatedAt:serverTimestamp()}); await updateDoc(doc(db,"lojas_parceiras",item.lojaId),{carrinhoCompras:novoStatus==="ativo"&&item.carrinhoCompras,atualizadoEm:serverTimestamp()}); await carregar(); }
     catch(error){console.error("Erro ao alterar status do contrato:",error);alert("Não foi possível alterar o status do contrato.");}
     finally{setSalvando(false);}
   }
@@ -628,6 +648,8 @@ export default function ContratosAnuncio({
         item.duracaoDias,
       limiteProdutos:
         item.limiteProdutos || 5,
+      carrinhoCompras:
+        item.carrinhoCompras,
       inicio:
         dataInput(item.inicio) ||
         new Date()
@@ -789,6 +811,15 @@ export default function ContratosAnuncio({
                 </div>
               </div>
 
+              <label className="flex gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                <input
+                  type="checkbox"
+                  checked={pacote.carrinhoCompras}
+                  onChange={(e) => setPacote({ ...pacote, carrinhoCompras: e.target.checked })}
+                />
+                <span><strong>🛒 Carrinho de compras</strong><span className="block text-xs text-slate-500">Cliente monta o pedido e envia pelo WhatsApp.</span></span>
+              </label>
+
               <label className="flex gap-2">
                 <input
                   type="checkbox"
@@ -853,6 +884,7 @@ export default function ContratosAnuncio({
                       </div>
 
                       <div className="mt-2 flex flex-wrap gap-1">
+                        {item.carrinhoCompras && <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-800">🛒 Carrinho</span>}
                         {POSICOES
                           .filter(
                             (p) =>
@@ -1170,6 +1202,15 @@ export default function ContratosAnuncio({
                 )}
 
               </div>
+
+              <label className="mt-3 flex gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={contrato.carrinhoCompras}
+                  onChange={(e) => setContrato({ ...contrato, carrinhoCompras: e.target.checked })}
+                />
+                <span><strong>🛒 Carrinho de compras</strong><span className="block text-xs text-slate-500">Liberar montagem do pedido e envio pelo WhatsApp.</span></span>
+              </label>
             </div>
 
             <button
@@ -1242,6 +1283,7 @@ export default function ContratosAnuncio({
                           </div>
 
                           <div className="mt-2 flex flex-wrap gap-1">
+                            {item.carrinhoCompras && <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-800">🛒 Carrinho</span>}
                             {POSICOES
                               .filter(
                                 (p) =>

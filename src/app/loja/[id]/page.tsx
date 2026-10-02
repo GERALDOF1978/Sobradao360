@@ -46,6 +46,7 @@ interface Negocio {
   ativo: boolean;
 
   mostrarBanner: boolean;
+  carrinhoCompras: boolean;
 }
 
 interface Produto {
@@ -186,6 +187,8 @@ export default function LojaPage({
 
   const [sobreExpandido, setSobreExpandido] =
     useState(false);
+
+  const [carrinho, setCarrinho] = useState<Record<string, number>>({});
 
   useEffect(() => {
     async function carregar() {
@@ -336,6 +339,9 @@ export default function LojaPage({
           mostrarBanner:
             data.mostrarBanner !==
             false,
+
+          carrinhoCompras:
+            data.carrinhoCompras === true,
         });
 
         try {
@@ -501,6 +507,29 @@ export default function LojaPage({
       "_blank",
       "noopener,noreferrer"
     );
+  }
+
+  function alterarCarrinho(produtoId: string, delta: number) {
+    setCarrinho((atual) => {
+      const quantidade = Math.max(0, (atual[produtoId] || 0) + delta);
+      const proximo = { ...atual };
+      if (quantidade === 0) delete proximo[produtoId];
+      else proximo[produtoId] = quantidade;
+      return proximo;
+    });
+  }
+
+  function enviarCarrinho() {
+    if (!negocio || !negocio.carrinhoCompras) return;
+    const itens = produtos.filter((p) => (carrinho[p.id] || 0) > 0);
+    if (itens.length === 0) return;
+
+    const linhas = itens.map((p) => {
+      const qtd = carrinho[p.id];
+      return `${qtd}x ${p.nome} — ${formatarPreco(p.preco * qtd)}`;
+    });
+    const total = itens.reduce((soma, p) => soma + p.preco * carrinho[p.id], 0);
+    abrirWhatsApp(`Olá! Montei um pedido na página de ${negocio.nome} no Sobradão 360.\n\n${linhas.join("\n")}\n\nTotal: ${formatarPreco(total)}\n\nGostaria de confirmar este pedido.`);
   }
 
   if (carregando) {
@@ -860,6 +889,14 @@ export default function LojaPage({
                           </button>
                         )}
 
+                        {negocio.carrinhoCompras && whatsappNumero && (
+                          <div className="mt-2 flex items-center justify-between rounded-xl bg-slate-100 p-1.5">
+                            <button type="button" onClick={() => alterarCarrinho(produto.id, -1)} className="h-8 w-8 rounded-lg bg-white font-black shadow-sm">−</button>
+                            <span className="text-xs font-black">{carrinho[produto.id] || 0}</span>
+                            <button type="button" onClick={() => alterarCarrinho(produto.id, 1)} className="h-8 w-8 rounded-lg bg-white font-black shadow-sm">+</button>
+                          </div>
+                        )}
+
                       </div>
 
                     </div>
@@ -873,6 +910,22 @@ export default function LojaPage({
           )}
 
         </section>
+
+        {negocio.carrinhoCompras && whatsappNumero && Object.values(carrinho).some((qtd) => qtd > 0) && (
+          <section className="sticky bottom-3 z-30 rounded-2xl border border-emerald-200 bg-white p-4 shadow-xl">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-black text-slate-900">🛒 Seu carrinho</p>
+                <p className="text-xs text-slate-500">
+                  {Object.values(carrinho).reduce((a, b) => a + b, 0)} item(ns) · {formatarPreco(produtos.reduce((total, p) => total + p.preco * (carrinho[p.id] || 0), 0))}
+                </p>
+              </div>
+              <button type="button" onClick={enviarCarrinho} className="rounded-xl bg-emerald-600 px-4 py-3 text-xs font-black text-white">
+                📱 Enviar pedido
+              </button>
+            </div>
+          </section>
+        )}
 
         {/* SOBRE */}
 

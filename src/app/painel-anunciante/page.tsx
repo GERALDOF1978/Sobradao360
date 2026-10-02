@@ -113,6 +113,7 @@ type PlanoAnuncio = {
   valor: number;
   duracaoDias: number;
   limiteProdutos: number;
+  carrinhoCompras: boolean;
   exibicaoPadrao: {
     marquee: boolean;
     publicidade: boolean;
@@ -425,6 +426,7 @@ export default function PainelAnunciantePage() {
             valor: numero(dados.valor),
             duracaoDias: numero(dados.duracaoDias),
             limiteProdutos: numero(dados.limiteProdutos),
+            carrinhoCompras: booleano(dados.carrinhoCompras),
             exibicaoPadrao: {
               marquee: booleano(exibicaoPadrao.marquee),
               publicidade: booleano(exibicaoPadrao.publicidade),
@@ -838,6 +840,7 @@ corMarca:
           planoEscolhidoValor: plano.valor,
           planoEscolhidoDuracaoDias: plano.duracaoDias,
           planoEscolhidoLimiteProdutos: plano.limiteProdutos,
+          planoEscolhidoCarrinhoCompras: plano.carrinhoCompras,
           statusPlano: "AGUARDANDO_CONFIRMACAO",
           atualizadoEm: serverTimestamp(),
         }
@@ -2006,6 +2009,7 @@ corMarca:
                                     <div className="mt-3 space-y-1 text-[11px] text-slate-600">
                                       <p>📅 {plano.duracaoDias} dias</p>
                                       <p>📦 Até {plano.limiteProdutos} produtos/serviços</p>
+                                      <p className={plano.carrinhoCompras ? "font-black text-emerald-700" : "text-slate-400"}>🛒 Carrinho: {plano.carrinhoCompras ? "incluso" : "não incluso"}</p>
                                     </div>
 
                                     <div className="mt-3 flex flex-wrap gap-1">
