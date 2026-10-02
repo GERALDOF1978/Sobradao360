@@ -4,7 +4,7 @@ import { FieldValue } from "firebase-admin/firestore";
 
 export async function GET() {
   try {
-    const telefonesUteis = [
+    const telefonesUteis: Array<{\n      id: string;\n      titulo: string;\n      categoria: string;\n      telefone: string;\n      horario: string;\n      icone: string;\n      isWhatsapp?: boolean;\n      servicos?: string[];\n    }> = [
       // =========================================================
       // EMERGÊNCIA & SEGURANÇA
       // =========================================================
