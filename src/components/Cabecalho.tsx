@@ -130,6 +130,7 @@ export default function Cabecalho() {
   const [mensagemPerfil, setMensagemPerfil] = useState("");
 
   const [plantaoAtual, setPlantaoAtual] = useState(0);
+  const [mensagemCompartilhar, setMensagemCompartilhar] = useState("");
 
   /*
    * =========================================================
@@ -435,6 +436,28 @@ export default function Cabecalho() {
     }
   }
 
+  async function compartilharPortal() {
+    const dados = {
+      title: "Sobradão 360",
+      text: "Confira o Sobradão 360 — tudo da nossa região em um só lugar.",
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(dados);
+        return;
+      }
+
+      await navigator.clipboard.writeText(window.location.href);
+      setMensagemCompartilhar("Link copiado!");
+      setTimeout(() => setMensagemCompartilhar(""), 2200);
+    } catch (erro) {
+      if (erro instanceof Error && erro.name === "AbortError") return;
+      console.error("Erro ao compartilhar:", erro);
+    }
+  }
+
   const alertaPrincipal =
     alertasMeteorologicos.length > 0
       ? alertasMeteorologicos[0]
@@ -556,6 +579,17 @@ export default function Cabecalho() {
 
             </div>
 
+            {/* COMPARTILHAR */}
+            <button
+              type="button"
+              onClick={compartilharPortal}
+              className="ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-blue-100 bg-white text-base shadow-sm hover:bg-blue-50"
+              title="Compartilhar Sobradão 360"
+              aria-label="Compartilhar Sobradão 360"
+            >
+              ↗️
+            </button>
+
             {/* PERFIL */}
 
             <button
@@ -603,6 +637,12 @@ export default function Cabecalho() {
 
         </div>
       </header>
+
+      {mensagemCompartilhar && (
+        <div className="fixed right-4 top-24 z-[120] rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-xl">
+          {mensagemCompartilhar}
+        </div>
+      )}
 
       {/* =====================================================
           MODAL ALERTA
