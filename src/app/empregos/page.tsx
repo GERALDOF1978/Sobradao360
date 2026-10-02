@@ -33,6 +33,9 @@ interface Vaga {
   origem: "trampolim" | "manual";
   createdAt?: any;
   autorNome?: string;
+  contato?: string | null;
+  observacao?: string | null;
+  temArte?: boolean;
 }
 
 /**
@@ -765,10 +768,20 @@ async function buscarVagas(): Promise<Vaga[]> {
             dados.createdAt,
 
           autorNome:
-            textoSeguro(
-              dados.autorNome
-            ) ||
+            textoSeguro(dados.nomeContato) ||
+            textoSeguro(dados.autorNome) ||
             "Morador",
+
+          contato:
+            textoSeguro(dados.contato) ||
+            null,
+
+          observacao:
+            textoSeguro(dados.observacao) ||
+            null,
+
+          temArte:
+            dados.temArte === true,
         });
       }
     );
@@ -894,6 +907,8 @@ export default function EmpregosPage() {
               vaga.tipoContrato,
               vaga.prazo,
               vaga.autorNome,
+              vaga.contato,
+              vaga.observacao,
             ]
               .filter(Boolean)
               .map((item) =>
@@ -1330,6 +1345,15 @@ export default function EmpregosPage() {
                                 vaga.descricao
                               )}
                             </p>
+                          )}
+
+                          {vaga.origem === "manual" && (vaga.autorNome || vaga.contato || vaga.observacao) && (
+                            <div className="mt-4 rounded-2xl bg-slate-50 p-3 text-[11px] text-slate-700">
+                              <p className="font-black text-slate-800">Contato da publicação</p>
+                              {vaga.autorNome && <p className="mt-1">👤 {textoSeguro(vaga.autorNome)}</p>}
+                              {vaga.contato && <p className="mt-1">📱 {textoSeguro(vaga.contato)}</p>}
+                              {vaga.observacao && <p className="mt-1">📝 {textoSeguro(vaga.observacao)}</p>}
+                            </div>
                           )}
 
                           {/* LINK TRAMPOLIM */}
