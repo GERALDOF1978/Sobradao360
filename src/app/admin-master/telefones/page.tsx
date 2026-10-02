@@ -8,7 +8,7 @@ type AuthUsuario = {
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { collection, getDoc, getDocs, query, orderBy, updateDoc, doc, addDoc, serverTimestamp } from "firebase/firestore";
+import { getDoc, doc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "@/lib/firebase";
 
@@ -35,12 +35,31 @@ export default function TelefonesMasterPage() {
   const [itens, setItens] = useState<Solicitacao[]>([]);
   const [processando, setProcessando] = useState<string | null>(null);
 
+  async function requisicaoMaster(method: "GET" | "PATCH", body?: Record<string, unknown>) {
+    const usuario = getAuth().currentUser;
+    if (!usuario) throw new Error("Sessão do Master não encontrada.");
+    const token = await usuario.getIdToken();
+    const resposta = await fetch("/api/admin/telefones", {
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(body ? { "Content-Type": "application/json" } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    const texto = await resposta.text();
+    let resultado: any = {};
+    try { resultado = texto ? JSON.parse(texto) : {}; } catch {}
+    if (!resposta.ok || !resultado.success) {
+      throw new Error(resultado.error || `Erro HTTP ${resposta.status}`);
+    }
+    return resultado;
+  }
+
   async function carregar() {
     try {
-      const snapshot = await getDocs(
-        query(collection(db, "solicitacoes_telefones"), orderBy("createdAt", "desc"))
-      );
-      setItens(snapshot.docs.map((item: { id: string; data: () => Record<string, unknown> }) => ({ id: item.id, ...(item.data() as Omit<Solicitacao, "id">) })));
+      const resultado = await requisicaoMaster("GET");
+      setItens(Array.isArray(resultado.itens) ? resultado.itens : []);
     } catch (error) {
       console.error("Erro ao carregar solicitações de telefones:", error);
     }
@@ -71,33 +90,11 @@ export default function TelefonesMasterPage() {
     if (!item.telefone || !item.nome || !item.servico) return;
     setProcessando(item.id);
     try {
-      await addDoc(collection(db, "telefones"), {
-        nome: item.nome,
-        servico: item.servico,
-        titulo: item.nome,
-        categoria: item.categoria || "Serviços",
-        telefone: item.telefone,
-        whatsapp: item.whatsapp === true,
-        isWhatsapp: item.whatsapp === true,
-        bairro: item.bairro || "",
-        descricao: item.descricao || "",
-        instagram: item.instagram || "",
-        site: item.site || "",
-        autorUid: item.autorUid || "",
-        status: "APROVADO",
-        origem: "comunidade",
-        icone: "📞",
-        horario: "—",
-        createdAt: serverTimestamp(),
-      });
-      await updateDoc(doc(db, "solicitacoes_telefones", item.id), {
-        status: "APROVADO",
-        aprovadoEm: serverTimestamp(),
-      });
+      await requisicaoMaster("PATCH", { id: item.id, acao: "aprovar" });
       await carregar();
     } catch (error) {
       console.error("Erro ao aprovar contato:", error);
-      alert("Não foi possível aprovar o contato.");
+      alert(error instanceof Error ? error.message : "Não foi possível aprovar o contato.");
     } finally {
       setProcessando(null);
     }
@@ -106,14 +103,11 @@ export default function TelefonesMasterPage() {
   async function recusar(item: Solicitacao) {
     setProcessando(item.id);
     try {
-      await updateDoc(doc(db, "solicitacoes_telefones", item.id), {
-        status: "RECUSADO",
-        recusadoEm: serverTimestamp(),
-      });
+      await requisicaoMaster("PATCH", { id: item.id, acao: "recusar" });
       await carregar();
     } catch (error) {
       console.error("Erro ao recusar contato:", error);
-      alert("Não foi possível recusar o contato.");
+      alert(error instanceof Error ? error.message : "Não foi possível recusar o contato.");
     } finally {
       setProcessando(null);
     }
