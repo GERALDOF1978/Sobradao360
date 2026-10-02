@@ -27,6 +27,16 @@ export default function UtilidadesPage() {
 
       <main className="max-w-md mx-auto px-4 py-3 space-y-4">
         <MiniCardsAnuncio />
+        <Link href="/utilidades/coleta-lixo" className="block rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm hover:bg-emerald-100">
+          <div className="flex items-center gap-3">
+            <div className="text-3xl">🗑️</div>
+            <div className="flex-1">
+              <p className="text-sm font-black text-slate-900">Coleta de Lixo</p>
+              <p className="text-[11px] text-slate-600">Consulte seu bairro e veja os dias e o horário da coleta.</p>
+            </div>
+            <span className="font-black text-emerald-700">›</span>
+          </div>
+        </Link>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
