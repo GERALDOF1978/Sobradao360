@@ -697,7 +697,8 @@ export async function GET() {
         telefonesUteis.push({
           id: doc.id,
           titulo: dados.nome || "Contato da comunidade",
-          categoria: Array.isArray(dados.servicos) && dados.servicos.length ? dados.servicos.join(", ") : (dados.categoria || dados.servico || "Serviços"),
+          categoria: dados.origem === "comunidade" || Array.isArray(dados.servicos) ? "Serviços da Comunidade" : (dados.categoria || "Serviços"),
+          servicos: Array.isArray(dados.servicos) && dados.servicos.length ? dados.servicos : (dados.servico ? String(dados.servico).split(",").map((item: string) => item.trim()).filter(Boolean) : []),
           telefone: dados.telefone || "",
           horario: dados.horario || "—",
           icone: dados.icone || "📞",

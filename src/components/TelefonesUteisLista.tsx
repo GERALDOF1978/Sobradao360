@@ -18,6 +18,7 @@ export default function TelefonesUteisLista() {
   const [busca, setBusca] = useState("");
   const [filtroAtivo, setFiltroAtivo] = useState("Todos");
   const [loading, setLoading] = useState(true);
+  const [servicosAtivos, setServicosAtivos] = useState<string[]>([]);
 
   useEffect(() => {
     async function carregar() {
@@ -39,6 +40,17 @@ export default function TelefonesUteisLista() {
   // Botões de filtro rápido no cabeçalho
   const categoriasFiltro = ["Todos", "Serviços da Comunidade", "Água", "Energia", "Internet", "Saúde", "Emergência", "Prefeitura", "Segurança", "Transporte", "Social", "Serviços Públicos"];
 
+  const servicosDisponiveis = Array.from(
+    telefones
+      .filter(item => item.categoria.toLowerCase().includes("serviços da comunidade"))
+      .flatMap(item => item.servicos || [])
+      .reduce((map, servico) => map.set(servico, (map.get(servico) || 0) + 1), new Map<string, number>())
+  ).sort((a, b) => a[0].localeCompare(b[0], "pt-BR"));
+
+  function alternarServico(servico: string) {
+    setServicosAtivos(atuais => atuais.includes(servico) ? atuais.filter(item => item !== servico) : [...atuais, servico]);
+  }
+
   const telefonesFiltrados = telefones.filter((item) => {
     const correspondeBusca =
       item.titulo.toLowerCase().includes(busca.toLowerCase()) ||
@@ -49,7 +61,11 @@ export default function TelefonesUteisLista() {
     if (filtroAtivo === "Todos") return correspondeBusca;
 
     const categoria = item.categoria.toLowerCase();
-    if (filtroAtivo === "Serviços da Comunidade") return correspondeBusca && categoria.includes("serviços da comunidade");
+    if (filtroAtivo === "Serviços da Comunidade") {
+      if (!correspondeBusca || !categoria.includes("serviços da comunidade")) return false;
+      if (servicosAtivos.length === 0) return true;
+      return servicosAtivos.some(servico => (item.servicos || []).includes(servico));
+    }
     if (filtroAtivo === "Serviços Públicos") {
       const categoriasPublicas = ["água", "esgoto", "energia", "internet", "prefeitura", "segurança", "social", "assistência", "iluminação", "obras públicas", "trânsito", "meio ambiente", "lixo", "inclusão", "previdência", "encomendas", "reclamação", "direitos", "governo", "administração", "planejamento", "agricultura", "educação", "turismo", "cursos", "empreendedorismo", "inovação", "celular"];
       return correspondeBusca && categoriasPublicas.some((cat) => categoria.includes(cat));
@@ -65,7 +81,10 @@ export default function TelefonesUteisLista() {
         {categoriasFiltro.map((cat) => (
           <button
             key={cat}
-            onClick={() => setFiltroAtivo(cat)}
+            onClick={() => {
+              setFiltroAtivo(cat);
+              if (cat !== "Serviços da Comunidade") setServicosAtivos([]);
+            }}
             className={`text-xs font-bold px-3.5 py-1.5 rounded-xl whitespace-nowrap transition shadow-sm ${
               filtroAtivo === cat
                 ? "bg-amber-500 text-white shadow-amber-200"
@@ -93,6 +112,30 @@ export default function TelefonesUteisLista() {
           </button>
         ))}
       </div>
+
+      {filtroAtivo === "Serviços da Comunidade" && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-black text-slate-800">🔧 Escolha um ou mais serviços</p>
+              <p className="text-[10px] text-slate-500">Só aparecem serviços com profissionais cadastrados.</p>
+            </div>
+            {servicosAtivos.length > 0 && <button onClick={() => setServicosAtivos([])} className="text-[10px] font-black text-amber-700">Limpar</button>}
+          </div>
+          {servicosDisponiveis.length === 0 ? (
+            <p className="mt-3 rounded-xl bg-white p-3 text-xs text-slate-500">Ainda não há profissionais aprovados nesta área.</p>
+          ) : (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {servicosDisponiveis.map(([servico, quantidade]) => {
+                const ativo = servicosAtivos.includes(servico);
+                return <button key={servico} onClick={() => alternarServico(servico)} className={`rounded-xl border px-2.5 py-1.5 text-[10px] font-bold transition ${ativo ? "border-amber-500 bg-amber-500 text-white" : "border-slate-200 bg-white text-slate-700"}`}>
+                  {ativo ? "✓ " : ""}{servico} <span className={ativo ? "text-white/80" : "text-slate-400"}>({quantidade})</span>
+                </button>;
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* CAMPO DE BUSCA */}
       <div className="relative">
