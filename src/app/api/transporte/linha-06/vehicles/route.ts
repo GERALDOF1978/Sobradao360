@@ -5,6 +5,11 @@ export const dynamic = "force-dynamic";
 const ROUTE_ID = "942470";
 const TRIP_IDS = ["8300811", "8300812", "8300813", "8300814"] as const;
 
+type VeiculoMobilibus = Record<string, unknown> & {
+  vehicleId?: unknown;
+  positionTime?: unknown;
+};
+
 function segundos(hora: unknown) {
   if (typeof hora !== "string") return -1;
   const p = hora.split(":").map(Number);
@@ -19,23 +24,25 @@ export async function GET() {
         try {
           const url = `https://mobilibus.com/api/vehicles?origin=web&trip_id=${tripId}&route_id=${ROUTE_ID}`;
           const resposta = await fetch(url, { cache: "no-store", headers: { Accept: "application/json" } });
-          if (!resposta.ok) return { tripId, vehicles: [] };
-          const dados = await resposta.json();
-          return { tripId, vehicles: Array.isArray(dados) ? dados : [] };
+          if (!resposta.ok) return { tripId, vehicles: [] as VeiculoMobilibus[] };
+          const dados: unknown = await resposta.json();
+          return { tripId, vehicles: Array.isArray(dados) ? (dados as VeiculoMobilibus[]) : [] };
         } catch {
-          return { tripId, vehicles: [] };
+          return { tripId, vehicles: [] as VeiculoMobilibus[] };
         }
       })
     );
 
-    const porVeiculo = new Map<string, Record<string, unknown>>();
+    const porVeiculo = new Map<string, VeiculoMobilibus>();
     resultados.forEach((r) => {
-      r.vehicles.forEach((v: Record<string, unknown>) => {
+      r.vehicles.forEach((v) => {
         const id = String(v.vehicleId ?? "");
         if (!id) return;
-        const atual = { ...v, tripId: r.tripId };
+        const atual: VeiculoMobilibus = { ...v, tripId: r.tripId };
         const anterior = porVeiculo.get(id);
-        if (!anterior || segundos(atual.positionTime) >= segundos(anterior.positionTime)) porVeiculo.set(id, atual);
+        if (!anterior || segundos(atual.positionTime) >= segundos(anterior.positionTime)) {
+          porVeiculo.set(id, atual);
+        }
       });
     });
 
@@ -44,6 +51,9 @@ export async function GET() {
       { headers: { "Cache-Control": "no-store, max-age=0" } }
     );
   } catch {
-    return NextResponse.json({ routeId: ROUTE_ID, vehicles: [], error: "Não foi possível consultar os ônibus agora." }, { status: 502 });
+    return NextResponse.json(
+      { routeId: ROUTE_ID, vehicles: [], error: "Não foi possível consultar os ônibus agora." },
+      { status: 502 }
+    );
   }
 }
