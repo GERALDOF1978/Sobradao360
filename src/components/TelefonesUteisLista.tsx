@@ -36,7 +36,7 @@ export default function TelefonesUteisLista() {
   }, []);
 
   // Botões de filtro rápido no cabeçalho
-  const categoriasFiltro = ["Todos", "Casa e Construção", "Automotivo", "Transporte", "Limpeza e Cuidados", "Saúde", "Beleza", "Alimentação", "Comércio", "Pet", "Emergência", "Serviços Públicos"];
+  const categoriasFiltro = ["Todos", "Água", "Energia", "Internet", "Saúde", "Emergência", "Prefeitura", "Segurança", "Transporte", "Social", "Casa e Construção", "Automotivo", "Limpeza e Cuidados", "Beleza", "Alimentação", "Comércio", "Pet", "Serviços Públicos"];
 
   const telefonesFiltrados = telefones.filter((item) => {
     const correspondeBusca =
@@ -69,6 +69,12 @@ export default function TelefonesUteisLista() {
                 : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
             }`}
           >
+            {cat === "Água" && "💧 "}
+            {cat === "Energia" && "⚡ "}
+            {cat === "Internet" && "🌐 "}
+            {cat === "Prefeitura" && "🏛️ "}
+            {cat === "Segurança" && "🛡️ "}
+            {cat === "Social" && "🤝 "}
             {cat === "Casa e Construção" && "🏠 "}
             {cat === "Automotivo" && "🚗 "}
             {cat === "Transporte" && "🚕 "}
