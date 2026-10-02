@@ -697,7 +697,7 @@ export async function GET() {
         telefonesUteis.push({
           id: doc.id,
           titulo: dados.nome || "Contato da comunidade",
-          categoria: dados.categoria || "Serviços",
+          categoria: Array.isArray(dados.servicos) && dados.servicos.length ? dados.servicos.join(", ") : (dados.categoria || dados.servico || "Serviços"),
           telefone: dados.telefone || "",
           horario: dados.horario || "—",
           icone: dados.icone || "📞",
@@ -737,7 +737,8 @@ export async function POST(request: Request) {
     const decoded = await adminAuth.verifyIdToken(autorizacao.slice(7).trim());
     const dados = await request.json();
     const nome = String(dados.nome || "").trim();
-    const servico = String(dados.servico || "").trim();
+    const servicos = Array.isArray(dados.servicos) ? dados.servicos.map((item: unknown) => String(item).trim()).filter(Boolean) : [];
+    const servico = servicos.join(", ");
     const telefone = String(dados.telefone || "").trim();
 
     if (!nome || !servico || !telefone) {
@@ -747,7 +748,8 @@ export async function POST(request: Request) {
     const ref = await adminDb.collection("solicitacoes_telefones").add({
       nome,
       servico,
-      categoria: String(dados.categoria || "Serviços"),
+      categoria: "Serviços da Comunidade",
+      servicos,
       telefone,
       whatsapp: dados.whatsapp === true,
       bairro: String(dados.bairro || "").trim(),

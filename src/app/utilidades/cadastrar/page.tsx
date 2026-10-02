@@ -11,7 +11,19 @@ import Link from "next/link";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
-const CATEGORIAS = ["Casa e Construção","Automotivo","Transporte e Motoristas","Limpeza e Cuidados","Saúde e Bem-estar","Beleza","Alimentação","Comércio","Pet","Educação","Tecnologia","Eventos","Outros"];
+const SERVICOS = [
+  "Pedreiro","Pintor","Encanador","Eletricista","Calheiro","Gesseiro","Drywall","Azulejista","Telhadista","Serralheiro","Ferreiro","Marceneiro","Carpinteiro",
+  "Jardineiro","Limpeza de quintal","Roçagem","Poda de árvore","Limpeza de terreno","Piscineiro","Dedetização","Limpeza de caixa d'água",
+  "Faxineira","Diarista","Limpeza residencial","Limpeza pós-obra","Lavanderia","Passadeira",
+  "Motorista particular","Frete","Carreto","Mudança","Motoboy","Transporte escolar",
+  "Mecânico","Eletricista automotivo","Borracharia","Guincho","Funilaria e pintura","Lavagem de veículos",
+  "Montador de móveis","Conserto de eletrodomésticos","Técnico de geladeira","Técnico de máquina de lavar","Ar-condicionado","Chaveiro",
+  "Marmitas","Bolos","Salgados","Doces","Churrasqueiro","Buffet","Gás","Água mineral",
+  "Banho e tosa","Cuidador de animais","Passeador de cães","Veterinário",
+  "Cabeleireiro","Barbeiro","Manicure","Pedicure","Cuidador de idosos",
+  "Manutenção de celular","Manutenção de computador","Instalação de internet/rede","Câmeras de segurança",
+  "Fotógrafo","DJ","Decoração","Aluguel de mesas e cadeiras","Som para festas","Outro serviço"
+];
 
 export default function CadastrarContatoPage() {
   const [uid, setUid] = useState("");
@@ -19,7 +31,7 @@ export default function CadastrarContatoPage() {
   const [carregando, setCarregando] = useState(true);
   const [enviando, setEnviando] = useState(false);
   const [mensagem, setMensagem] = useState("");
-  const [form, setForm] = useState({nome:"",servico:"",categoria:"Casa e Construção",telefone:"",whatsapp:false,bairro:"",descricao:"",instagram:"",site:""});
+  const [form, setForm] = useState({nome:"",servicos:[] as string[],telefone:"",whatsapp:false,bairro:"",descricao:"",instagram:"",site:""});
 
   useEffect(() => onAuthStateChanged(auth, (usuario: AuthUsuario | null) => {
     setUid(usuario?.uid || "");
@@ -28,11 +40,14 @@ export default function CadastrarContatoPage() {
   }), []);
 
   function atualizar(campo:string, valor:string|boolean) { setForm(atual => ({...atual,[campo]:valor})); }
+  function alternarServico(servico:string) {
+    setForm(atual => ({...atual, servicos: atual.servicos.includes(servico) ? atual.servicos.filter(item => item !== servico) : [...atual.servicos, servico]}));
+  }
 
   async function enviar(e:import("react").FormEvent) {
     e.preventDefault(); setMensagem("");
     if (!uid) { setMensagem("Você precisa entrar na sua conta para cadastrar um contato."); return; }
-    if (!form.nome.trim() || !form.servico.trim() || !form.telefone.trim()) { setMensagem("Preencha nome/empresa, serviço e telefone."); return; }
+    if (!form.nome.trim() || form.servicos.length === 0 || !form.telefone.trim()) { setMensagem("Preencha nome/empresa, marque pelo menos um serviço e informe o telefone."); return; }
     setEnviando(true);
     try {
       const usuario = auth.currentUser;
@@ -49,7 +64,7 @@ export default function CadastrarContatoPage() {
       if (!resposta.ok || !resultado.success) {
         throw new Error(resultado.error || `Erro HTTP ${resposta.status} ao cadastrar.`);
       }
-      setForm({nome:"",servico:"",categoria:"Casa e Construção",telefone:"",whatsapp:false,bairro:"",descricao:"",instagram:"",site:""});
+      setForm({nome:"",servicos:[],telefone:"",whatsapp:false,bairro:"",descricao:"",instagram:"",site:""});
       setMensagem("Cadastro enviado! Ele ficará aguardando aprovação antes de aparecer nos Telefones e Serviços.");
     } catch (error) {
       console.error("Erro ao cadastrar contato:",error);
@@ -81,8 +96,13 @@ export default function CadastrarContatoPage() {
       </div>
       <form onSubmit={enviar} className="mt-4 space-y-3 rounded-3xl bg-white p-4 shadow-sm border border-slate-200">
         <div><label className="text-[10px] font-black uppercase text-slate-500">Nome ou empresa *</label><input value={form.nome} onChange={e=>atualizar("nome",e.target.value)} placeholder="Ex.: João Reformas" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-400"/></div>
-        <div><label className="text-[10px] font-black uppercase text-slate-500">Serviço oferecido *</label><input value={form.servico} onChange={e=>atualizar("servico",e.target.value)} placeholder="Ex.: Pedreiro, eletricista, bolos..." className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-400"/></div>
-        <div><label className="text-[10px] font-black uppercase text-slate-500">Categoria</label><select value={form.categoria} onChange={e=>atualizar("categoria",e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm">{CATEGORIAS.map(c=><option key={c}>{c}</option>)}</select></div>
+        <div>
+          <label className="text-[10px] font-black uppercase text-slate-500">Quais serviços você oferece? *</label>
+          <p className="mt-1 text-[10px] text-slate-500">Marque quantas opções precisar.</p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {SERVICOS.map(servico => <label key={servico} className={`flex items-center gap-2 rounded-xl border p-2.5 text-[11px] font-bold ${form.servicos.includes(servico) ? "border-amber-400 bg-amber-50 text-slate-900" : "border-slate-200 bg-white text-slate-600"}`}><input type="checkbox" checked={form.servicos.includes(servico)} onChange={()=>alternarServico(servico)}/>{servico}</label>)}
+          </div>
+        </div>
         <div><label className="text-[10px] font-black uppercase text-slate-500">Telefone *</label><input type="tel" value={form.telefone} onChange={e=>atualizar("telefone",e.target.value)} placeholder="(19) 99999-9999" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-400"/></div>
         <label className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-xs font-bold text-emerald-900"><input type="checkbox" checked={form.whatsapp} onChange={e=>atualizar("whatsapp",e.target.checked)}/>Este número também atende pelo WhatsApp</label>
         <div><label className="text-[10px] font-black uppercase text-slate-500">Bairro</label><input value={form.bairro} onChange={e=>atualizar("bairro",e.target.value)} placeholder="Ex.: Sobradão" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-400"/></div>

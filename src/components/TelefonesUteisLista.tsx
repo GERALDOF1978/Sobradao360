@@ -10,6 +10,7 @@ interface TelefoneUtil {
   horario: string;
   icone: string;
   isWhatsapp?: boolean;
+  servicos?: string[];
 }
 
 export default function TelefonesUteisLista() {
@@ -36,17 +37,19 @@ export default function TelefonesUteisLista() {
   }, []);
 
   // Botões de filtro rápido no cabeçalho
-  const categoriasFiltro = ["Todos", "Água", "Energia", "Internet", "Saúde", "Emergência", "Prefeitura", "Segurança", "Transporte", "Social", "Casa e Construção", "Automotivo", "Limpeza e Cuidados", "Beleza", "Alimentação", "Comércio", "Pet", "Serviços Públicos"];
+  const categoriasFiltro = ["Todos", "Serviços da Comunidade", "Água", "Energia", "Internet", "Saúde", "Emergência", "Prefeitura", "Segurança", "Transporte", "Social", "Serviços Públicos"];
 
   const telefonesFiltrados = telefones.filter((item) => {
     const correspondeBusca =
       item.titulo.toLowerCase().includes(busca.toLowerCase()) ||
       item.categoria.toLowerCase().includes(busca.toLowerCase()) ||
+      (item.servicos || []).some(servico => servico.toLowerCase().includes(busca.toLowerCase())) ||
       item.telefone.includes(busca);
 
     if (filtroAtivo === "Todos") return correspondeBusca;
 
     const categoria = item.categoria.toLowerCase();
+    if (filtroAtivo === "Serviços da Comunidade") return correspondeBusca && categoria.includes("serviços da comunidade");
     if (filtroAtivo === "Serviços Públicos") {
       const categoriasPublicas = ["água", "esgoto", "energia", "internet", "prefeitura", "segurança", "social", "assistência", "iluminação", "obras públicas", "trânsito", "meio ambiente", "lixo", "inclusão", "previdência", "encomendas", "reclamação", "direitos", "governo", "administração", "planejamento", "agricultura", "educação", "turismo", "cursos", "empreendedorismo", "inovação", "celular"];
       return correspondeBusca && categoriasPublicas.some((cat) => categoria.includes(cat));
@@ -75,7 +78,7 @@ export default function TelefonesUteisLista() {
             {cat === "Prefeitura" && "🏛️ "}
             {cat === "Segurança" && "🛡️ "}
             {cat === "Social" && "🤝 "}
-            {cat === "Casa e Construção" && "🏠 "}
+            {cat === "Serviços da Comunidade" && "🔧 "}
             {cat === "Automotivo" && "🚗 "}
             {cat === "Transporte" && "🚕 "}
             {cat === "Limpeza e Cuidados" && "🧹 "}
@@ -135,6 +138,7 @@ export default function TelefonesUteisLista() {
                       <span className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">
                         {item.categoria}
                       </span>
+                      {(item.servicos || []).slice(0,4).map(servico => <span key={servico} className="text-[9px] font-bold bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded">{servico}</span>)}
                       {item.horario && item.horario !== "—" && (
                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                           item.horario === "24h" ? "bg-emerald-100 text-emerald-800" : "bg-blue-50 text-blue-700"
