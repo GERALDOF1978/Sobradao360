@@ -1084,6 +1084,37 @@ corMarca:
       `/loja/${negocio.id}`;
   }
 
+  async function compartilharNegocio(negocio: Negocio) {
+    setErro("");
+    setMensagem("");
+
+    const url = `${window.location.origin}/loja/${negocio.id}`;
+    const dados = {
+      title: negocio.nome || "Sobradão 360",
+      text: `Confira ${negocio.nome || "este negócio"} no Sobradão 360.`,
+      url,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(dados);
+        return;
+      }
+
+      await navigator.clipboard.writeText(url);
+      setMensagem("Link da sua página copiado! Agora é só compartilhar.");
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+
+      try {
+        await navigator.clipboard.writeText(url);
+        setMensagem("Link da sua página copiado! Agora é só compartilhar.");
+      } catch {
+        setErro("Não foi possível compartilhar a página agora.");
+      }
+    }
+  }
+
   function textoStatus(
     negocio: Negocio
   ): string {
@@ -1888,6 +1919,16 @@ corMarca:
                             className="rounded-xl border border-blue-200 bg-white px-4 py-3 text-xs font-black text-blue-800 hover:bg-blue-50"
                           >
                             👀 Ver minha página
+                          </button>
+                        )}
+
+                        {negocio.ativo && negocio.tipoPresenca === "pagina_sobradao" && (
+                          <button
+                            type="button"
+                            onClick={() => void compartilharNegocio(negocio)}
+                            className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-black text-emerald-800 hover:bg-emerald-100"
+                          >
+                            ↗️ Compartilhar minha página
                           </button>
                         )}
 
