@@ -224,6 +224,7 @@ export default function AdminMasterPage() {
 
   const [noticiasImportadas, setNoticiasImportadas] = useState<NoticiaImportada[]>([]);
   const [carregandoNoticias, setCarregandoNoticias] = useState(false);
+  const [processandoNoticia, setProcessandoNoticia] = useState<string | null>(null);
 
   const [resultadoNoticias, setResultadoNoticias] = useState<{
     fontes?: number;
@@ -415,6 +416,49 @@ export default function AdminMasterPage() {
       );
     } finally {
       setAtualizandoNoticias(false);
+    }
+  }
+
+  async function revisarNoticia(id: string, acao: "APROVAR" | "RECUSAR") {
+    if (processandoNoticia) return;
+
+    setProcessandoNoticia(id);
+
+    try {
+      const usuario = getAuth().currentUser;
+      if (!usuario) {
+        alert("Sessão do Master não encontrada. Entre novamente.");
+        return;
+      }
+
+      const token = await usuario.getIdToken();
+      const response = await fetch("/api/admin/noticias/revisar", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, acao }),
+      });
+
+      const resultado = await response.json();
+
+      if (!response.ok || !resultado.success) {
+        throw new Error(resultado.erro || "Não foi possível revisar a notícia.");
+      }
+
+      setNoticiasImportadas((atuais) =>
+        atuais.map((noticia) =>
+          noticia.id === id
+            ? { ...noticia, status: resultado.status }
+            : noticia
+        )
+      );
+    } catch (error) {
+      console.error("Erro ao revisar notícia:", error);
+      alert(error instanceof Error ? error.message : "Não foi possível revisar a notícia.");
+    } finally {
+      setProcessandoNoticia(null);
     }
   }
 
@@ -1169,12 +1213,34 @@ export default function AdminMasterPage() {
                               🔗 Abrir matéria original
                             </a>
                           )}
-                          <span className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-400">
-                            Aprovar — próxima etapa
-                          </span>
-                          <span className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-400">
-                            Recusar — próxima etapa
-                          </span>
+                          {noticia.status === "AGUARDANDO_REVISAO" ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => revisarNoticia(noticia.id, "APROVAR")}
+                                disabled={processandoNoticia === noticia.id}
+                                className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-black text-white hover:bg-emerald-700 disabled:opacity-50"
+                              >
+                                {processandoNoticia === noticia.id ? "⏳ Processando..." : "✅ Aprovar para resumo"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => revisarNoticia(noticia.id, "RECUSAR")}
+                                disabled={processandoNoticia === noticia.id}
+                                className="rounded-lg bg-red-600 px-3 py-2 text-xs font-black text-white hover:bg-red-700 disabled:opacity-50"
+                              >
+                                ❌ Recusar
+                              </button>
+                            </>
+                          ) : (
+                            <span className={`rounded-lg px-3 py-2 text-xs font-black ${
+                              noticia.status === "APROVADA"
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-red-50 text-red-700"
+                            }`}>
+                              {noticia.status === "APROVADA" ? "✅ Aprovada para resumo" : "❌ Recusada"}
+                            </span>
+                          )}
                         </div>
                       </article>
                     ))}
