@@ -430,7 +430,7 @@ export default function AdminMasterPage() {
       );
 
       setNoticiasImportadas(
-        snapshot.docs.map((item) => ({
+        snapshot.docs.map((item: (typeof snapshot.docs)[number]) => ({
           id: item.id,
           ...(item.data() as Omit<NoticiaImportada, "id">),
         }))
