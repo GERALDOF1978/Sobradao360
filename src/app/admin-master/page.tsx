@@ -341,9 +341,7 @@ export default function AdminMasterPage() {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ fonteId }),
       });
 
       const textoResposta = await response.text();
@@ -394,7 +392,9 @@ export default function AdminMasterPage() {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({ fonteId }),
       });
 
       const texto = await response.text();
