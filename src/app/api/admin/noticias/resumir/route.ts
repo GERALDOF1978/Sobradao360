@@ -95,7 +95,12 @@ ${material}`;
     const resumo = String(gerado.resumo || "").trim().slice(0, 700);
     if (!titulo || !resumo) throw new Error("A IA não gerou título e resumo válidos.");
 
-    return NextResponse.json({ success: true, titulo, resumo });
+    await snap.ref.update({
+      resumidoPorIA: true,
+      resumidoPorIAEm: new Date(),
+    });
+
+    return NextResponse.json({ success: true, titulo, resumo, resumidoPorIA: true });
   } catch (error) {
     console.error("Erro ao gerar resumo com Gemini:", error);
     return NextResponse.json(

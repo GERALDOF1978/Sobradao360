@@ -15,6 +15,7 @@ type Noticia = {
 export default function NoticiasPage() {
   const [noticias, setNoticias] = useState<Noticia[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [expandidas, setExpandidas] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetch("/api/noticias", { cache: "no-store" })
@@ -53,7 +54,16 @@ export default function NoticiasPage() {
                 )}
               </div>
               <h2 className="mt-3 text-xl font-black leading-snug text-slate-900">{noticia.titulo}</h2>
-              <p className="mt-3 text-sm leading-relaxed text-slate-700">{noticia.resumo}</p>
+              <p className={`mt-3 text-sm leading-relaxed text-slate-700 ${expandidas[noticia.id] ? "" : "line-clamp-3"}`}>
+                {noticia.resumo}
+              </p>
+              <button
+                type="button"
+                onClick={() => setExpandidas((atuais) => ({ ...atuais, [noticia.id]: !atuais[noticia.id] }))}
+                className="mt-2 text-xs font-black text-blue-700 hover:underline"
+              >
+                {expandidas[noticia.id] ? "▲ Mostrar menos" : "▼ Continuar lendo"}
+              </button>
               <a
                 href={noticia.linkOriginal}
                 target="_blank"

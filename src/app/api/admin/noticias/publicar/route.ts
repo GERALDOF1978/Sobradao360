@@ -52,6 +52,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, erro: "Preencha o título e o resumo." }, { status: 400 });
     }
 
+    if (acao === "PUBLICAR" && snap.data()?.resumidoPorIA !== true) {
+      return NextResponse.json(
+        { success: false, erro: "Gere o resumo com IA antes de publicar esta notícia." },
+        { status: 400 }
+      );
+    }
+
     const publicado = acao === "PUBLICAR" ? true : acao === "RETIRAR" ? false : Boolean(snap.data()?.publicadoNoPortal);
     await ref.update({
       tituloPortal: titulo || snap.data()?.tituloPortal || "",

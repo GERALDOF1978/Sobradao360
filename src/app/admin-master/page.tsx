@@ -107,6 +107,7 @@ interface NoticiaImportada {
   publicadoNoPortal?: boolean;
   tituloPortal?: string;
   resumoPortal?: string;
+  resumidoPorIA?: boolean;
 }
 
 interface SolicitacaoDivulgacao {
@@ -228,6 +229,8 @@ export default function AdminMasterPage() {
   const [carregandoNoticias, setCarregandoNoticias] = useState(false);
   const [processandoNoticia, setProcessandoNoticia] = useState<string | null>(null);
   const [rascunhosNoticias, setRascunhosNoticias] = useState<Record<string, { titulo: string; resumo: string }>>({});
+  const [noticiasExpandidas, setNoticiasExpandidas] = useState<Record<string, boolean>>({});
+  const [ordemNoticias, setOrdemNoticias] = useState<"recentes" | "antigas">("recentes");
 
   const [resultadoNoticias, setResultadoNoticias] = useState<{
     fontes?: number;
@@ -498,6 +501,11 @@ export default function AdminMasterPage() {
           resumo: resultado.resumo,
         },
       }));
+      setNoticiasImportadas((atuais) =>
+        atuais.map((noticia) =>
+          noticia.id === id ? { ...noticia, resumidoPorIA: true } : noticia
+        )
+      );
     } catch (error) {
       console.error("Erro ao gerar resumo com IA:", error);
       alert(error instanceof Error ? error.message : "Não foi possível gerar o resumo.");
@@ -1258,9 +1266,19 @@ export default function AdminMasterPage() {
                       Confira o título, a data e abra a publicação original antes da próxima etapa.
                     </p>
                   </div>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
-                    {noticiasImportadas.length} salva(s)
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      value={ordemNoticias}
+                      onChange={(e) => setOrdemNoticias(e.target.value as "recentes" | "antigas")}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-black text-slate-700"
+                    >
+                      <option value="recentes">Mais recentes primeiro</option>
+                      <option value="antigas">Mais antigas primeiro</option>
+                    </select>
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+                      {noticiasImportadas.length} salva(s)
+                    </span>
+                  </div>
                 </div>
 
                 {carregandoNoticias ? (
@@ -1273,7 +1291,13 @@ export default function AdminMasterPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {noticiasImportadas.map((noticia) => (
+                    {[...noticiasImportadas]
+                      .sort((a, b) => {
+                        const ta = a.dataPublicacao ? new Date(a.dataPublicacao).getTime() : 0;
+                        const tb = b.dataPublicacao ? new Date(b.dataPublicacao).getTime() : 0;
+                        return ordemNoticias === "antigas" ? ta - tb : tb - ta;
+                      })
+                      .map((noticia) => (
                       <article
                         key={noticia.id}
                         className="rounded-xl border border-slate-200 bg-white p-4"
@@ -1284,12 +1308,23 @@ export default function AdminMasterPage() {
                           </span>
                           <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-black text-amber-700">
                             {noticia.status === "AGUARDANDO_REVISAO"
-                              ? "Aguardando revisão"
+                              ? "🟡 Aguardando revisão"
+                              : noticia.status === "APROVADA" && !noticia.resumidoPorIA
+                              ? "🟡 Aguardando IA"
+                              : noticia.resumidoPorIA
+                              ? "🟣 Resumida pela IA"
                               : noticia.status || "Importada"}
                           </span>
+                          <span className={`rounded-full px-2.5 py-1 text-[11px] font-black ${noticia.publicadoNoPortal ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>
+                            {noticia.publicadoNoPortal ? "🟢 PUBLICADA" : "⚪ NÃO PUBLICADA"}
+                          </span>
                           {noticia.dataPublicacao && (
-                            <span className="text-xs text-slate-500">
-                              {new Date(noticia.dataPublicacao).toLocaleString("pt-BR")}
+                            <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-700">
+                              {(() => {
+                                const data = new Date(noticia.dataPublicacao);
+                                const dias = Math.max(0, Math.floor((Date.now() - data.getTime()) / 86400000));
+                                return `${dias === 0 ? "Hoje" : dias === 1 ? "1 dia atrás" : `${dias} dias atrás`} • ${data.toLocaleDateString("pt-BR")}`;
+                              })()}
                             </span>
                           )}
                         </div>
@@ -1299,9 +1334,18 @@ export default function AdminMasterPage() {
                         </h4>
 
                         {noticia.resumoFeed && (
-                          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-600">
-                            {noticia.resumoFeed}
-                          </p>
+                          <>
+                            <p className={`mt-2 text-sm leading-relaxed text-slate-600 ${noticiasExpandidas[noticia.id] ? "" : "line-clamp-3"}`}>
+                              {noticia.resumoFeed}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setNoticiasExpandidas((atuais) => ({ ...atuais, [noticia.id]: !atuais[noticia.id] }))}
+                              className="mt-1 text-xs font-black text-blue-700 hover:underline"
+                            >
+                              {noticiasExpandidas[noticia.id] ? "▲ Ver menos" : "▼ Ver mais"}
+                            </button>
+                          </>
                         )}
 
                         {noticia.status === "APROVADA" && (
@@ -1365,10 +1409,11 @@ export default function AdminMasterPage() {
                               <button
                                 type="button"
                                 onClick={() => salvarPublicacaoNoticia(noticia.id, "PUBLICAR")}
-                                disabled={processandoNoticia === noticia.id}
-                                className="rounded-lg bg-blue-700 px-3 py-2 text-xs font-black text-white hover:bg-blue-800 disabled:opacity-50"
+                                disabled={processandoNoticia === noticia.id || !noticia.resumidoPorIA}
+                                title={!noticia.resumidoPorIA ? "Gere o resumo com IA antes de publicar." : ""}
+                                className="rounded-lg bg-blue-700 px-3 py-2 text-xs font-black text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
                               >
-                                📰 Publicar no portal
+                                {noticia.resumidoPorIA ? "📰 Publicar no portal" : "🔒 Publicar após IA"}
                               </button>
                             </div>
                           </div>
