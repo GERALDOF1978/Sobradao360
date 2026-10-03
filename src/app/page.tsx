@@ -44,6 +44,12 @@ const servicosRapidos = [
     cor: "bg-cyan-600",
     link: "/daae",
   },
+  {
+    titulo: "Giro de Notícias",
+    icone: "📰",
+    cor: "bg-blue-700",
+    link: "/noticias",
+  },
 ];
 
 type Exibicao = {

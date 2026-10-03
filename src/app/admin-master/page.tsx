@@ -1018,7 +1018,7 @@ export default function AdminMasterPage() {
           </div>
         </section>
 
-        <div className="mb-6">
+        <div className="mb-6 grid gap-3 sm:grid-cols-2">
           <a
             href="/admin-master/telefones"
             className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 hover:bg-amber-100"
@@ -1029,6 +1029,20 @@ export default function AdminMasterPage() {
               <span className="block text-xs text-slate-500">Aprovar cadastros enviados pela comunidade</span>
             </span>
           </a>
+
+          <button
+            type="button"
+            onClick={() => setMenuAberto("noticias")}
+            className="flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left hover:bg-blue-100"
+          >
+            <span className="text-2xl">📰</span>
+            <span>
+              <span className="block text-sm font-black text-slate-900">Giro de Notícias</span>
+              <span className="block text-xs text-slate-500">
+                Atualizar e revisar matérias importadas
+              </span>
+            </span>
+          </button>
         </div>
 
         <section className="mb-6">
