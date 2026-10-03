@@ -16,8 +16,19 @@ export async function GET() {
     const snap = await getFirestore(adminApp()).collection("noticias_importadas").get();
     const noticias = snap.docs
       .map((doc) => ({ id: doc.id, ...doc.data() }))
-      .filter((item: any) => item.publicadoNoPortal === true && item.status === "APROVADA")
-      .sort((a: any, b: any) => String(b.dataPublicacao || "").localeCompare(String(a.dataPublicacao || "")))
+      .filter((item: any) => item.publicadoNoPortal === true && item.status === "APROVADA" && item.arquivada !== true)
+      .sort((a: any, b: any) => String(b.dataPublicacao || "").localeCompare(String(a.dataPublicacao || "")));
+
+    const contagemPorFonte = new Map<string, number>();
+    const limitadas = noticias.filter((item: any) => {
+      const fonte = String(item.fonte || "Sem fonte");
+      const atual = contagemPorFonte.get(fonte) || 0;
+      if (atual >= 5) return false;
+      contagemPorFonte.set(fonte, atual + 1);
+      return true;
+    });
+
+    const resposta = limitadas
       .map((item: any) => ({
         id: item.id,
         titulo: item.tituloPortal || item.tituloOriginal || "",
@@ -27,7 +38,7 @@ export async function GET() {
         dataPublicacao: item.dataPublicacao || null,
       }));
 
-    return NextResponse.json({ success: true, noticias });
+    return NextResponse.json({ success: true, noticias: resposta });
   } catch (error) {
     console.error("Erro ao listar notícias públicas:", error);
     return NextResponse.json({ success: false, noticias: [] }, { status: 500 });

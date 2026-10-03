@@ -64,9 +64,37 @@ export async function POST(request: NextRequest) {
       tituloPortal: titulo || snap.data()?.tituloPortal || "",
       resumoPortal: resumo || snap.data()?.resumoPortal || "",
       publicadoNoPortal: publicado,
+      arquivada: acao === "PUBLICAR" ? false : Boolean(snap.data()?.arquivada),
       ...(acao === "PUBLICAR" ? { publicadoEm: FieldValue.serverTimestamp() } : {}),
       atualizadoEm: FieldValue.serverTimestamp(),
     });
+
+    if (acao === "PUBLICAR") {
+      const fonte = String(snap.data()?.fonte || "");
+      const publicadas = await db.collection("noticias_importadas")
+        .where("publicadoNoPortal", "==", true)
+        .get();
+
+      const daFonte = publicadas.docs
+        .filter((doc) => doc.id !== id && String(doc.data()?.fonte || "") === fonte)
+        .sort((a, b) => {
+          const ad = a.data()?.publicadoEm?.toMillis?.() || new Date(a.data()?.dataPublicacao || 0).getTime();
+          const bd = b.data()?.publicadoEm?.toMillis?.() || new Date(b.data()?.dataPublicacao || 0).getTime();
+          return bd - ad;
+        });
+
+      const excedentes = daFonte.slice(4);
+      if (excedentes.length) {
+        const batch = db.batch();
+        excedentes.forEach((doc) => batch.update(doc.ref, {
+          publicadoNoPortal: false,
+          arquivada: true,
+          arquivadoEm: FieldValue.serverTimestamp(),
+          atualizadoEm: FieldValue.serverTimestamp(),
+        }));
+        await batch.commit();
+      }
+    }
 
     return NextResponse.json({ success: true, publicadoNoPortal: publicado });
   } catch (error) {

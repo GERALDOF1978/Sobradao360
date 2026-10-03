@@ -108,6 +108,8 @@ interface NoticiaImportada {
   tituloPortal?: string;
   resumoPortal?: string;
   resumidoPorIA?: boolean;
+  possivelDuplicidade?: boolean;
+  arquivada?: boolean;
 }
 
 interface SolicitacaoDivulgacao {
@@ -231,6 +233,7 @@ export default function AdminMasterPage() {
   const [rascunhosNoticias, setRascunhosNoticias] = useState<Record<string, { titulo: string; resumo: string }>>({});
   const [noticiasExpandidas, setNoticiasExpandidas] = useState<Record<string, boolean>>({});
   const [ordemNoticias, setOrdemNoticias] = useState<"recentes" | "antigas">("recentes");
+  const [fonteNoticias, setFonteNoticias] = useState("todas");
 
   const [resultadoNoticias, setResultadoNoticias] = useState<{
     fontes?: number;
@@ -338,7 +341,9 @@ export default function AdminMasterPage() {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({ fonteId }),
       });
 
       const textoResposta = await response.text();
@@ -368,7 +373,7 @@ export default function AdminMasterPage() {
     }
   }
 
-  async function atualizarNoticias() {
+  async function atualizarNoticias(fonteId = "todas") {
     if (atualizandoNoticias) return;
 
     setAtualizandoNoticias(true);
@@ -422,6 +427,26 @@ export default function AdminMasterPage() {
       );
     } finally {
       setAtualizandoNoticias(false);
+    }
+  }
+
+  async function limparPendentesFonte(fonte: string) {
+    if (!confirm(`Excluir as notícias NÃO publicadas de ${fonte}? As publicadas serão preservadas.`)) return;
+    try {
+      const usuario = getAuth().currentUser;
+      if (!usuario) return alert("Sessão do Master não encontrada.");
+      const token = await usuario.getIdToken();
+      const response = await fetch("/api/admin/noticias/limpar", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ fonte }),
+      });
+      const resultado = await response.json();
+      if (!response.ok || !resultado.success) throw new Error(resultado.erro || "Falha ao limpar.");
+      alert(`${resultado.excluidas} notícia(s) não publicada(s) removida(s).`);
+      await carregarNoticiasImportadas();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Não foi possível limpar as pendentes.");
     }
   }
 
@@ -1219,7 +1244,7 @@ export default function AdminMasterPage() {
 
                 <button
                   type="button"
-                  onClick={atualizarNoticias}
+                  onClick={() => atualizarNoticias("todas")}
                   disabled={atualizandoNoticias}
                   className="rounded-xl bg-blue-700 px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
@@ -1227,6 +1252,30 @@ export default function AdminMasterPage() {
                     ? "⏳ Buscando notícias..."
                     : "🔄 Atualizar notícias agora"}
                 </button>
+              </div>
+
+              <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                {[
+                  ["jornal-cidade", "Jornal Cidade"],
+                  ["diario-rio-claro", "Diário do Rio Claro"],
+                  ["cidade-azul", "Cidade Azul Notícias"],
+                  ["prefeitura-rio-claro", "Prefeitura de Rio Claro"],
+                ].map(([id, nome]) => {
+                  const daFonte = noticiasImportadas.filter((n) => n.fonte === nome);
+                  const publicadas = daFonte.filter((n) => n.publicadoNoPortal && !n.arquivada).length;
+                  const aguardando = daFonte.filter((n) => !n.publicadoNoPortal && n.status !== "RECUSADA").length;
+                  return (
+                    <div key={id} className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                      <div className="font-black text-slate-900">{nome}</div>
+                      <div className="mt-1 text-xs text-slate-600">{publicadas}/5 publicadas • {aguardando} aguardando</div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button type="button" onClick={() => { setFonteNoticias(nome); atualizarNoticias(id); }} disabled={atualizandoNoticias} className="rounded-lg bg-blue-700 px-3 py-2 text-xs font-black text-white disabled:opacity-50">🔄 Buscar 5 novas</button>
+                        <button type="button" onClick={() => setFonteNoticias(nome)} className="rounded-lg bg-white px-3 py-2 text-xs font-black text-blue-700">Gerenciar</button>
+                        <button type="button" onClick={() => limparPendentesFonte(nome)} className="rounded-lg bg-white px-3 py-2 text-xs font-black text-red-700">🗑️ Limpar pendentes</button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -1268,6 +1317,17 @@ export default function AdminMasterPage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <select
+                      value={fonteNoticias}
+                      onChange={(e) => setFonteNoticias(e.target.value)}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-black text-slate-700"
+                    >
+                      <option value="todas">Todas as fontes</option>
+                      <option value="Jornal Cidade">Jornal Cidade</option>
+                      <option value="Diário do Rio Claro">Diário do Rio Claro</option>
+                      <option value="Cidade Azul Notícias">Cidade Azul Notícias</option>
+                      <option value="Prefeitura de Rio Claro">Prefeitura de Rio Claro</option>
+                    </select>
+                    <select
                       value={ordemNoticias}
                       onChange={(e) => setOrdemNoticias(e.target.value as "recentes" | "antigas")}
                       className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-black text-slate-700"
@@ -1292,6 +1352,7 @@ export default function AdminMasterPage() {
                 ) : (
                   <div className="space-y-3">
                     {[...noticiasImportadas]
+                      .filter((n) => fonteNoticias === "todas" || n.fonte === fonteNoticias)
                       .sort((a, b) => {
                         const ta = a.dataPublicacao ? new Date(a.dataPublicacao).getTime() : 0;
                         const tb = b.dataPublicacao ? new Date(b.dataPublicacao).getTime() : 0;
@@ -1318,6 +1379,12 @@ export default function AdminMasterPage() {
                           <span className={`rounded-full px-2.5 py-1 text-[11px] font-black ${noticia.publicadoNoPortal ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>
                             {noticia.publicadoNoPortal ? "🟢 PUBLICADA" : "⚪ NÃO PUBLICADA"}
                           </span>
+                          {noticia.possivelDuplicidade && (
+                            <span className="rounded-full bg-fuchsia-100 px-2.5 py-1 text-[11px] font-black text-fuchsia-800">⚠️ Possível notícia semelhante</span>
+                          )}
+                          {noticia.arquivada && (
+                            <span className="rounded-full bg-slate-200 px-2.5 py-1 text-[11px] font-black text-slate-700">📦 ARQUIVADA</span>
+                          )}
                           {noticia.dataPublicacao && (
                             <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-700">
                               {(() => {
@@ -1468,9 +1535,7 @@ export default function AdminMasterPage() {
               <div className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
                 <div className="font-black text-slate-800">🛡️ Publicação controlada pelo Master</div>
                 <p className="mt-1 text-sm text-slate-600">
-                  Primeiro vamos testar uma fonte real. Depois conectaremos o tratamento
-                  por IA, resumo, categoria, detecção de duplicidade e os botões
-                  Aprovar / Recusar antes de aparecer no portal.
+                  Cada fonte pode ser atualizada separadamente ou todas de uma vez. Entram no máximo 5 novas por fonte a cada busca. A publicação continua passando por aprovação, IA e revisão. Ao publicar a 6ª notícia de uma fonte, a mais antiga sai da vitrine principal e fica arquivada.
                 </p>
                 {resultadoNoticias?.mensagem && (
                   <p className="mt-3 rounded-lg bg-white p-3 text-sm font-bold text-blue-700">
