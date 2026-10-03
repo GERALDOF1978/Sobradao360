@@ -207,6 +207,18 @@ export default function AdminMasterPage() {
   const [sincronizandoVagas, setSincronizandoVagas] =
     useState(false);
 
+  const [atualizandoNoticias, setAtualizandoNoticias] =
+    useState(false);
+
+  const [resultadoNoticias, setResultadoNoticias] = useState<{
+    fontes?: number;
+    encontradas?: number;
+    novas?: number;
+    duplicadas?: number;
+    aguardando?: number;
+    mensagem?: string;
+  } | null>(null);
+
   const [filtro, setFiltro] = useState("todos");
   const [filtroSolicitacao, setFiltroSolicitacao] = useState("todos");
 
@@ -330,6 +342,62 @@ export default function AdminMasterPage() {
       );
     } finally {
       setSincronizandoVagas(false);
+    }
+  }
+
+  async function atualizarNoticias() {
+    if (atualizandoNoticias) return;
+
+    setAtualizandoNoticias(true);
+    setResultadoNoticias(null);
+
+    try {
+      const auth = getAuth();
+      const usuario = auth.currentUser;
+
+      if (!usuario) {
+        alert("Sessão do Master não encontrada. Entre novamente.");
+        return;
+      }
+
+      const token = await usuario.getIdToken();
+
+      const response = await fetch("/api/admin/noticias/atualizar", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const texto = await response.text();
+      let resultado: Record<string, any> = {};
+
+      try {
+        resultado = texto ? JSON.parse(texto) : {};
+      } catch {
+        throw new Error(
+          `O servidor respondeu sem JSON válido (HTTP ${response.status}).`
+        );
+      }
+
+      if (!response.ok || !resultado.success) {
+        throw new Error(
+          resultado.erro ||
+            "Não foi possível atualizar as notícias."
+        );
+      }
+
+      setResultadoNoticias(resultado);
+    } catch (error) {
+      console.error("Erro ao atualizar notícias:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível atualizar as notícias."
+      );
+    } finally {
+      setAtualizandoNoticias(false);
     }
   }
 
@@ -863,6 +931,7 @@ export default function AdminMasterPage() {
               ["anunciantes", "🏪", "Anunciantes", "Lojas parceiras"],
               ["solicitacoes", "📨", "Solicitações", solicitacoes.length + " recebida(s)"],
               ["planos", "💳", "Planos e contratos", "Pacotes e contratos"],
+              ["noticias", "📰", "Giro de Notícias", "Buscar e revisar notícias"],
               ["painel", "👤", "Painel anunciante", "Abrir painel"],
             ].map(([id, icone, titulo, descricao]) => (
               <button
@@ -922,6 +991,78 @@ export default function AdminMasterPage() {
         </div>
 
         <section className="mb-6">
+          {menuAberto === "noticias" && (
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="text-xs font-black uppercase tracking-wider text-blue-600">
+                    Giro de Notícias
+                  </div>
+                  <h2 className="mt-1 text-xl font-black text-slate-900">
+                    Notícias de Rio Claro e região
+                  </h2>
+                  <p className="mt-1 max-w-2xl text-sm text-slate-500">
+                    O Master consulta as fontes cadastradas, identifica matérias novas
+                    e prepara os itens para revisão. Nesta primeira etapa nenhuma
+                    notícia será publicada automaticamente.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={atualizarNoticias}
+                  disabled={atualizandoNoticias}
+                  className="rounded-xl bg-blue-700 px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {atualizandoNoticias
+                    ? "⏳ Buscando notícias..."
+                    : "🔄 Atualizar notícias agora"}
+                </button>
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <div className="text-xs font-bold text-slate-500">Fontes consultadas</div>
+                  <div className="mt-1 text-2xl font-black text-slate-900">
+                    {resultadoNoticias?.fontes ?? 0}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <div className="text-xs font-bold text-slate-500">Encontradas</div>
+                  <div className="mt-1 text-2xl font-black text-slate-900">
+                    {resultadoNoticias?.encontradas ?? 0}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-amber-50 p-4">
+                  <div className="text-xs font-bold text-amber-700">Novas</div>
+                  <div className="mt-1 text-2xl font-black text-amber-800">
+                    {resultadoNoticias?.novas ?? 0}
+                  </div>
+                </div>
+                <div className="rounded-xl bg-emerald-50 p-4">
+                  <div className="text-xs font-bold text-emerald-700">Aguardando revisão</div>
+                  <div className="mt-1 text-2xl font-black text-emerald-800">
+                    {resultadoNoticias?.aguardando ?? 0}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
+                <div className="font-black text-slate-800">🛡️ Publicação controlada pelo Master</div>
+                <p className="mt-1 text-sm text-slate-600">
+                  Primeiro vamos testar uma fonte real. Depois conectaremos o tratamento
+                  por IA, resumo, categoria, detecção de duplicidade e os botões
+                  Aprovar / Recusar antes de aparecer no portal.
+                </p>
+                {resultadoNoticias?.mensagem && (
+                  <p className="mt-3 rounded-lg bg-white p-3 text-sm font-bold text-blue-700">
+                    {resultadoNoticias.mensagem}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {menuAberto === "planos" && (
             <ContratosAnuncio
               lojas={lojas.map((loja) => ({
