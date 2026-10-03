@@ -366,6 +366,7 @@ async function buscarVagas(): Promise<Vaga[]> {
         null;
 
       const titulo =
+        textoSeguro(vaga.name) ||
         textoSeguro(vaga.title) ||
         textoSeguro(vaga.titulo) ||
         textoSeguro(vaga.position) ||
@@ -531,6 +532,9 @@ async function buscarVagas(): Promise<Vaga[]> {
 
         escolaridade:
           textoSeguro(
+            vaga.min_education
+          ) ||
+          textoSeguro(
             vaga.education
           ) ||
           textoSeguro(
@@ -540,6 +544,9 @@ async function buscarVagas(): Promise<Vaga[]> {
 
         experiencia:
           textoSeguro(
+            vaga.min_experience
+          ) ||
+          textoSeguro(
             vaga.experience
           ) ||
           textoSeguro(
@@ -548,6 +555,9 @@ async function buscarVagas(): Promise<Vaga[]> {
           null,
 
         turno:
+          textoSeguro(
+            vaga.work_shift
+          ) ||
           textoSeguro(
             vaga.shift
           ) ||
@@ -567,6 +577,9 @@ async function buscarVagas(): Promise<Vaga[]> {
 
         tipoContrato:
           textoSeguro(
+            vaga.work_relationship
+          ) ||
+          textoSeguro(
             vaga.contract_type
           ) ||
           textoSeguro(
@@ -576,12 +589,16 @@ async function buscarVagas(): Promise<Vaga[]> {
 
         quantidadeVagas:
           quantidadeSegura(
-            vaga.quantity ??
+            vaga.number_vacancies ??
+              vaga.quantity ??
               vaga.quantity_vacancies ??
               vaga.quantidadeVagas
           ),
 
         prazo:
+          textoSeguro(
+            vaga.vacancy_viewing_deadline
+          ) ||
           textoSeguro(
             vaga.deadline
           ) ||
@@ -597,6 +614,7 @@ async function buscarVagas(): Promise<Vaga[]> {
         origem: "trampolim",
 
         createdAt:
+          vaga.publication_date ||
           vaga.createdAt ||
           vaga.created_at ||
           vaga.updatedAt ||
