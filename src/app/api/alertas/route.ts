@@ -205,13 +205,13 @@ function alertaVigente(item: Record<string, unknown>): boolean {
     "validade_fim",
   ]);
 
-  if (inicio) {
-    const inicioMs = new Date(inicio).getTime();
-
-    if (!Number.isNaN(inicioMs) && agora < inicioMs) {
-      return false;
-    }
-  }
+  // O endpoint /avisos/ativos do INMET também pode devolver avisos
+  // já publicados cujo período de validade começa nas próximas horas.
+  // Esses avisos precisam aparecer no portal antes do início para que
+  // a comunidade seja alertada com antecedência. Por isso, não
+  // descartamos o aviso apenas porque \"inicio\" ainda é futuro.
+  // Mantemos somente a proteção contra avisos já encerrados.
+  void inicio;
 
   if (fim) {
     const fimMs = new Date(fim).getTime();
