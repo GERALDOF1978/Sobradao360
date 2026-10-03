@@ -105,6 +105,8 @@ interface NoticiaImportada {
   categorias?: string[];
   status?: string;
   publicadoNoPortal?: boolean;
+  tituloPortal?: string;
+  resumoPortal?: string;
 }
 
 interface SolicitacaoDivulgacao {
@@ -225,6 +227,7 @@ export default function AdminMasterPage() {
   const [noticiasImportadas, setNoticiasImportadas] = useState<NoticiaImportada[]>([]);
   const [carregandoNoticias, setCarregandoNoticias] = useState(false);
   const [processandoNoticia, setProcessandoNoticia] = useState<string | null>(null);
+  const [rascunhosNoticias, setRascunhosNoticias] = useState<Record<string, { titulo: string; resumo: string }>>({});
 
   const [resultadoNoticias, setResultadoNoticias] = useState<{
     fontes?: number;
@@ -462,6 +465,50 @@ export default function AdminMasterPage() {
     }
   }
 
+  async function salvarPublicacaoNoticia(
+    id: string,
+    acao: "SALVAR" | "PUBLICAR" | "RETIRAR"
+  ) {
+    if (processandoNoticia) return;
+    setProcessandoNoticia(id);
+
+    try {
+      const usuario = getAuth().currentUser;
+      if (!usuario) {
+        alert("Sessão do Master não encontrada. Entre novamente.");
+        return;
+      }
+
+      const rascunho = rascunhosNoticias[id] || { titulo: "", resumo: "" };
+      const token = await usuario.getIdToken();
+      const response = await fetch("/api/admin/noticias/publicar", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id,
+          acao,
+          titulo: rascunho.titulo,
+          resumo: rascunho.resumo,
+        }),
+      });
+      const resultado = await response.json();
+
+      if (!response.ok || !resultado.success) {
+        throw new Error(resultado.erro || "Não foi possível salvar a notícia.");
+      }
+
+      await carregarNoticiasImportadas();
+    } catch (error) {
+      console.error("Erro ao salvar/publicar notícia:", error);
+      alert(error instanceof Error ? error.message : "Não foi possível salvar a notícia.");
+    } finally {
+      setProcessandoNoticia(null);
+    }
+  }
+
   async function carregarNoticiasImportadas() {
     setCarregandoNoticias(true);
 
@@ -473,12 +520,24 @@ export default function AdminMasterPage() {
         )
       );
 
-      setNoticiasImportadas(
-        snapshot.docs.map((item: (typeof snapshot.docs)[number]) => ({
-          id: item.id,
-          ...(item.data() as Omit<NoticiaImportada, "id">),
-        }))
-      );
+      const lista = snapshot.docs.map((item: (typeof snapshot.docs)[number]) => ({
+        id: item.id,
+        ...(item.data() as Omit<NoticiaImportada, "id">),
+      }));
+
+      setNoticiasImportadas(lista);
+      setRascunhosNoticias((atuais) => {
+        const proximos = { ...atuais };
+        lista.forEach((noticia) => {
+          if (!proximos[noticia.id]) {
+            proximos[noticia.id] = {
+              titulo: noticia.tituloPortal || noticia.tituloOriginal || "",
+              resumo: noticia.resumoPortal || noticia.resumoFeed || "",
+            };
+          }
+        });
+        return proximos;
+      });
     } catch (error) {
       console.error("Erro ao carregar notícias importadas:", error);
     } finally {
@@ -1200,6 +1259,68 @@ export default function AdminMasterPage() {
                           <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-600">
                             {noticia.resumoFeed}
                           </p>
+                        )}
+
+                        {noticia.status === "APROVADA" && (
+                          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                            <div className="text-xs font-black uppercase tracking-wider text-emerald-700">
+                              Texto para o Giro de Notícias
+                            </div>
+                            <label className="mt-3 block text-xs font-bold text-slate-700">
+                              Título
+                            </label>
+                            <input
+                              value={rascunhosNoticias[noticia.id]?.titulo ?? noticia.tituloOriginal ?? ""}
+                              onChange={(e) =>
+                                setRascunhosNoticias((atuais) => ({
+                                  ...atuais,
+                                  [noticia.id]: {
+                                    titulo: e.target.value,
+                                    resumo: atuais[noticia.id]?.resumo ?? noticia.resumoFeed ?? "",
+                                  },
+                                }))
+                              }
+                              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-900"
+                            />
+                            <label className="mt-3 block text-xs font-bold text-slate-700">
+                              Resumo
+                            </label>
+                            <textarea
+                              rows={5}
+                              value={rascunhosNoticias[noticia.id]?.resumo ?? noticia.resumoFeed ?? ""}
+                              onChange={(e) =>
+                                setRascunhosNoticias((atuais) => ({
+                                  ...atuais,
+                                  [noticia.id]: {
+                                    titulo: atuais[noticia.id]?.titulo ?? noticia.tituloOriginal ?? "",
+                                    resumo: e.target.value,
+                                  },
+                                }))
+                              }
+                              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-relaxed text-slate-700"
+                            />
+                            <p className="mt-2 text-[11px] text-slate-500">
+                              O texto inicial vem do conteúdo recebido da fonte. Revise e edite antes de publicar.
+                            </p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => salvarPublicacaoNoticia(noticia.id, "SALVAR")}
+                                disabled={processandoNoticia === noticia.id}
+                                className="rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs font-black text-emerald-700 disabled:opacity-50"
+                              >
+                                💾 Salvar rascunho
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => salvarPublicacaoNoticia(noticia.id, "PUBLICAR")}
+                                disabled={processandoNoticia === noticia.id}
+                                className="rounded-lg bg-blue-700 px-3 py-2 text-xs font-black text-white hover:bg-blue-800 disabled:opacity-50"
+                              >
+                                📰 Publicar no portal
+                              </button>
+                            </div>
+                          </div>
                         )}
 
                         <div className="mt-3 flex flex-wrap gap-2">
