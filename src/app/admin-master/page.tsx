@@ -465,6 +465,47 @@ export default function AdminMasterPage() {
     }
   }
 
+  async function gerarResumoIA(id: string) {
+    if (processandoNoticia) return;
+    setProcessandoNoticia(id);
+
+    try {
+      const usuario = getAuth().currentUser;
+      if (!usuario) {
+        alert("Sessão do Master não encontrada. Entre novamente.");
+        return;
+      }
+
+      const token = await usuario.getIdToken();
+      const response = await fetch("/api/admin/noticias/resumir", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+      const resultado = await response.json();
+
+      if (!response.ok || !resultado.success) {
+        throw new Error(resultado.erro || "Não foi possível gerar o resumo.");
+      }
+
+      setRascunhosNoticias((atuais) => ({
+        ...atuais,
+        [id]: {
+          titulo: resultado.titulo,
+          resumo: resultado.resumo,
+        },
+      }));
+    } catch (error) {
+      console.error("Erro ao gerar resumo com IA:", error);
+      alert(error instanceof Error ? error.message : "Não foi possível gerar o resumo.");
+    } finally {
+      setProcessandoNoticia(null);
+    }
+  }
+
   async function salvarPublicacaoNoticia(
     id: string,
     acao: "SALVAR" | "PUBLICAR" | "RETIRAR"
@@ -1305,6 +1346,14 @@ export default function AdminMasterPage() {
                               O texto inicial vem do conteúdo recebido da fonte. Revise e edite antes de publicar.
                             </p>
                             <div className="mt-3 flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => gerarResumoIA(noticia.id)}
+                                disabled={processandoNoticia === noticia.id}
+                                className="rounded-lg bg-violet-700 px-3 py-2 text-xs font-black text-white hover:bg-violet-800 disabled:opacity-50"
+                              >
+                                {processandoNoticia === noticia.id ? "⏳ Gerando..." : "✨ Gerar resumo com IA"}
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => salvarPublicacaoNoticia(noticia.id, "SALVAR")}
