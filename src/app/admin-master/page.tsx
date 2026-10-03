@@ -95,6 +95,18 @@ interface UsuarioLogado {
   displayName: string | null;
 }
 
+interface NoticiaImportada {
+  id: string;
+  fonte?: string;
+  linkOriginal?: string;
+  tituloOriginal?: string;
+  resumoFeed?: string;
+  dataPublicacao?: string | null;
+  categorias?: string[];
+  status?: string;
+  publicadoNoPortal?: boolean;
+}
+
 interface SolicitacaoDivulgacao {
   id: string;
   nomeResponsavel?: string;
@@ -210,6 +222,9 @@ export default function AdminMasterPage() {
   const [atualizandoNoticias, setAtualizandoNoticias] =
     useState(false);
 
+  const [noticiasImportadas, setNoticiasImportadas] = useState<NoticiaImportada[]>([]);
+  const [carregandoNoticias, setCarregandoNoticias] = useState(false);
+
   const [resultadoNoticias, setResultadoNoticias] = useState<{
     fontes?: number;
     encontradas?: number;
@@ -280,6 +295,7 @@ export default function AdminMasterPage() {
         await carregarLojas();
         await carregarContratosMaster();
         await carregarSolicitacoes();
+        await carregarNoticiasImportadas();
       } catch (error: unknown) {
         console.error(
           "Erro ao verificar acesso Master:",
@@ -388,6 +404,7 @@ export default function AdminMasterPage() {
       }
 
       setResultadoNoticias(resultado);
+      await carregarNoticiasImportadas();
     } catch (error) {
       console.error("Erro ao atualizar notícias:", error);
 
@@ -398,6 +415,30 @@ export default function AdminMasterPage() {
       );
     } finally {
       setAtualizandoNoticias(false);
+    }
+  }
+
+  async function carregarNoticiasImportadas() {
+    setCarregandoNoticias(true);
+
+    try {
+      const snapshot = await getDocs(
+        query(
+          collection(db, "noticias_importadas"),
+          orderBy("criadoEm", "desc")
+        )
+      );
+
+      setNoticiasImportadas(
+        snapshot.docs.map((item) => ({
+          id: item.id,
+          ...(item.data() as Omit<NoticiaImportada, "id">),
+        }))
+      );
+    } catch (error) {
+      console.error("Erro ao carregar notícias importadas:", error);
+    } finally {
+      setCarregandoNoticias(false);
     }
   }
 
@@ -1045,6 +1086,86 @@ export default function AdminMasterPage() {
                     {resultadoNoticias?.aguardando ?? 0}
                   </div>
                 </div>
+              </div>
+
+              <div className="mt-6">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-black text-slate-900">
+                      Matérias recebidas
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Confira o título, a data e abra a publicação original antes da próxima etapa.
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+                    {noticiasImportadas.length} salva(s)
+                  </span>
+                </div>
+
+                {carregandoNoticias ? (
+                  <div className="rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-500">
+                    Carregando matérias...
+                  </div>
+                ) : noticiasImportadas.length === 0 ? (
+                  <div className="rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-500">
+                    Nenhuma matéria importada ainda. Use o botão Atualizar notícias agora.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {noticiasImportadas.map((noticia) => (
+                      <article
+                        key={noticia.id}
+                        className="rounded-xl border border-slate-200 bg-white p-4"
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
+                            {noticia.fonte || "Fonte"}
+                          </span>
+                          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-black text-amber-700">
+                            {noticia.status === "AGUARDANDO_REVISAO"
+                              ? "Aguardando revisão"
+                              : noticia.status || "Importada"}
+                          </span>
+                          {noticia.dataPublicacao && (
+                            <span className="text-xs text-slate-500">
+                              {new Date(noticia.dataPublicacao).toLocaleString("pt-BR")}
+                            </span>
+                          )}
+                        </div>
+
+                        <h4 className="mt-3 text-base font-black leading-snug text-slate-900">
+                          {noticia.tituloOriginal || "Sem título"}
+                        </h4>
+
+                        {noticia.resumoFeed && (
+                          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-600">
+                            {noticia.resumoFeed}
+                          </p>
+                        )}
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {noticia.linkOriginal && (
+                            <a
+                              href={noticia.linkOriginal}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-black text-white hover:bg-slate-800"
+                            >
+                              🔗 Abrir matéria original
+                            </a>
+                          )}
+                          <span className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-400">
+                            Aprovar — próxima etapa
+                          </span>
+                          <span className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-400">
+                            Recusar — próxima etapa
+                          </span>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
