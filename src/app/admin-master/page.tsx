@@ -520,10 +520,12 @@ export default function AdminMasterPage() {
         )
       );
 
-      const lista = snapshot.docs.map((item: (typeof snapshot.docs)[number]) => ({
-        id: item.id,
-        ...(item.data() as Omit<NoticiaImportada, "id">),
-      }));
+      const lista: NoticiaImportada[] = snapshot.docs.map(
+        (item: (typeof snapshot.docs)[number]): NoticiaImportada => ({
+          id: item.id,
+          ...(item.data() as Omit<NoticiaImportada, "id">),
+        })
+      );
 
       setNoticiasImportadas(lista);
       setRascunhosNoticias((atuais) => {
