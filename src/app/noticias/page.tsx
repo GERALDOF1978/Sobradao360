@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Share2 } from "lucide-react";
 
 type Noticia = {
   id: string;
@@ -26,6 +27,29 @@ export default function NoticiasPage() {
     if (/polícia|policia|crime|roubo|furto|prisão|prisao/.test(t)) return { icone: "🚔", categoria: "Segurança", fundo: "from-slate-700 to-slate-950" };
     if (/prefeitura|câmara|camara|vereador|municipal/.test(t)) return { icone: "🏛️", categoria: "Cidade", fundo: "from-blue-700 to-slate-950" };
     return { icone: "📰", categoria: "Rio Claro e Região", fundo: "from-blue-700 to-indigo-950" };
+  }
+
+  async function compartilharNoticia(noticia: Noticia) {
+    const url = noticia.linkOriginal || window.location.href;
+    const dados = {
+      title: noticia.titulo,
+      text: `${noticia.titulo} — Sobradão 360`,
+      url,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(dados);
+        return;
+      }
+
+      await navigator.clipboard.writeText(url);
+      alert("Link copiado!");
+    } catch (erro) {
+      if ((erro as DOMException)?.name !== "AbortError") {
+        console.error("Erro ao compartilhar:", erro);
+      }
+    }
   }
 
   useEffect(() => {
@@ -74,14 +98,26 @@ export default function NoticiasPage() {
               >
                 {expandidas[noticia.id] ? "▲ Mostrar menos" : "▼ Continuar lendo"}
               </button>
-              <a
-                href={noticia.linkOriginal}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-black text-white"
-              >
-                🔗 Ler matéria completa na fonte
-              </a>
+              <div className="mt-4 flex items-center gap-3">
+                <a
+                  href={noticia.linkOriginal}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-black text-white"
+                >
+                  🔗 Ler matéria completa na fonte
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => compartilharNoticia(noticia)}
+                  title="Compartilhar"
+                  aria-label={`Compartilhar: ${noticia.titulo}`}
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm transition hover:bg-black active:scale-95"
+                >
+                  <Share2 size={18} strokeWidth={2.5} />
+                </button>
+              </div>
               </div>
             </article>
           ))}
