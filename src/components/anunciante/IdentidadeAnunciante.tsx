@@ -365,7 +365,7 @@ export default function IdentidadeAnunciante({
         <p className="mt-2 text-center text-[10px] text-blue-700">Você não precisa criar os banners. Envie uma boa imagem e nós preparamos os formatos de divulgação.</p>
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+      <details className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:hidden">\n        <summary className="cursor-pointer text-sm font-black text-slate-800">⚙️ Identidade avançada (logo, banner e cor)</summary>\n        <p className="mt-2 text-xs text-slate-500">Use somente se quiser alterar a identidade visual da sua página.</p>\n      </details>\n\n      <div className="mt-5 hidden gap-5 lg:grid lg:grid-cols-2">
 
         {/* LOGO */}
 
@@ -510,7 +510,7 @@ export default function IdentidadeAnunciante({
 
       {/* EXIBIÇÃO CONTROLADA PELO MASTER */}
 
-      <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-4">
+      <div className="mt-5 hidden rounded-2xl border border-blue-100 bg-blue-50 p-4 lg:block">
 
         <h4 className="text-sm font-black text-blue-950">
           📢 Exibição da publicidade
