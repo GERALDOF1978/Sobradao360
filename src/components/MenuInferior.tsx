@@ -32,7 +32,7 @@ export default function MenuInferior() {
       )}
 
       <Link href="/comunidade" className="fixed bottom-[92px] left-3 z-[75] flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-xl text-white shadow-xl ring-2 ring-white md:hidden" title="Voz da Comunidade" aria-label="Voz da Comunidade">💬</Link>
-      <Link href="/planos-anunciante" className="fixed bottom-[92px] right-3 z-[75] flex h-12 w-12 items-center justify-center rounded-full bg-amber-400 text-xl text-blue-950 shadow-xl ring-2 ring-white md:hidden" title="Anuncie no Sobradão 360" aria-label="Anuncie no Sobradão 360">📢</Link>
+      <Link href="/loja-explicativa?anunciante=novo" className="fixed bottom-[92px] right-3 z-[75] flex h-12 w-12 items-center justify-center rounded-full bg-amber-400 text-xl text-blue-950 shadow-xl ring-2 ring-white md:hidden" title="Anuncie no Sobradão 360" aria-label="Anuncie no Sobradão 360">📢</Link>
 
       <nav className="fixed inset-x-0 bottom-0 z-[70] border-t-[3px] border-amber-400 bg-blue-900 text-white shadow-[0_-5px_18px_rgba(15,23,42,.2)] md:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="mx-auto grid h-[72px] max-w-md grid-cols-5 items-center px-2">
