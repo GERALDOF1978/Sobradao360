@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Noticia = {
@@ -28,11 +27,7 @@ export default function NoticiasPage() {
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8">
       <div className="mx-auto max-w-3xl">
-        <Link href="/" className="text-sm font-bold text-blue-700 hover:underline">
-          ← Voltar para o Sobradão 360
-        </Link>
-
-        <section className="mt-4 rounded-3xl bg-white p-6 shadow-sm">
+<section className="rounded-3xl bg-white p-6 shadow-sm">
           <div className="text-xs font-black uppercase tracking-wider text-blue-600">Sobradão 360</div>
           <h1 className="mt-1 text-3xl font-black text-slate-900">📰 Giro de Notícias</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
