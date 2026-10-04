@@ -385,6 +385,16 @@ export default function PainelAnunciantePage() {
   const [siteUrl, setSiteUrl] =
     useState("");
 
+  const [secaoAtiva, setSecaoAtiva] = useState<"inicio" | "pagina" | "identidade" | "plano" | "catalogo" | "divulgacao">("inicio");
+  const [menuAberto, setMenuAberto] = useState(false);
+
+  function abrirSecao(secao: "inicio" | "pagina" | "identidade" | "plano" | "catalogo" | "divulgacao") {
+    setSecaoAtiva(secao);
+    setMenuAberto(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (secao === "pagina" && negocios[0]) preencherFormulario(negocios[0]);
+  }
+
   useEffect(() => {
     const cancelar = onAuthStateChanged(
   auth,
@@ -1274,11 +1284,19 @@ corMarca:
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-6 pb-12">
+    <main data-secao={secaoAtiva} className="min-h-screen bg-slate-100 px-4 py-6 pb-12 lg:pl-64">
+      <style jsx global>{`
+        [data-secao]:not([data-secao="inicio"]) .painel-resumo { display:none !important; }
+        [data-secao]:not([data-secao="pagina"]) .painel-pagina { display:none !important; }
+        [data-secao]:not([data-secao="identidade"]) .painel-identidade { display:none !important; }
+        [data-secao]:not([data-secao="plano"]) .painel-plano { display:none !important; }
+        [data-secao]:not([data-secao="catalogo"]) .painel-catalogo { display:none !important; }
+        [data-secao]:not([data-secao="divulgacao"]) .painel-divulgacao { display:none !important; }
+      `}</style>
 
       <div className="mx-auto max-w-6xl space-y-5">
 
-        <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
+        <section className="painel-resumo overflow-hidden rounded-3xl bg-white shadow-sm">
 
           <div className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-800 p-6 text-white md:p-8">
 
@@ -1349,24 +1367,26 @@ corMarca:
         </section>
 
         {negocios.length > 0 && (
-          <nav
-            aria-label="Menu do anunciante"
-            className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm lg:fixed lg:left-4 lg:top-4 lg:z-30 lg:w-56"
-          >
-            <p className="px-2 pb-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
-              Menu do anunciante
-            </p>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1">
-              <a href="#minha-empresa" className="rounded-xl bg-blue-900 px-4 py-3 text-xs font-black text-white">🏠 Início</a>
-              <a href="#minha-pagina" className="rounded-xl bg-slate-100 px-4 py-3 text-xs font-black text-slate-700 hover:bg-slate-200">✏️ Minha página</a>
-              <a href="#identidade" className="rounded-xl bg-slate-100 px-4 py-3 text-xs font-black text-slate-700 hover:bg-slate-200">🎨 Identidade</a>
-              <a href="#contrato" className="rounded-xl bg-slate-100 px-4 py-3 text-xs font-black text-slate-700 hover:bg-slate-200">📋 Contrato</a>
-              <a href="#catalogo" className="rounded-xl bg-amber-100 px-4 py-3 text-xs font-black text-amber-900 hover:bg-amber-200">
-                {negocios[0]?.tipo === "loja" || negocios[0]?.tipo === "alimentacao" ? "🛍️ Produtos" : "🔧 Serviços"}
-              </a>
-              <a href="#divulgacao" className="rounded-xl bg-slate-100 px-4 py-3 text-xs font-black text-slate-700 hover:bg-slate-200">📢 Divulgação</a>
-            </div>
-          </nav>
+          <>
+            <button type="button" onClick={() => setMenuAberto(true)} className="fixed left-3 top-1/2 z-40 -translate-y-1/2 rounded-r-2xl bg-blue-950 px-3 py-4 text-xl text-white shadow-xl lg:hidden" aria-label="Abrir menu do anunciante">☰</button>
+            {menuAberto && <button type="button" onClick={() => setMenuAberto(false)} className="fixed inset-0 z-40 bg-black/30 lg:hidden" aria-label="Fechar menu" />}
+            <aside className={`fixed bottom-0 left-0 top-0 z-50 w-64 overflow-y-auto bg-white p-4 shadow-2xl transition-transform lg:translate-x-0 ${menuAberto ? "translate-x-0" : "-translate-x-full"}`}>
+              <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-4">
+                <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-700">Sobradão 360</p><p className="text-base font-black text-slate-900">Painel do Anunciante</p></div>
+                <button type="button" onClick={() => setMenuAberto(false)} className="rounded-lg bg-slate-100 px-3 py-2 font-black lg:hidden">✕</button>
+              </div>
+              <div className="space-y-2">
+                {([
+                  ["inicio","🏠","Início"],["pagina","✏️","Minha página"],["identidade","🎨","Identidade"],["plano","📋","Plano e contrato"],["catalogo", negocios[0]?.tipo === "loja" || negocios[0]?.tipo === "alimentacao" ? "🛍️" : "🔧", negocios[0]?.tipo === "loja" || negocios[0]?.tipo === "alimentacao" ? "Produtos" : "Serviços"],["divulgacao","📢","Divulgação"]
+                ] as const).map(([chave,icone,rotulo]) => (
+                  <button key={chave} type="button" onClick={() => abrirSecao(chave)} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-black ${secaoAtiva === chave ? "bg-blue-900 text-white" : "bg-slate-50 text-slate-700 hover:bg-slate-100"}`}>
+                    <span>{icone}</span><span>{rotulo}</span>
+                  </button>
+                ))}
+              </div>
+              <Link href="/" className="mt-6 block rounded-xl border border-slate-200 px-4 py-3 text-center text-xs font-black text-slate-600">← Voltar ao portal</Link>
+            </aside>
+          </>
         )}
 
         {mensagem && (
@@ -1386,7 +1406,7 @@ corMarca:
           className="rounded-3xl bg-white p-5 shadow-sm"
         >
 
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="painel-resumo flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 
             <div>
 
@@ -1417,7 +1437,7 @@ corMarca:
               <form
                 id="minha-pagina"
                 onSubmit={salvarNegocio}
-                className="mt-5 space-y-5 rounded-2xl border border-blue-100 bg-blue-50 p-5"
+                className="painel-pagina mt-5 space-y-5 rounded-2xl border border-blue-100 bg-blue-50 p-5"
               >
 
                 <div>
@@ -1796,7 +1816,7 @@ corMarca:
                       key={negocio.id}
                       className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
                     >
-
+                      <div className="painel-resumo">
                       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 
                         <div className="flex gap-4">
@@ -1906,10 +1926,9 @@ corMarca:
 
                         <button
                           type="button"
-                          onClick={() =>
-                            preencherFormulario(
-                              negocio
-                            )
+                          onClick={() => {
+                            setSecaoAtiva("pagina");
+                            preencherFormulario(negocio);
                           }
                           className="rounded-xl bg-blue-900 px-4 py-3 text-xs font-black text-white hover:bg-blue-800"
                         >
@@ -1941,7 +1960,9 @@ corMarca:
                         )}
 
                       </div>
+                      </div>
                       <div id={negocio.id === negocios[0]?.id ? "identidade" : undefined}>
+                      <div className="painel-identidade">
                       <IdentidadeAnunciante
   lojaId={negocio.id}
   nome={negocio.nome}
@@ -1961,7 +1982,9 @@ corMarca:
     void carregarNegocios();
   }}
 />
+                      </div>
 
+                      <div className="painel-plano">
                       {!contratos[negocio.id] && (
                         <div className="mt-5 rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-amber-50 p-5">
                           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">
@@ -2165,7 +2188,9 @@ corMarca:
                         })()}
                       </div>
 
-                      <div id={negocio.id === negocios[0]?.id ? "catalogo" : undefined}>
+                      </div>
+
+                      <div className="painel-catalogo" id={negocio.id === negocios[0]?.id ? "catalogo" : undefined}>
                       <GerenciadorProdutos
                         lojaId={negocio.id}
                         tipoNegocio={negocio.tipo}
@@ -2186,88 +2211,13 @@ corMarca:
 
         </section>
 
-        <section
-          id="divulgacao"
-          className="rounded-3xl border border-blue-100 bg-blue-50 p-5"
-        >
-
-          <h2 className="text-sm font-black text-blue-950">
-            🚀 Área comercial
-          </h2>
-
-          <p className="mt-1 text-xs leading-5 text-blue-800">
-            O ambiente abaixo será adaptado de
-            acordo com o tipo do seu negócio.
-          </p>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-
-            <div className="rounded-2xl bg-white p-4">
-
-              <div className="text-2xl">
-                📦
-              </div>
-
-              <p className="mt-2 text-xs font-black text-slate-800">
-                Produtos
-              </p>
-
-              <p className="mt-1 text-[10px] text-slate-500">
-                Produtos, preços e imagens.
-              </p>
-
-            </div>
-
-            <div className="rounded-2xl bg-white p-4">
-
-              <div className="text-2xl">
-                🔧
-              </div>
-
-              <p className="mt-2 text-xs font-black text-slate-800">
-                Serviços
-              </p>
-
-              <p className="mt-1 text-[10px] text-slate-500">
-                Serviços oferecidos pelo negócio.
-              </p>
-
-            </div>
-
-            <div className="rounded-2xl bg-white p-4">
-
-              <div className="text-2xl">
-                📸
-              </div>
-
-              <p className="mt-2 text-xs font-black text-slate-800">
-                Fotos
-              </p>
-
-              <p className="mt-1 text-[10px] text-slate-500">
-                Fotos da empresa e produtos.
-              </p>
-
-            </div>
-
-            <div className="rounded-2xl bg-white p-4">
-
-              <div className="text-2xl">
-                📢
-              </div>
-
-              <p className="mt-2 text-xs font-black text-slate-800">
-                Divulgação
-              </p>
-
-              <p className="mt-1 text-[10px] text-slate-500">
-                Cards, banners e destaque.
-              </p>
-
-            </div>
-
-          </div>
-
+        <section id="divulgacao" className="painel-divulgacao rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-black text-slate-950">📢 Divulgação</h2>
+          <p className="mt-1 text-xs leading-5 text-slate-600">Acesse sua página pública ou compartilhe o negócio. As posições de publicidade contratadas ficam em Plano e contrato.</p>
+          {negocios[0] && <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <button type="button" onClick={() => abrirNegocio(negocios[0])} className="rounded-xl bg-blue-900 px-5 py-3 text-sm font-black text-white">👀 Ver minha página</button>
+            <button type="button" onClick={() => void compartilharNegocio(negocios[0])} className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-black text-emerald-800">↗️ Compartilhar minha página</button>
+          </div>}
         </section>
 
       </div>
