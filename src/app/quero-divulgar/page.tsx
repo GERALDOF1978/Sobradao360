@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
-import { addDoc, collection, getDocs, query, serverTimestamp, where, type QuerySnapshot, type DocumentData } from "firebase/firestore";
+import { addDoc, collection, getDocs, query, serverTimestamp, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 type Plano = { id: string; nome: string; valor: number; duracaoDias: number; limiteProdutos: number; carrinhoCompras: boolean; };
@@ -27,12 +27,30 @@ export default function QueroDivulgarPage() {
   const [enviandoImagem, setEnviandoImagem] = useState(false);
 
   useEffect(() => {
-    void getDocs(query(collection(db, "pacotes_anuncio"), where("ativo", "==", true))).then((snapshot: QuerySnapshot<DocumentData>) => {
-      setPlanos(snapshot.docs.map((item: QuerySnapshot<DocumentData>["docs"][number]) => {
-        const d = item.data();
-        return { id: item.id, nome: String(d.nome || "Plano"), valor: Number(d.valor || 0), duracaoDias: Number(d.duracaoDias || 0), limiteProdutos: Number(d.limiteProdutos || 0), carrinhoCompras: d.carrinhoCompras === true };
-      }).sort((a: Plano, b: Plano) => a.valor-b.valor));
-    }).catch((e: unknown) => console.error("Erro ao carregar planos:", e));
+    async function carregarPlanos() {
+      try {
+        const snapshot = await getDocs(
+          query(collection(db, "pacotes_anuncio"), where("ativo", "==", true))
+        );
+        const lista: Plano[] = [];
+        for (const documento of snapshot.docs) {
+          const d = documento.data() as Record<string, unknown>;
+          lista.push({
+            id: documento.id,
+            nome: String(d.nome || "Plano"),
+            valor: Number(d.valor || 0),
+            duracaoDias: Number(d.duracaoDias || 0),
+            limiteProdutos: Number(d.limiteProdutos || 0),
+            carrinhoCompras: d.carrinhoCompras === true,
+          });
+        }
+        lista.sort((a, b) => a.valor - b.valor);
+        setPlanos(lista);
+      } catch (error: unknown) {
+        console.error("Erro ao carregar planos:", error);
+      }
+    }
+    void carregarPlanos();
   }, []);
 
   async function enviarImagem(evento: ChangeEvent<HTMLInputElement>) {
