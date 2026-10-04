@@ -255,12 +255,12 @@ export default function ComunidadePage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <section className="bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-600 text-white">
-        <div className="mx-auto max-w-3xl px-4 py-4">
+        <div className="mx-auto max-w-3xl px-4 py-2.5">
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="text-xs font-bold text-white/90 hover:text-white">← Início</Link>
             <div className="text-center">
-              <div className="text-2xl">🏘️</div>
-              <h1 className="text-xl font-black">Mural da Comunidade</h1>
+              <div className="text-lg">🏘️</div>
+              <h1 className="text-base font-black">Mural da Comunidade</h1>
             </div>
             <Link
               href="/anuncie?modo=post"
@@ -269,7 +269,7 @@ export default function ComunidadePage() {
               💬 Publicar
             </Link>
           </div>
-          <p className="mt-2 text-center text-[11px] leading-4 text-white/90">
+          <p className="mt-1 text-center text-[10px] leading-3 text-white/85">
             Notícias, avisos, pedidos, acontecimentos e informações dos moradores.
           </p>
         </div>

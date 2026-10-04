@@ -24,16 +24,16 @@ export default function DaaePage() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <section className="bg-gradient-to-br from-cyan-700 via-cyan-600 to-blue-700 text-white">
-        <div className="mx-auto max-w-3xl px-4 py-4">
+        <div className="mx-auto max-w-3xl px-4 py-2.5">
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="text-xs font-bold text-white/90 hover:text-white">← Início</Link>
             <div className="text-center">
-              <div className="text-2xl">💧</div>
-              <h1 className="text-xl font-black">DAAE Rio Claro</h1>
+              <div className="text-lg">💧</div>
+              <h1 className="text-base font-black">DAAE Rio Claro</h1>
             </div>
             <span className="rounded-lg bg-white/20 px-2 py-1 text-[9px] font-black">Atendimento</span>
           </div>
-          <p className="mt-2 text-center text-[11px] leading-4 text-white/90">
+          <p className="mt-1 text-center text-[10px] leading-3 text-white/85">
             Água, esgoto, contas e canais de atendimento.
           </p>
         </div>
@@ -43,7 +43,7 @@ export default function DaaePage() {
         <MiniCardsAnuncio />
         <div className="grid grid-cols-2 gap-3">
           <a href="tel:08000190505" className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm hover:border-cyan-400 transition">
-            <div className="text-2xl">📞</div>
+            <div className="text-lg">📞</div>
             <h2 className="mt-2 font-black">Ligar</h2>
             <p className="text-xs text-slate-500">0800 019 0505</p>
           </a>

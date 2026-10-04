@@ -174,18 +174,18 @@ export default function TransportePage() {
   return (
     <div className="min-h-screen bg-slate-100 pb-16 text-slate-900">
       <header className="bg-gradient-to-r from-sky-700 to-blue-900 text-white shadow">
-        <div className="mx-auto max-w-md px-4 py-4">
+        <div className="mx-auto max-w-md px-4 py-2.5">
           <div className="flex items-center justify-between">
             <Link href="/utilidades" className="text-xs font-bold">← Utilidades</Link>
             <span className="rounded-lg bg-amber-400 px-2 py-1 text-[9px] font-black text-slate-950">RIO CLARO</span>
           </div>
-          <p className="mt-3 text-xs font-bold text-sky-100">Transporte Público</p>
-          <h1 className="text-2xl font-black">🚌 Linha 06 — Cervezão</h1>
-          <p className="mt-1 text-[11px] text-sky-100">Veja os ônibus que estão aparecendo em tempo real.</p>
+          <p className="mt-1 text-[10px] font-bold text-sky-100">Transporte Público</p>
+          <h1 className="text-lg font-black">🚌 Linha 06 — Cervezão</h1>
+          <p className="text-[10px] text-sky-100">Veja os ônibus que estão aparecendo em tempo real.</p>
         </div>
       </header>
 
-      <main className="mx-auto max-w-md space-y-4 px-4 py-4">
+      <main className="mx-auto max-w-md space-y-4 px-4 py-2.5">
         <section className="overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="flex items-center justify-between gap-3 p-4 pb-3">
             <div>

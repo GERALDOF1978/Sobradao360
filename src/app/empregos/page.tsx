@@ -950,16 +950,16 @@ export default function EmpregosPage() {
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-16 font-sans">
       {/* HEADER */}
       <header className="bg-gradient-to-r from-indigo-700 via-blue-700 to-indigo-700 text-white shadow-md">
-        <div className="max-w-md mx-auto px-4 py-4">
+        <div className="max-w-md mx-auto px-4 py-2.5">
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="text-xs font-bold text-white/90 hover:text-white">← Início</Link>
             <div className="text-center">
-              <div className="text-2xl">💼</div>
-              <h1 className="text-xl font-black">Empregos</h1>
+              <div className="text-lg">💼</div>
+              <h1 className="text-base font-black">Empregos</h1>
             </div>
             <span className="rounded-lg bg-amber-400 px-2 py-1 text-[9px] font-black text-slate-950">Rio Claro</span>
           </div>
-          <p className="mt-2 text-center text-[11px] leading-4 text-white/90">
+          <p className="mt-1 text-center text-[10px] leading-3 text-white/85">
             Vagas, oportunidades e currículos da comunidade.
           </p>
         </div>

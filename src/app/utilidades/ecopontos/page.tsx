@@ -136,11 +136,11 @@ export default function EcopontosPage() {
   }, [localizacao]);
 
   return <div className="min-h-screen bg-slate-100 pb-16 text-slate-900">
-    <header className="bg-gradient-to-r from-emerald-700 to-green-900 text-white shadow"><div className="mx-auto max-w-md px-4 py-4">
+    <header className="bg-gradient-to-r from-emerald-700 to-green-900 text-white shadow"><div className="mx-auto max-w-md px-4 py-2.5">
       <div className="flex items-center justify-between"><Link href="/utilidades" className="text-xs font-bold">← Utilidades</Link><span className="rounded-lg bg-amber-400 px-2 py-1 text-[9px] font-black text-slate-950">RIO CLARO</span></div>
-      <p className="mt-3 text-xs font-bold text-emerald-100">Descarte correto</p><h1 className="text-2xl font-black">♻️ Ecopontos</h1><p className="mt-1 text-[11px] text-emerald-100">Encontre o ecoponto mais próximo e veja como chegar.</p>
+      <p className="mt-1 text-[10px] font-bold text-emerald-100">Descarte correto</p><h1 className="text-lg font-black">♻️ Ecopontos</h1><p className="text-[10px] text-emerald-100">Encontre o ecoponto mais próximo e veja como chegar.</p>
     </div></header>
-    <main className="mx-auto max-w-md space-y-4 px-4 py-4">
+    <main className="mx-auto max-w-md space-y-4 px-4 py-2.5">
       <section className="overflow-hidden rounded-2xl bg-white shadow-sm">
         <div className="p-4 pb-3"><p className="text-xs font-black text-emerald-700">MAPA DOS ECOPONTOS</p><h2 className="text-lg font-black">Pontos de descarte em Rio Claro</h2></div>
         <div ref={mapaRef} className="h-[360px] w-full bg-slate-200" />
