@@ -39,15 +39,7 @@ export default function NoticiasPage() {
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8">
       <div className="mx-auto max-w-3xl">
-<section className="rounded-3xl bg-white p-6 shadow-sm">
-          <div className="text-xs font-black uppercase tracking-wider text-blue-600">Sobradão 360</div>
-          <h1 className="mt-1 text-3xl font-black text-slate-900">📰 Giro de Notícias</h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">
-            Resumos de notícias de Rio Claro e região, sempre com a fonte e o acesso à matéria original.
-          </p>
-        </section>
-
-        <section className="mt-5 space-y-4">
+        <section className="space-y-4">
           {carregando ? (
             <div className="rounded-2xl bg-white p-6 text-center text-sm text-slate-500">Carregando notícias...</div>
           ) : noticias.length === 0 ? (

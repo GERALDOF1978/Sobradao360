@@ -233,6 +233,7 @@ function formatarAlerta(item: unknown): AlertaNormalizado {
     "nivel",
     "nivel_severidade",
     "nivelSeveridade",
+    "severity",
     "cor",
   ]);
 
@@ -245,6 +246,7 @@ function formatarAlerta(item: unknown): AlertaNormalizado {
       "evento",
       "descricao_evento",
       "descricaoEvento",
+      "evento",
     ]) || "Alerta meteorológico";
 
   const inicio =
@@ -352,6 +354,11 @@ async function buscarAlertasInmetSP(): Promise<unknown[]> {
   return extrairLista(dados);
 }
 
+async function buscarAlertasRadar(): Promise<unknown[]> {
+  const dados = await buscarFonte("https://radarmeteorologico.com.br/api/v1/alertas?uf=SP");
+  return extrairLista(dados);
+}
+
 async function buscarAlertasLegado(): Promise<unknown[]> {
   const dados = await buscarFonte("https://apiprevmet3.inmet.gov.br/avisos/ativos");
   return extrairLista(dados);
@@ -381,8 +388,25 @@ export async function GET() {
     }
   }
 
-  const alertas = itens
-    .filter(codigoMunicipioNoAlerta)
+  let itensRioClaro = itens.filter(codigoMunicipioNoAlerta);
+
+  // A API oficial pode entregar o aviso estadual sem expandir os municípios.
+  // Quando isso acontecer, confirmamos a abrangência numa réplica dos avisos
+  // do INMET que expõe explicitamente os códigos IBGE dos municípios.
+  if (itensRioClaro.length === 0) {
+    try {
+      const radar = await buscarAlertasRadar();
+      const confirmados = radar.filter(codigoMunicipioNoAlerta);
+      if (confirmados.length > 0) {
+        itensRioClaro = confirmados;
+        endpoint = "INMET via RadarMeteorologico";
+      }
+    } catch (erroRadar) {
+      erros.push(erroRadar instanceof Error ? erroRadar.message : "Falha na confirmação municipal");
+    }
+  }
+
+  const alertas = itensRioClaro
     .map((item) => encontrarObjetoAlerta(item))
     .filter(alertaVigente)
     .map((item) => formatarAlerta(item))
