@@ -254,6 +254,7 @@ export default function AdminMasterPage() {
   const [filtroSolicitacao, setFiltroSolicitacao] = useState("todos");
 
   const [menuAberto, setMenuAberto] = useState("anunciantes");
+  const [menuMobileAberto, setMenuMobileAberto] = useState(false);
 
   const [solicitacoes, setSolicitacoes] =
     useState<SolicitacaoDivulgacao[]>([]);
@@ -1169,7 +1170,10 @@ export default function AdminMasterPage() {
             </p>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <button type="button" onClick={() => setMenuMobileAberto(v => !v)} className="flex w-full items-center justify-between rounded-xl bg-slate-900 px-4 py-3 text-left text-sm font-black text-white sm:hidden">
+            <span>☰ Trocar área do Master</span><span>{menuMobileAberto ? "▲" : "▼"}</span>
+          </button>
+          <div className={`${menuMobileAberto ? "grid" : "hidden"} mt-2 gap-2 sm:mt-0 sm:grid sm:grid-cols-2 lg:grid-cols-4`}>
             {[
               ["anunciantes", "🏪", "Anunciantes", "Lojas parceiras"],
               ["solicitacoes", "📨", "Solicitações", solicitacoes.length + " recebida(s)"],
@@ -1177,23 +1181,10 @@ export default function AdminMasterPage() {
               ["noticias", "📰", "Giro de Notícias", "Buscar e revisar notícias"],
               ["painel", "👤", "Painel anunciante", "Abrir painel"],
             ].map(([id, icone, titulo, descricao]) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setMenuAberto(id)}
-                className={`rounded-xl border p-3 text-left transition ${
-                  menuAberto === id
-                    ? "border-amber-400 bg-amber-50"
-                    : "border-slate-200 bg-white hover:bg-slate-50"
-                }`}
-              >
-                <div className="text-lg">{icone}</div>
-                <div className="mt-1 text-sm font-black text-slate-900">
-                  {titulo}
-                </div>
-                <div className="text-xs text-slate-500">
-                  {descricao}
-                </div>
+              <button key={id} type="button" onClick={() => { setMenuAberto(id); setMenuMobileAberto(false); }}
+                className={`rounded-xl border p-3 text-left transition ${menuAberto === id ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
+                <div className="flex items-center gap-2"><span className="text-lg">{icone}</span><span className="text-sm font-black text-slate-900">{titulo}</span></div>
+                <div className="mt-1 text-xs text-slate-500">{descricao}</div>
               </button>
             ))}
           </div>
