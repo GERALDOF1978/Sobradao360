@@ -55,11 +55,6 @@ interface LojaParceira {
   siteUrl?: string;
 
   imagemUrl?: string;
-  bannerUrl?: string;
-  imagemReferenciaUrl?: string;
-  imagemQuadradaUrl?: string;
-  imagemHorizontalUrl?: string;
-  imagemVerticalUrl?: string;
 
   ativo?: boolean;
   status?: string;
@@ -225,7 +220,6 @@ export default function AdminMasterPage() {
 
   const [processando, setProcessando] =
     useState<string | null>(null);
-  const [enviandoArte, setEnviandoArte] = useState<string | null>(null);
 
   const [sincronizandoVagas, setSincronizandoVagas] =
     useState(false);
@@ -254,8 +248,6 @@ export default function AdminMasterPage() {
   const [filtroSolicitacao, setFiltroSolicitacao] = useState("todos");
 
   const [menuAberto, setMenuAberto] = useState("anunciantes");
-  const [menuMobileAberto, setMenuMobileAberto] = useState(false);
-  const [lojaMobileAberta, setLojaMobileAberta] = useState<string | null>(null);
 
   const [solicitacoes, setSolicitacoes] =
     useState<SolicitacaoDivulgacao[]>([]);
@@ -711,23 +703,6 @@ export default function AdminMasterPage() {
     }
   }
 
-  async function enviarArteMaster(loja: LojaParceira, campo: "imagemQuadradaUrl" | "imagemHorizontalUrl" | "imagemVerticalUrl", arquivo?: File) {
-    if (!arquivo) return;
-    if (!arquivo.type.startsWith("image/")) { alert("Escolha um arquivo de imagem."); return; }
-    if (arquivo.size > 10 * 1024 * 1024) { alert("A imagem deve ter no máximo 10 MB."); return; }
-    try {
-      setEnviandoArte(campo);
-      const form = new FormData(); form.append("file", arquivo);
-      const resposta = await fetch("/api/upload-image", { method: "POST", body: form });
-      const resultado = await resposta.json() as { success?: boolean; url?: string; error?: string };
-      if (!resposta.ok || !resultado.success || !resultado.url) throw new Error(resultado.error || "Falha no upload.");
-      await updateDoc(doc(db, "lojas_parceiras", loja.id), { [campo]: resultado.url, atualizadoEm: serverTimestamp() });
-      const atualizada = { ...loja, [campo]: resultado.url };
-      setSelecionada(atualizada); setLojas(lista => lista.map(x => x.id === loja.id ? atualizada : x));
-    } catch (e) { alert(e instanceof Error ? e.message : "Não foi possível enviar a arte."); }
-    finally { setEnviandoArte(null); }
-  }
-
   async function carregarContratosMaster() {
     try {
       const snapshot = await getDocs(collection(db, "contratos_anuncio"));
@@ -1171,27 +1146,83 @@ export default function AdminMasterPage() {
             </p>
           </div>
 
-          <button type="button" onClick={() => setMenuMobileAberto(v => !v)} className="flex w-full items-center justify-between rounded-xl bg-slate-900 px-4 py-3 text-left text-sm font-black text-white sm:hidden">
-            <span>☰ Trocar área do Master</span><span>{menuMobileAberto ? "▲" : "▼"}</span>
-          </button>
-          <div className={`${menuMobileAberto ? "grid" : "hidden"} mt-2 gap-2 sm:mt-0 sm:grid sm:grid-cols-2 lg:grid-cols-4`}>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["anunciantes", "🏪", "Anunciantes", "Lojas parceiras"],
               ["solicitacoes", "📨", "Solicitações", solicitacoes.length + " recebida(s)"],
               ["planos", "💳", "Planos e contratos", "Pacotes e contratos"],
               ["noticias", "📰", "Giro de Notícias", "Buscar e revisar notícias"],
               ["painel", "👤", "Painel anunciante", "Abrir painel"],
-              ["vagas", "💼", "Atualizar vagas", "Trampolim / PAT"],
-              ["telefones", "📞", "Contatos", "Contatos e serviços"],
             ].map(([id, icone, titulo, descricao]) => (
-              <button key={id} type="button" onClick={() => { if (id === "vagas") { void sincronizarVagasTrampolim(); setMenuMobileAberto(false); return; } if (id === "telefones") { window.location.href = "/admin-master/telefones"; return; } setMenuAberto(id); setMenuMobileAberto(false); }}
-                className={`rounded-xl border p-3 text-left transition ${menuAberto === id ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
-                <div className="flex items-center gap-2"><span className="text-lg">{icone}</span><span className="text-sm font-black text-slate-900">{titulo}</span></div>
-                <div className="mt-1 text-xs text-slate-500">{descricao}</div>
+              <button
+                key={id}
+                type="button"
+                onClick={() => setMenuAberto(id)}
+                className={`rounded-xl border p-3 text-left transition ${
+                  menuAberto === id
+                    ? "border-amber-400 bg-amber-50"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <div className="text-lg">{icone}</div>
+                <div className="mt-1 text-sm font-black text-slate-900">
+                  {titulo}
+                </div>
+                <div className="text-xs text-slate-500">
+                  {descricao}
+                </div>
               </button>
             ))}
           </div>
         </section>
+
+        <section className="mb-6">
+          <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="text-sm font-black text-indigo-950">💼 Atualização de vagas</div>
+                <p className="mt-1 text-xs leading-relaxed text-indigo-800">
+                  Atualize manualmente as vagas do Trampolim / PAT. A integração já está preparada para futuramente ser automatizada pelo n8n.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={sincronizarVagasTrampolim}
+                disabled={sincronizandoVagas}
+                className="rounded-xl bg-indigo-700 px-4 py-2.5 text-xs font-black text-white shadow-sm hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {sincronizandoVagas ? "⏳ Atualizando..." : "🔄 Atualizar Trampolim"}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <div className="mb-6 grid gap-3 sm:grid-cols-2">
+          <a
+            href="/admin-master/telefones"
+            className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 hover:bg-amber-100"
+          >
+            <span className="text-2xl">📞</span>
+            <span>
+              <span className="block text-sm font-black text-slate-900">Contatos e Serviços</span>
+              <span className="block text-xs text-slate-500">Aprovar cadastros enviados pela comunidade</span>
+            </span>
+          </a>
+
+          <button
+            type="button"
+            onClick={() => setMenuAberto("noticias")}
+            className="flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left hover:bg-blue-100"
+          >
+            <span className="text-2xl">📰</span>
+            <span>
+              <span className="block text-sm font-black text-slate-900">Giro de Notícias</span>
+              <span className="block text-xs text-slate-500">
+                Atualizar e revisar matérias importadas
+              </span>
+            </span>
+          </button>
+        </div>
 
         <section className="mb-6">
           {menuAberto === "noticias" && (
@@ -1693,21 +1724,65 @@ export default function AdminMasterPage() {
 
         {menuAberto === "anunciantes" && (
           <>
-        <section className="mb-4">
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              ["todos", "Total", total, "text-slate-900"],
-              ["PENDENTE", "Pendentes", pendentes, "text-amber-500"],
-              ["APROVADO", "Aprovados", aprovadas, "text-green-600"],
-              ["SUSPENSO", "Suspensos", suspensas, "text-red-600"],
-            ].map(([valor, titulo, numero, cor]) => (
-              <button key={String(valor)} type="button" onClick={() => setFiltro(String(valor))}
-                className={`rounded-xl border p-2 text-center shadow-sm transition ${filtro === valor ? "border-slate-900 bg-slate-900" : "border-slate-200 bg-white"}`}>
-                <div className={`text-[10px] font-bold sm:text-sm ${filtro === valor ? "text-white" : "text-slate-500"}`}>{String(titulo)}</div>
-                <div className={`mt-1 text-xl font-black sm:text-2xl ${filtro === valor ? "text-white" : String(cor)}`}>{String(numero)}</div>
-              </button>
-            ))}
+        <section className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <div className="text-sm text-slate-500">
+              Total
+            </div>
+            <div className="mt-1 text-3xl font-bold text-slate-900">
+              {total}
+            </div>
           </div>
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <div className="text-sm text-slate-500">
+              Pendentes
+            </div>
+            <div className="mt-1 text-3xl font-bold text-amber-500">
+              {pendentes}
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <div className="text-sm text-slate-500">
+              Aprovados
+            </div>
+            <div className="mt-1 text-3xl font-bold text-green-600">
+              {aprovadas}
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <div className="text-sm text-slate-500">
+              Suspensos
+            </div>
+            <div className="mt-1 text-3xl font-bold text-red-600">
+              {suspensas}
+            </div>
+          </div>
+
+        </section>
+
+        <section className="mb-6 flex flex-wrap gap-2">
+
+          {FILTROS.map((filtroItem) => (
+            <button
+              key={filtroItem.valor}
+              type="button"
+              onClick={() =>
+                setFiltro(filtroItem.valor)
+              }
+              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${
+                filtro === filtroItem.valor
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-600 shadow-sm hover:bg-slate-50"
+              }`}
+            >
+              {filtroItem.texto}
+            </button>
+          ))}
+
         </section>
 
         <section className="space-y-4">
@@ -1737,7 +1812,7 @@ export default function AdminMasterPage() {
               return (
                 <article
                   key={item.id}
-                  className="rounded-xl bg-white p-3 text-center shadow-sm"
+                  className="rounded-2xl bg-white p-5 shadow-sm"
                 >
 
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -1777,7 +1852,7 @@ export default function AdminMasterPage() {
                         </p>
                       )}
 
-                      <div className={`${lojaMobileAberta === item.id ? "grid" : "hidden"} mt-4 gap-2 text-sm md:grid`}>
+                      <div className="mt-4 grid gap-2 text-sm md:grid-cols-2">
 
                         <div>
                           <span className="font-semibold text-slate-700">
@@ -1832,7 +1907,7 @@ export default function AdminMasterPage() {
 
                       </div>
 
-                      <button type="button" onClick={() => setLojaMobileAberta(lojaMobileAberta === item.id ? null : item.id)} className="mt-3 w-full rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 md:hidden">{lojaMobileAberta === item.id ? "▲ Ocultar informações" : "▼ Ver informações"}</button>\n\n                      {item.siteUrl && (
+                      {item.siteUrl && (
                         <div className="mt-3 break-all text-sm">
                           <span className="font-semibold text-slate-700">
                             Site:
@@ -1849,7 +1924,7 @@ export default function AdminMasterPage() {
 
                     </div>
 
-                    <div className="mt-1 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:w-[270px] lg:justify-end">
+                    <div className="flex flex-wrap gap-2 lg:w-[270px] lg:justify-end">
 
                       <button
                         type="button"
@@ -2103,36 +2178,6 @@ export default function AdminMasterPage() {
                   </p>
                 )}
 
-              </div>
-
-              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                <h3 className="font-black text-blue-950">🎨 Artes publicitárias</h3>
-                <p className="mt-1 text-xs text-blue-800">A imagem enviada pelo anunciante serve como referência. Aqui o Master adiciona as três artes finais. Futuramente o botão de IA poderá gerar estes três formatos automaticamente.</p>
-                <div className="mt-4">
-                  <p className="text-xs font-black uppercase text-slate-500">Imagem original do anunciante</p>
-                  {selecionada.imagemReferenciaUrl ? <img src={selecionada.imagemReferenciaUrl} alt="Referência" className="mt-2 max-h-64 w-full rounded-xl bg-white object-contain p-2" /> : <div className="mt-2 rounded-xl bg-white p-5 text-center text-xs text-slate-400">Ainda não enviada</div>}
-                </div>
-                <button type="button" disabled className="mt-4 w-full rounded-xl bg-violet-200 px-4 py-3 text-xs font-black text-violet-700 opacity-70">✨ Criar 3 artes com IA — em preparação</button>
-                <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                  {([
-                    ["imagemQuadradaUrl","Quadrada","1080 × 1080 px","aspect-square"],
-                    ["imagemHorizontalUrl","Horizontal","1920 × 1080 px (16:9)","aspect-video"],
-                    ["imagemVerticalUrl","Vertical","1080 × 1350 px (4:5)","aspect-[4/5]"],
-                  ] as const).map(([campo,nome,tamanho,aspecto]) => {
-                    const url = selecionada[campo];
-                    return <div key={campo} className="rounded-xl bg-white p-3">
-                      <p className="text-xs font-black text-slate-800">{nome}</p>
-                      <p className="text-[10px] font-bold text-blue-700">{tamanho}</p>
-                      <div className={`mt-2 ${aspecto} overflow-hidden rounded-lg bg-slate-100`}>
-                        {url ? <img src={url} alt={nome} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center p-2 text-center text-[10px] text-slate-400">Sem arte</div>}
-                      </div>
-                      <label className="mt-2 block cursor-pointer rounded-lg bg-slate-900 px-2 py-2 text-center text-[10px] font-black text-white">
-                        {enviandoArte === campo ? "Enviando..." : url ? "Trocar arte" : "Adicionar arte"}
-                        <input type="file" accept="image/*" className="hidden" disabled={!!enviandoArte} onChange={(e) => { void enviarArteMaster(selecionada, campo, e.target.files?.[0]); e.target.value = ""; }} />
-                      </label>
-                    </div>;
-                  })}
-                </div>
               </div>
 
               {selecionada.descricao && (
