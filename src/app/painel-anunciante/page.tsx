@@ -1330,16 +1330,9 @@ corMarca:
 
             </div>
 
-            <div className="rounded-2xl bg-slate-50 p-4">
-
-              <p className="text-[10px] font-black uppercase text-slate-400">
-                ID do usuário
-              </p>
-
-              <p className="mt-1 break-all text-[11px] font-bold text-slate-600">
-                {usuario.uid}
-              </p>
-
+            <div className="rounded-2xl bg-emerald-50 p-4">
+              <p className="text-[10px] font-black uppercase text-emerald-600">Acesso</p>
+              <p className="mt-1 text-sm font-black text-emerald-800">✓ Conta vinculada</p>
             </div>
 
           </div>
@@ -1424,12 +1417,14 @@ corMarca:
 
             </div>
 
-            <Link
-              href="/cadastro-anunciante"
-              className="rounded-xl bg-amber-400 px-4 py-3 text-center text-xs font-black text-blue-950 hover:bg-amber-300"
-            >
-              + Cadastrar outro negócio
-            </Link>
+            {negocios.length > 0 && (
+              <a
+                href="#catalogo"
+                className="rounded-xl bg-amber-400 px-4 py-3 text-center text-xs font-black text-blue-950 hover:bg-amber-300"
+              >
+                ➕ {negocios[0]?.tipo === "loja" || negocios[0]?.tipo === "alimentacao" ? "Cadastrar produtos" : "Cadastrar serviços"}
+              </a>
+            )}
 
           </div>
 
@@ -1792,10 +1787,10 @@ corMarca:
                 </p>
 
                 <Link
-                  href="/cadastro-anunciante"
+                  href="/quero-divulgar"
                   className="mt-5 inline-block rounded-xl bg-blue-900 px-5 py-3 text-xs font-black text-white"
                 >
-                  Cadastrar negócio
+                  Solicitar divulgação
                 </Link>
 
               </div>
@@ -1912,6 +1907,16 @@ corMarca:
                         </div>
 
                       </div>
+
+                      {negocio.status === "APROVADO" && (
+                        <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                          <p className="text-sm font-black text-emerald-900">✅ Seu negócio já está cadastrado</p>
+                          <p className="mt-1 text-xs leading-5 text-emerald-800">Os dados acima vieram da sua solicitação aprovada. Agora você pode começar a incluir seus produtos ou serviços.</p>
+                          <a href="#catalogo" className="mt-3 inline-flex rounded-xl bg-emerald-700 px-5 py-3 text-xs font-black text-white hover:bg-emerald-800">
+                            ➕ {negocio.tipo === "loja" || negocio.tipo === "alimentacao" ? "Cadastrar produtos" : "Cadastrar serviços"}
+                          </a>
+                        </div>
+                      )}
 
                       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
 
