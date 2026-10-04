@@ -1421,14 +1421,7 @@ corMarca:
 
             </div>
 
-            {negocios.length > 0 && (
-              <a
-                href="#catalogo"
-                className="rounded-xl bg-amber-400 px-4 py-3 text-center text-xs font-black text-blue-950 hover:bg-amber-300"
-              >
-                ➕ {negocios[0]?.tipo === "loja" || negocios[0]?.tipo === "alimentacao" ? "Cadastrar produtos" : "Cadastrar serviços"}
-              </a>
-            )}
+
 
           </div>
 
@@ -1858,67 +1851,10 @@ corMarca:
 
                       </div>
 
-                      <div className="mt-5 grid gap-3 md:grid-cols-3">
-
-                        <div className="rounded-xl bg-white p-4">
-
-                          <p className="text-[10px] font-black uppercase text-slate-400">
-                            Presença
-                          </p>
-
-                          <p className="mt-1 text-xs font-black text-slate-700">
-
-                            {negocio.tipoPresenca ===
-                              "site_externo" &&
-                              "🌐 Site externo"}
-
-                            {negocio.tipoPresenca ===
-                              "whatsapp" &&
-                              "💬 WhatsApp"}
-
-                            {negocio.tipoPresenca ===
-                              "pagina_sobradao" &&
-                              "🏠 Página Sobradão 360"}
-
-                          </p>
-
-                        </div>
-
-                        <div className="rounded-xl bg-white p-4">
-
-                          <p className="text-[10px] font-black uppercase text-slate-400">
-                            Plano
-                          </p>
-
-                          <p className="mt-1 text-xs font-black capitalize text-slate-700">
-                            {negocio.plano}
-                          </p>
-
-                        </div>
-
-                        <div className="rounded-xl bg-white p-4">
-
-                          <p className="text-[10px] font-black uppercase text-slate-400">
-                            Publicação
-                          </p>
-
-                          <p className="mt-1 text-xs font-black text-slate-700">
-                            {negocio.ativo
-                              ? "Publicado"
-                              : "Aguardando aprovação"}
-                          </p>
-
-                        </div>
-
-                      </div>
-
                       {negocio.status === "APROVADO" && (
                         <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                          <p className="text-sm font-black text-emerald-900">✅ Seu negócio já está cadastrado</p>
-                          <p className="mt-1 text-xs leading-5 text-emerald-800">Os dados acima vieram da sua solicitação aprovada. Agora você pode começar a incluir seus produtos ou serviços.</p>
-                          <a href="#catalogo" className="mt-3 inline-flex rounded-xl bg-emerald-700 px-5 py-3 text-xs font-black text-white hover:bg-emerald-800">
-                            ➕ {negocio.tipo === "loja" || negocio.tipo === "alimentacao" ? "Cadastrar produtos" : "Cadastrar serviços"}
-                          </a>
+                          <p className="text-sm font-black text-emerald-900">✅ Seu negócio está pronto</p>
+                          <p className="mt-1 text-xs leading-5 text-emerald-800">Use o menu lateral e entre em <strong>{negocio.tipo === "loja" || negocio.tipo === "alimentacao" ? "Produtos" : "Serviços"}</strong> para cadastrar seu catálogo.</p>
                         </div>
                       )}
 
