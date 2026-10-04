@@ -1113,7 +1113,7 @@ export default function GerenciadorProdutos({
 
         ) : (
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
 
             {produtos.map(
               (produto) => (
@@ -1131,7 +1131,7 @@ export default function GerenciadorProdutos({
 
                   {/* IMAGEM */}
 
-                  <div className="h-48 bg-slate-100">
+                  <div className="aspect-square bg-slate-100">
 
                     {produto.imagemUrl ? (
 
@@ -1171,7 +1171,7 @@ export default function GerenciadorProdutos({
 
                   {/* INFORMAÇÕES */}
 
-                  <div className="p-4">
+                  <div className="p-3 sm:p-4">
 
                     <div className="flex items-start justify-between gap-2">
 
@@ -1213,7 +1213,7 @@ export default function GerenciadorProdutos({
 
                     {/* AÇÕES */}
 
-                    <div className="mt-4 grid grid-cols-3 gap-2">
+                    <div className="mt-4 grid gap-2 sm:grid-cols-3">
 
                       <button
                         type="button"
