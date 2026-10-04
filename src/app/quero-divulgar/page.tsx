@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
-import { addDoc, collection, getDocs, query, serverTimestamp, where } from "firebase/firestore";
+import { addDoc, collection, getDocs, query, serverTimestamp, where, type QuerySnapshot, type DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 type Plano = { id: string; nome: string; valor: number; duracaoDias: number; limiteProdutos: number; carrinhoCompras: boolean; };
@@ -27,12 +27,12 @@ export default function QueroDivulgarPage() {
   const [enviandoImagem, setEnviandoImagem] = useState(false);
 
   useEffect(() => {
-    void getDocs(query(collection(db, "pacotes_anuncio"), where("ativo", "==", true))).then((snapshot) => {
-      setPlanos(snapshot.docs.map((item) => {
+    void getDocs(query(collection(db, "pacotes_anuncio"), where("ativo", "==", true))).then((snapshot: QuerySnapshot<DocumentData>) => {
+      setPlanos(snapshot.docs.map((item: QuerySnapshot<DocumentData>["docs"][number]) => {
         const d = item.data();
         return { id: item.id, nome: String(d.nome || "Plano"), valor: Number(d.valor || 0), duracaoDias: Number(d.duracaoDias || 0), limiteProdutos: Number(d.limiteProdutos || 0), carrinhoCompras: d.carrinhoCompras === true };
-      }).sort((a,b) => a.valor-b.valor));
-    }).catch((e) => console.error("Erro ao carregar planos:", e));
+      }).sort((a: Plano, b: Plano) => a.valor-b.valor));
+    }).catch((e: unknown) => console.error("Erro ao carregar planos:", e));
   }, []);
 
   async function enviarImagem(evento: ChangeEvent<HTMLInputElement>) {
