@@ -1929,7 +1929,7 @@ corMarca:
                           onClick={() => {
                             setSecaoAtiva("pagina");
                             preencherFormulario(negocio);
-                          }
+                          }}
                           className="rounded-xl bg-blue-900 px-4 py-3 text-xs font-black text-white hover:bg-blue-800"
                         >
                           ✏️ Editar minha página
