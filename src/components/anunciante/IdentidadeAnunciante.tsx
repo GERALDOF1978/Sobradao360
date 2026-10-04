@@ -471,6 +471,43 @@ export default function IdentidadeAnunciante({
 
         </div>
 
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="mb-3 text-xs font-black text-slate-700">🎨 Cor da marca</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+
+          <div className="flex items-center gap-3">
+
+            <label className="text-xs font-black text-slate-700">
+              Cor da marca
+            </label>
+
+            <input
+              type="color"
+              value={corMarca}
+              onChange={(e) => setCorMarca(e.target.value)}
+              className="h-10 w-14 cursor-pointer rounded-lg border border-slate-200 bg-white p-1"
+            />
+
+            <span className="rounded-lg bg-white px-3 py-2 font-mono text-xs font-bold text-slate-600">
+              {corMarca}
+            </span>
+
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              void salvarConfiguracoes();
+            }}
+            disabled={salvando}
+            className="rounded-xl bg-blue-900 px-5 py-3 text-xs font-black text-white hover:bg-blue-800 disabled:opacity-50 sm:ml-auto"
+          >
+            {salvando ? "Salvando..." : "💾 Salvar identidade"}
+          </button>
+
+        </div>
+        </div>
+
       </div>
 
       {/* EXIBIÇÃO CONTROLADA PELO MASTER */}
@@ -531,39 +568,7 @@ export default function IdentidadeAnunciante({
 
         </div>
 
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-
-          <div className="flex items-center gap-3">
-
-            <label className="text-xs font-black text-slate-700">
-              Cor da marca
-            </label>
-
-            <input
-              type="color"
-              value={corMarca}
-              onChange={(e) => setCorMarca(e.target.value)}
-              className="h-10 w-14 cursor-pointer rounded-lg border border-slate-200 bg-white p-1"
-            />
-
-            <span className="rounded-lg bg-white px-3 py-2 font-mono text-xs font-bold text-slate-600">
-              {corMarca}
-            </span>
-
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              void salvarConfiguracoes();
-            }}
-            disabled={salvando}
-            className="rounded-xl bg-blue-900 px-5 py-3 text-xs font-black text-white hover:bg-blue-800 disabled:opacity-50 sm:ml-auto"
-          >
-            {salvando ? "Salvando..." : "💾 Salvar identidade"}
-          </button>
-
-        </div>
+        
 
       </div>
 
