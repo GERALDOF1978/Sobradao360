@@ -255,6 +255,7 @@ export default function AdminMasterPage() {
 
   const [menuAberto, setMenuAberto] = useState("anunciantes");
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
+  const [lojaMobileAberta, setLojaMobileAberta] = useState<string | null>(null);
 
   const [solicitacoes, setSolicitacoes] =
     useState<SolicitacaoDivulgacao[]>([]);
@@ -1738,47 +1739,47 @@ export default function AdminMasterPage() {
 
         {menuAberto === "anunciantes" && (
           <>
-        <section className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <section className="mb-4 grid grid-cols-4 gap-2">
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <div className="rounded-xl bg-white p-3 text-center shadow-sm">
             <div className="text-sm text-slate-500">
               Total
             </div>
-            <div className="mt-1 text-3xl font-bold text-slate-900">
+            <div className="mt-1 text-2xl font-bold text-slate-900">
               {total}
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <div className="rounded-xl bg-white p-3 text-center shadow-sm">
             <div className="text-sm text-slate-500">
               Pendentes
             </div>
-            <div className="mt-1 text-3xl font-bold text-amber-500">
+            <div className="mt-1 text-2xl font-bold text-amber-500">
               {pendentes}
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <div className="rounded-xl bg-white p-3 text-center shadow-sm">
             <div className="text-sm text-slate-500">
               Aprovados
             </div>
-            <div className="mt-1 text-3xl font-bold text-green-600">
+            <div className="mt-1 text-2xl font-bold text-green-600">
               {aprovadas}
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <div className="rounded-xl bg-white p-3 text-center shadow-sm">
             <div className="text-sm text-slate-500">
               Suspensos
             </div>
-            <div className="mt-1 text-3xl font-bold text-red-600">
+            <div className="mt-1 text-2xl font-bold text-red-600">
               {suspensas}
             </div>
           </div>
 
         </section>
 
-        <section className="mb-6 flex flex-wrap gap-2">
+        <section className="mb-4 grid grid-cols-4 gap-2">
 
           {FILTROS.map((filtroItem) => (
             <button
@@ -1787,7 +1788,7 @@ export default function AdminMasterPage() {
               onClick={() =>
                 setFiltro(filtroItem.valor)
               }
-              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${
+              className={`rounded-xl px-2 py-2 text-xs font-bold transition ${
                 filtro === filtroItem.valor
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-600 shadow-sm hover:bg-slate-50"
@@ -1826,7 +1827,7 @@ export default function AdminMasterPage() {
               return (
                 <article
                   key={item.id}
-                  className="rounded-2xl bg-white p-5 shadow-sm"
+                  className="rounded-xl bg-white p-3 text-center shadow-sm"
                 >
 
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -1866,7 +1867,7 @@ export default function AdminMasterPage() {
                         </p>
                       )}
 
-                      <div className="mt-4 grid gap-2 text-sm md:grid-cols-2">
+                      <div className={`${lojaMobileAberta === item.id ? "grid" : "hidden"} mt-4 gap-2 text-sm md:grid`}>
 
                         <div>
                           <span className="font-semibold text-slate-700">
@@ -1921,7 +1922,7 @@ export default function AdminMasterPage() {
 
                       </div>
 
-                      {item.siteUrl && (
+                      <button type="button" onClick={() => setLojaMobileAberta(lojaMobileAberta === item.id ? null : item.id)} className="mt-3 w-full rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 md:hidden">{lojaMobileAberta === item.id ? "▲ Ocultar informações" : "▼ Ver informações"}</button>\n\n                      {item.siteUrl && (
                         <div className="mt-3 break-all text-sm">
                           <span className="font-semibold text-slate-700">
                             Site:
@@ -1938,7 +1939,7 @@ export default function AdminMasterPage() {
 
                     </div>
 
-                    <div className="flex flex-wrap gap-2 lg:w-[270px] lg:justify-end">
+                    <div className="mt-1 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:w-[270px] lg:justify-end">
 
                       <button
                         type="button"
