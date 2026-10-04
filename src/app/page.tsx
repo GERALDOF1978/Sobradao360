@@ -19,9 +19,6 @@ type AnuncioHome = {
   lojaId: string;
   nome: string;
   bannerUrl: string;
-  imagemQuadradaUrl: string;
-  imagemHorizontalUrl: string;
-  imagemVerticalUrl: string;
   exibicao: Exibicao;
 };
 
@@ -29,7 +26,6 @@ type LojaHome = {
   id: string;
   nome: string;
   bannerUrl: string;
-  imagemQuadradaUrl: string;
 };
 
 function dataTimestamp(valor: unknown): Date | null {
@@ -85,8 +81,7 @@ export default function Home() {
               const dados = doc.data() as Record<string, unknown>;
               const bannerUrl = typeof dados.bannerUrl === "string" ? dados.bannerUrl : "";
               const nome = typeof dados.nome === "string" ? dados.nome : "";
-              const imagemQuadradaUrl = typeof dados.imagemQuadradaUrl === "string" ? dados.imagemQuadradaUrl : bannerUrl;
-              return { id: doc.id, nome, bannerUrl, imagemQuadradaUrl };
+              return { id: doc.id, nome, bannerUrl };
             })
             .filter((loja: LojaHome) => loja.nome || loja.bannerUrl)
         );
@@ -127,9 +122,6 @@ export default function Home() {
             lojaId,
             nome: typeof loja.nome === "string" ? loja.nome : "",
             bannerUrl,
-            imagemQuadradaUrl: typeof loja.imagemQuadradaUrl === "string" ? loja.imagemQuadradaUrl : bannerUrl,
-            imagemHorizontalUrl: typeof loja.imagemHorizontalUrl === "string" ? loja.imagemHorizontalUrl : bannerUrl,
-            imagemVerticalUrl: typeof loja.imagemVerticalUrl === "string" ? loja.imagemVerticalUrl : bannerUrl,
             exibicao,
           });
         });
@@ -245,7 +237,7 @@ export default function Home() {
               >
                 <div className="aspect-[3/1] w-full bg-slate-200 overflow-hidden">
                   <img
-                    src={item.imagemHorizontalUrl}
+                    src={item.bannerUrl}
                     alt={item.nome || "Publicidade"}
                     className="block h-full w-full object-cover"
                   />
@@ -279,10 +271,10 @@ export default function Home() {
               <Link
                 key={item.id}
                 href={`/loja/${item.lojaId}`}
-                className="aspect-[4/5] w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 transition"
+                className="aspect-[3/1] w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 transition"
               >
                 <img
-                  src={item.imagemVerticalUrl}
+                  src={item.bannerUrl}
                   alt={item.nome || "Destaque"}
                   className="block h-full w-full object-cover"
                 />
@@ -329,9 +321,9 @@ export default function Home() {
                 className="aspect-square w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-amber-400 transition"
                 title={loja.nome || "Loja"}
               >
-                {loja.imagemQuadradaUrl ? (
+                {loja.bannerUrl ? (
                   <img
-                    src={loja.imagemQuadradaUrl}
+                    src={loja.bannerUrl}
                     alt={loja.nome || "Loja"}
                     className="block h-full w-full object-cover"
                   />
