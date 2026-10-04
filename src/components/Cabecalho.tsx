@@ -577,14 +577,14 @@ export default function Cabecalho() {
                     );
                   }
                 }}
-                className={`ml-1 rounded-lg px-2 py-1 text-[9px] font-black sm:text-[10px] ${estiloAlerta()}`}
+                className={`ml-1 max-w-[210px] rounded-lg px-2.5 py-1.5 text-[9px] font-black leading-tight sm:max-w-[300px] sm:text-[10px] ${estiloAlerta()}`}
               >
                 {statusAlertas === "carregando"
                   ? "⏳ VERIFICANDO"
                   : statusAlertas === "erro"
                   ? "⚠️ INMET INDISPONÍVEL"
                   : alertaPrincipal
-                  ? "⚠️ ALERTA"
+                  ? `${alertaPrincipal.severidadeNivel >= 3 ? "🔴" : alertaPrincipal.severidadeNivel === 2 ? "🟠" : "🟡"} ${alertaPrincipal.titulo.toUpperCase()} · ${alertaPrincipal.severidade.toUpperCase()}`
                   : "✓ SEM ALERTAS"}
               </button>
 
