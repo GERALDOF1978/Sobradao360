@@ -62,6 +62,7 @@ export default function EcopontosPage() {
 
   useEffect(() => {
     if (!localizacao) return;
+    const posicao = localizacao;
     const pontos = ECOPONTOS.filter(e => typeof e.lat === "number" && typeof e.lng === "number");
     if (!pontos.length) return;
     let cancelado = false;
@@ -69,7 +70,7 @@ export default function EcopontosPage() {
       setCalculandoRotas(true);
       try {
         const coords = [
-          `${localizacao.lng},${localizacao.lat}`,
+          `${posicao.lng},${posicao.lat}`,
           ...pontos.map(e => `${e.lng},${e.lat}`)
         ].join(";");
         const destinos = pontos.map((_, i) => i + 1).join(";");
