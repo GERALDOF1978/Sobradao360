@@ -14,7 +14,6 @@ type Props = {
   nome: string;
   imagemUrl: string;
   bannerUrl: string;
-  imagemReferenciaUrl?: string;
   corMarca: string;
   mostrarBanner: boolean;
   mostrarMarquee: boolean;
@@ -33,7 +32,6 @@ export default function IdentidadeAnunciante({
   nome,
   imagemUrl: imagemUrlInicial,
   bannerUrl: bannerUrlInicial,
-  imagemReferenciaUrl: imagemReferenciaUrlInicial = "",
   corMarca: corMarcaInicial,
   mostrarBanner: mostrarBannerInicial,
   mostrarMarquee: mostrarMarqueeInicial,
@@ -45,9 +43,6 @@ export default function IdentidadeAnunciante({
 
   const [bannerUrl, setBannerUrl] =
     useState(bannerUrlInicial || "");
-
-  const [imagemReferenciaUrl, setImagemReferenciaUrl] = useState(imagemReferenciaUrlInicial || "");
-  const [enviandoReferencia, setEnviandoReferencia] = useState(false);
 
   const [corMarca, setCorMarca] =
     useState(corMarcaInicial || "#0f172a");
@@ -141,25 +136,6 @@ export default function IdentidadeAnunciante({
     }
 
     return true;
-  }
-
-  async function selecionarReferencia(evento: ChangeEvent<HTMLInputElement>) {
-    const arquivo = evento.target.files?.[0];
-    if (!arquivo || !validarImagem(arquivo)) return;
-    try {
-      setEnviandoReferencia(true); setErro(""); setMensagem("");
-      const url = await enviarImagem(arquivo);
-      await updateDoc(doc(db, "lojas_parceiras", lojaId), {
-        imagemReferenciaUrl: url, atualizadoEm: serverTimestamp(),
-      });
-      setImagemReferenciaUrl(url);
-      setMensagem("Imagem de referência enviada. O Sobradão 360 usará esta imagem para preparar suas artes publicitárias.");
-      onAtualizado?.();
-    } catch (error) {
-      setErro(error instanceof Error ? error.message : "Não foi possível enviar a imagem.");
-    } finally {
-      setEnviandoReferencia(false); evento.target.value = "";
-    }
   }
 
   async function selecionarLogo(
@@ -354,18 +330,7 @@ export default function IdentidadeAnunciante({
         </div>
       )}
 
-      <div className="mt-5 rounded-2xl border-2 border-blue-200 bg-blue-50 p-4">
-        <h4 className="text-sm font-black text-blue-950">✨ Imagem de referência para criação das artes</h4>
-        <p className="mt-1 text-xs leading-5 text-blue-800">Envie somente uma imagem: pode ser seu cartão, logotipo, fachada, produto ou foto do seu trabalho. As peças publicitárias serão adaptadas com auxílio de Inteligência Artificial e revisadas pelo Sobradão 360.</p>
-        {imagemReferenciaUrl && <img src={imagemReferenciaUrl} alt="Imagem de referência" className="mt-4 max-h-64 w-full rounded-2xl bg-white object-contain p-2" />}
-        <label className="mt-4 block cursor-pointer rounded-xl bg-blue-900 px-4 py-3 text-center text-xs font-black text-white">
-          {enviandoReferencia ? "⏳ Enviando..." : "📤 Enviar / trocar imagem de referência"}
-          <input type="file" accept="image/*" onChange={selecionarReferencia} disabled={enviandoReferencia} className="hidden" />
-        </label>
-        <p className="mt-2 text-center text-[10px] text-blue-700">Você não precisa criar os banners. Envie uma boa imagem e nós preparamos os formatos de divulgação.</p>
-      </div>
-
-      <details className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:hidden">\n        <summary className="cursor-pointer text-sm font-black text-slate-800">⚙️ Identidade avançada (logo, banner e cor)</summary>\n        <p className="mt-2 text-xs text-slate-500">Use somente se quiser alterar a identidade visual da sua página.</p>\n      </details>\n\n      <div className="mt-5 hidden gap-5 lg:grid lg:grid-cols-2">
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
 
         {/* LOGO */}
 
@@ -510,7 +475,7 @@ export default function IdentidadeAnunciante({
 
       {/* EXIBIÇÃO CONTROLADA PELO MASTER */}
 
-      <div className="mt-5 hidden rounded-2xl border border-blue-100 bg-blue-50 p-4 lg:block">
+      <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-4">
 
         <h4 className="text-sm font-black text-blue-950">
           📢 Exibição da publicidade
