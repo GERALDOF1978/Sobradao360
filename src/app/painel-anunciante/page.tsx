@@ -68,6 +68,7 @@ type Negocio = {
 
   imagemUrl: string;
   bannerUrl: string;
+  imagemReferenciaUrl: string;
 slogan: string;
 corMarca: string;
 
@@ -610,6 +611,9 @@ imagemUrl:
 
 bannerUrl:
   texto(dados.bannerUrl),
+
+imagemReferenciaUrl:
+  texto(dados.imagemReferenciaUrl),
 
 slogan:
   texto(dados.slogan),
@@ -1942,6 +1946,7 @@ corMarca:
   nome={negocio.nome}
   imagemUrl={negocio.imagemUrl}
   bannerUrl={negocio.bannerUrl}
+                  imagemReferenciaUrl={negocio.imagemReferenciaUrl}
   corMarca={negocio.corMarca}
   mostrarBanner={
     negocio.mostrarBanner
