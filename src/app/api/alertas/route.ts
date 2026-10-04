@@ -329,81 +329,68 @@ function formatarAlerta(item: unknown): AlertaNormalizado {
 
 async function buscarFonte(url: string) {
   const controlador = new AbortController();
-
-  const temporizador = setTimeout(() => {
-    controlador.abort();
-  }, 8000);
-
+  const temporizador = setTimeout(() => controlador.abort(), 8000);
   try {
     const resposta = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-      },
+      headers: { Accept: "application/json" },
       next: { revalidate: 300 },
       signal: controlador.signal,
     });
-
-    if (!resposta.ok) {
-      throw new Error(
-        `INMET respondeu ${resposta.status}`
-      );
-    }
-
+    if (!resposta.ok) throw new Error(`INMET respondeu ${resposta.status}`);
     return await resposta.json();
-  } finally {
-    clearTimeout(temporizador);
-  }
+  } finally { clearTimeout(temporizador); }
+}
+
+function codigoMunicipioNoAlerta(item: unknown): boolean {
+  const texto = textoDoObjeto(item);
+  return texto.includes(CODIGO_IBGE) || texto.includes(CIDADE);
+}
+
+async function buscarAlertasInmetSP(): Promise<unknown[]> {
+  // Endpoint atual de avisos por UF. O "0" solicita os avisos vigentes.
+  const dados = await buscarFonte("https://apitempo.inmet.gov.br/api/v3/avisos/0/SP");
+  return extrairLista(dados);
+}
+
+async function buscarAlertasLegado(): Promise<unknown[]> {
+  const dados = await buscarFonte("https://apiprevmet3.inmet.gov.br/avisos/ativos");
+  return extrairLista(dados);
 }
 
 export async function GET() {
+  const erros: string[] = [];
+  let itens: unknown[] = [];
+  let endpoint = "INMET API v3";
+
   try {
-    const dados = await buscarFonte(
-      "https://apiprevmet3.inmet.gov.br/avisos/ativos"
-    );
-
-    const itens = extrairLista(dados);
-
-    const alertas = itens
-      .filter(alertaEhRioClaro)
-      .map((item) => encontrarObjetoAlerta(item))
-      .filter(alertaVigente)
-      .map((item) => formatarAlerta(item))
-      .sort(
-        (a, b) =>
-          b.severidadeNivel - a.severidadeNivel
-      );
-
-    return NextResponse.json({
-      sucesso: true,
-      cidade: "Rio Claro",
-      estado: UF,
-      possuiAlerta: alertas.length > 0,
-      quantidade: alertas.length,
-      alertas,
-      atualizadoEm: new Date().toISOString(),
-      fonte: "INMET",
-    });
+    itens = await buscarAlertasInmetSP();
   } catch (erro) {
-    console.error(
-      "Erro ao consultar avisos ativos do INMET:",
-      erro
-    );
-
-    return NextResponse.json(
-      {
-        sucesso: false,
-        cidade: "Rio Claro",
-        estado: UF,
-        possuiAlerta: false,
-        quantidade: 0,
-        alertas: [],
-        erro:
-          "Não foi possível consultar os avisos meteorológicos do INMET no momento.",
-        fonte: "INMET",
-      },
-      {
-        status: 200,
-      }
-    );
+    erros.push(erro instanceof Error ? erro.message : "Falha na API v3");
+    endpoint = "INMET legado";
+    try {
+      itens = await buscarAlertasLegado();
+    } catch (erroLegado) {
+      erros.push(erroLegado instanceof Error ? erroLegado.message : "Falha no endpoint legado");
+      return NextResponse.json({
+        sucesso: false, cidade: "Rio Claro", estado: UF,
+        possuiAlerta: false, quantidade: 0, alertas: [],
+        indisponivel: true,
+        erro: "Não foi possível confirmar os avisos do INMET agora.",
+        fonte: "INMET", detalhes: erros,
+      }, { status: 200 });
+    }
   }
+
+  const alertas = itens
+    .filter(codigoMunicipioNoAlerta)
+    .map((item) => encontrarObjetoAlerta(item))
+    .filter(alertaVigente)
+    .map((item) => formatarAlerta(item))
+    .sort((a, b) => b.severidadeNivel - a.severidadeNivel);
+
+  return NextResponse.json({
+    sucesso: true, cidade: "Rio Claro", estado: UF,
+    possuiAlerta: alertas.length > 0, quantidade: alertas.length, alertas,
+    atualizadoEm: new Date().toISOString(), fonte: "INMET", endpoint,
+  });
 }
