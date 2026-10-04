@@ -534,6 +534,22 @@ export default function PainelAnunciantePage() {
                 "pagina_sobradao",
               siteUrl:
                 texto(solicitacao.site),
+              imagemUrl:
+                texto(solicitacao.imagemReferenciaUrl),
+              planoEscolhidoId:
+                texto(solicitacao.planoEscolhidoId),
+              planoEscolhidoNome:
+                texto(solicitacao.planoEscolhidoNome),
+              planoEscolhidoValor:
+                numero(solicitacao.planoEscolhidoValor),
+              planoEscolhidoDuracaoDias:
+                numero(solicitacao.planoEscolhidoDuracaoDias),
+              planoEscolhidoLimiteProdutos:
+                numero(solicitacao.planoEscolhidoLimiteProdutos),
+              planoEscolhidoCarrinhoCompras:
+                booleano(solicitacao.planoEscolhidoCarrinhoCompras),
+              statusPlano:
+                texto(solicitacao.statusPlano) || "AGUARDANDO_CONFIRMACAO",
               ativo:
                 true,
               status:
