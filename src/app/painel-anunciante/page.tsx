@@ -16,6 +16,7 @@ import {
 import {
   onAuthStateChanged,
   signInWithPopup,
+  signOut,
 } from "firebase/auth";
 
 
@@ -474,10 +475,14 @@ export default function PainelAnunciantePage() {
             (usuario.email || "").trim().toLowerCase();
 
           if (emailSolicitacao !== emailUsuario) {
-            setErro(
-              "Entre com o Google usando o mesmo e-mail informado no cadastro."
-            );
             setNegocios([]);
+            setContratos({});
+            setMostrarCadastro(false);
+            setNegocioEditando(null);
+            setErro(
+              "Este acesso pertence ao e-mail informado no cadastro. Escolha a conta Google correta para continuar."
+            );
+            await signOut(auth);
             setCarregando(false);
             return;
           }
@@ -1035,6 +1040,10 @@ corMarca:
     try {
       setErro("");
 
+      googleProvider.setCustomParameters({
+        prompt: "select_account",
+      });
+
       await signInWithPopup(
         auth,
         googleProvider
@@ -1233,8 +1242,8 @@ corMarca:
               </p>
 
               <p className="mt-1 text-xs leading-5 text-slate-500">
-                Use a mesma conta Google usada
-                no cadastro da empresa.
+                Use exatamente o mesmo e-mail Google informado
+                no cadastro enviado para aprovação.
               </p>
 
               <button
@@ -1324,7 +1333,7 @@ corMarca:
               </p>
 
               <p className="mt-1 break-all text-sm font-black text-slate-800">
-                {usuario.email ||
+                {negocios[0]?.emailDono || usuario.email ||
                   "Não informado"}
               </p>
 
@@ -1342,45 +1351,20 @@ corMarca:
         {negocios.length > 0 && (
           <nav
             aria-label="Menu do anunciante"
-            className="sticky top-2 z-20 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-lg backdrop-blur"
+            className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm lg:fixed lg:left-4 lg:top-4 lg:z-30 lg:w-56"
           >
-            <div className="flex gap-2 overflow-x-auto">
-              <a
-                href="#minha-empresa"
-                className="shrink-0 rounded-xl bg-blue-900 px-4 py-2.5 text-xs font-black text-white"
-              >
-                🏠 Início
-              </a>
-              <a
-                href="#minha-pagina"
-                className="shrink-0 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-200"
-              >
-                ✏️ Minha página
-              </a>
-              <a
-                href="#identidade"
-                className="shrink-0 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-200"
-              >
-                🎨 Identidade
-              </a>
-              <a
-                href="#contrato"
-                className="shrink-0 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-200"
-              >
-                📋 Contrato
-              </a>
-              <a
-                href="#catalogo"
-                className="shrink-0 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-200"
-              >
+            <p className="px-2 pb-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+              Menu do anunciante
+            </p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1">
+              <a href="#minha-empresa" className="rounded-xl bg-blue-900 px-4 py-3 text-xs font-black text-white">🏠 Início</a>
+              <a href="#minha-pagina" className="rounded-xl bg-slate-100 px-4 py-3 text-xs font-black text-slate-700 hover:bg-slate-200">✏️ Minha página</a>
+              <a href="#identidade" className="rounded-xl bg-slate-100 px-4 py-3 text-xs font-black text-slate-700 hover:bg-slate-200">🎨 Identidade</a>
+              <a href="#contrato" className="rounded-xl bg-slate-100 px-4 py-3 text-xs font-black text-slate-700 hover:bg-slate-200">📋 Contrato</a>
+              <a href="#catalogo" className="rounded-xl bg-amber-100 px-4 py-3 text-xs font-black text-amber-900 hover:bg-amber-200">
                 {negocios[0]?.tipo === "loja" || negocios[0]?.tipo === "alimentacao" ? "🛍️ Produtos" : "🔧 Serviços"}
               </a>
-              <a
-                href="#divulgacao"
-                className="shrink-0 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-200"
-              >
-                📢 Divulgação
-              </a>
+              <a href="#divulgacao" className="rounded-xl bg-slate-100 px-4 py-3 text-xs font-black text-slate-700 hover:bg-slate-200">📢 Divulgação</a>
             </div>
           </nav>
         )}
@@ -1455,7 +1439,7 @@ corMarca:
                   </label>
 
                   <input
-                    value={usuario?.email || ""}
+                    value={negocios.find((item) => item.id === negocioEditando)?.emailDono || usuario?.email || ""}
                     readOnly
                     className="mt-1 w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none"
                   />
