@@ -7,51 +7,6 @@ import { db } from "@/lib/firebase";
 
 import NegociosMarquee from "@/components/NegociosMarquee";
 
-const servicosRapidos = [
-  {
-    titulo: "Anuncie",
-    icone: "📢",
-    cor: "bg-emerald-600",
-    link: "/anuncie",
-  },
-  {
-    titulo: "Empregos",
-    icone: "💼",
-    cor: "bg-indigo-600",
-    link: "/empregos",
-  },
-  {
-    titulo: "Voz do Morador",
-    icone: "💬",
-    cor: "bg-emerald-700",
-    link: "/comunidade",
-  },
-  {
-    titulo: "Telefones e Serviços",
-    icone: "📞",
-    cor: "bg-slate-700",
-    link: "/utilidades",
-  },
-  {
-    titulo: "Lâmpada Queimada",
-    icone: "💡",
-    cor: "bg-amber-500",
-    link: "/lampada-queimada",
-  },
-  {
-    titulo: "DAAE",
-    icone: "💧",
-    cor: "bg-cyan-600",
-    link: "/daae",
-  },
-  {
-    titulo: "Giro de Notícias",
-    icone: "📰",
-    cor: "bg-blue-700",
-    link: "/noticias",
-  },
-];
-
 type Exibicao = {
   marquee?: boolean;
   publicidade?: boolean;
@@ -249,54 +204,7 @@ export default function Home() {
         </section>
 
         {/* ==========================================
-            2. CATEGORIAS PRINCIPAIS
-            UMA ÚNICA LINHA
-        ========================================== */}
-
-        <section className="space-y-2">
-
-          <div className="px-1">
-
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
-              Mural da Comunidade
-            </h2>
-
-          </div>
-
-          <div className="w-full overflow-x-auto scrollbar-hide">
-
-            <div className="flex gap-2 min-w-max">
-
-              {servicosRapidos.map(
-                (servico) => (
-                  <Link
-                    key={servico.titulo}
-                    href={servico.link}
-                    className="bg-white border border-slate-200 rounded-2xl p-2.5 flex flex-col items-center justify-center gap-1.5 shadow-sm hover:border-amber-400 hover:shadow-md transition group w-[100px] min-h-[100px] shrink-0"
-                  >
-
-                    <div
-                      className={`w-11 h-11 rounded-xl ${servico.cor} flex items-center justify-center text-white text-base shadow-md group-hover:scale-110 transition`}
-                    >
-                      {servico.icone}
-                    </div>
-
-                    <span className="text-[10px] font-bold text-slate-700 leading-tight text-center">
-                      {servico.titulo}
-                    </span>
-
-                  </Link>
-                )
-              )}
-
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* ==========================================
-            3. NEGÓCIOS DO SOBRADÃO
+            NEGÓCIOS DO SOBRADÃO
             MARQUEE
         ========================================== */}
 
