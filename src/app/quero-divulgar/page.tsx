@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { addDoc, collection, getDocs, query, serverTimestamp, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+
+type Plano = { id: string; nome: string; valor: number; duracaoDias: number; limiteProdutos: number; carrinhoCompras: boolean; };
 
 const TIPOS = [
   "Loja",
@@ -19,6 +21,34 @@ export default function QueroDivulgarPage() {
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [erro, setErro] = useState("");
+  const [planos, setPlanos] = useState<Plano[]>([]);
+  const [planoId, setPlanoId] = useState("");
+  const [imagemReferenciaUrl, setImagemReferenciaUrl] = useState("");
+  const [enviandoImagem, setEnviandoImagem] = useState(false);
+
+  useEffect(() => {
+    void getDocs(query(collection(db, "pacotes_anuncio"), where("ativo", "==", true))).then((snapshot) => {
+      setPlanos(snapshot.docs.map((item) => {
+        const d = item.data();
+        return { id: item.id, nome: String(d.nome || "Plano"), valor: Number(d.valor || 0), duracaoDias: Number(d.duracaoDias || 0), limiteProdutos: Number(d.limiteProdutos || 0), carrinhoCompras: d.carrinhoCompras === true };
+      }).sort((a,b) => a.valor-b.valor));
+    }).catch((e) => console.error("Erro ao carregar planos:", e));
+  }, []);
+
+  async function enviarImagem(evento: ChangeEvent<HTMLInputElement>) {
+    const arquivo = evento.target.files?.[0];
+    if (!arquivo) return;
+    if (!arquivo.type.startsWith("image/")) { setErro("Selecione uma imagem válida."); return; }
+    try {
+      setEnviandoImagem(true); setErro("");
+      const fd = new FormData(); fd.append("file", arquivo);
+      const resposta = await fetch("/api/upload-image", { method: "POST", body: fd });
+      const dados = await resposta.json();
+      if (!resposta.ok || !dados.url) throw new Error(dados.error || "Falha no upload");
+      setImagemReferenciaUrl(String(dados.url));
+    } catch (e) { console.error(e); setErro("Não foi possível enviar a imagem."); }
+    finally { setEnviandoImagem(false); }
+  }
 
   async function enviarSolicitacao(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -38,13 +68,14 @@ export default function QueroDivulgarPage() {
     const site = String(formulario.get("site") || "").trim();
     const observacoes = String(formulario.get("observacoes") || "").trim();
 
-    if (!nomeResponsavel || !nomeNegocio || !tipoNegocio || !whatsapp || !email) {
+    if (!nomeResponsavel || !nomeNegocio || !tipoNegocio || !whatsapp || !email || !planoId) {
       setErro("Preencha os campos obrigatórios.");
       return;
     }
 
     try {
       setEnviando(true);
+      const plano = planos.find((item) => item.id === planoId);
 
       await addDoc(collection(db, "solicitacoes_divulgacao"), {
         nomeResponsavel,
@@ -58,6 +89,14 @@ export default function QueroDivulgarPage() {
         instagram,
         site,
         observacoes,
+        imagemReferenciaUrl,
+        planoEscolhidoId: plano?.id || "",
+        planoEscolhidoNome: plano?.nome || "",
+        planoEscolhidoValor: plano?.valor || 0,
+        planoEscolhidoDuracaoDias: plano?.duracaoDias || 0,
+        planoEscolhidoLimiteProdutos: plano?.limiteProdutos || 0,
+        planoEscolhidoCarrinhoCompras: plano?.carrinhoCompras === true,
+        statusPlano: "AGUARDANDO_CONFIRMACAO",
         status: "PENDENTE",
         criadoEm: serverTimestamp(),
         atualizadoEm: serverTimestamp(),
@@ -288,15 +327,28 @@ export default function QueroDivulgarPage() {
                 </div>
               </section>
 
+              <section className="border-t border-slate-100 pt-6">
+                <h2 className="text-lg font-black text-slate-900">📸 Imagem e plano</h2>
+                <p className="mt-1 text-xs text-slate-500">Envie uma imagem do negócio e escolha o plano agora. Depois da aprovação, você não precisará preencher outro cadastro.</p>
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <label className="text-xs font-black text-slate-700">Imagem do negócio</label>
+                  <input type="file" accept="image/*" onChange={enviarImagem} disabled={enviandoImagem} className="mt-2 block w-full text-xs" />
+                  {enviandoImagem && <p className="mt-2 text-xs font-bold text-blue-700">Enviando imagem...</p>}
+                  {imagemReferenciaUrl && <img src={imagemReferenciaUrl} alt="Imagem do negócio" className="mt-3 h-40 w-full rounded-xl object-cover" />}
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {planos.map((plano) => (
+                    <button key={plano.id} type="button" onClick={() => setPlanoId(plano.id)} className={`rounded-2xl border-2 p-4 text-left ${planoId === plano.id ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-white"}`}>
+                      <div className="flex items-start justify-between gap-2"><strong>{plano.nome}</strong><strong className="text-blue-900">{plano.valor.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}</strong></div>
+                      <p className="mt-2 text-xs text-slate-600">{plano.duracaoDias} dias · até {plano.limiteProdutos} produtos/serviços</p>
+                      <p className="mt-1 text-[11px] text-slate-500">Carrinho: {plano.carrinhoCompras ? "incluso" : "não incluso"}</p>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
               <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-950">
-                <strong>Antes de enviar:</strong> consulte os planos de divulgação,
-                limites de produtos e formas de contratação.
-                <a
-                  href="/planos-anunciante"
-                  className="ml-1 font-black underline"
-                >
-                  Ver planos e condições
-                </a>
+                <strong>Antes de enviar:</strong> confira seus dados, a imagem e o plano escolhido. Após a aprovação, sua loja será preparada com essas informações.
               </div>
 
               <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-xs leading-5 text-blue-900">
