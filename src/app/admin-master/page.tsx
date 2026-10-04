@@ -1181,8 +1181,10 @@ export default function AdminMasterPage() {
               ["planos", "💳", "Planos e contratos", "Pacotes e contratos"],
               ["noticias", "📰", "Giro de Notícias", "Buscar e revisar notícias"],
               ["painel", "👤", "Painel anunciante", "Abrir painel"],
+              ["vagas", "💼", "Atualizar vagas", "Trampolim / PAT"],
+              ["telefones", "📞", "Contatos", "Contatos e serviços"],
             ].map(([id, icone, titulo, descricao]) => (
-              <button key={id} type="button" onClick={() => { setMenuAberto(id); setMenuMobileAberto(false); }}
+              <button key={id} type="button" onClick={() => { if (id === "vagas") { void sincronizarVagasTrampolim(); setMenuMobileAberto(false); return; } if (id === "telefones") { window.location.href = "/admin-master/telefones"; return; } setMenuAberto(id); setMenuMobileAberto(false); }}
                 className={`rounded-xl border p-3 text-left transition ${menuAberto === id ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
                 <div className="flex items-center gap-2"><span className="text-lg">{icone}</span><span className="text-sm font-black text-slate-900">{titulo}</span></div>
                 <div className="mt-1 text-xs text-slate-500">{descricao}</div>
@@ -1190,54 +1192,6 @@ export default function AdminMasterPage() {
             ))}
           </div>
         </section>
-
-        <section className="mb-6">
-          <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="text-sm font-black text-indigo-950">💼 Atualização de vagas</div>
-                <p className="mt-1 text-xs leading-relaxed text-indigo-800">
-                  Atualize manualmente as vagas do Trampolim / PAT. A integração já está preparada para futuramente ser automatizada pelo n8n.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={sincronizarVagasTrampolim}
-                disabled={sincronizandoVagas}
-                className="rounded-xl bg-indigo-700 px-4 py-2.5 text-xs font-black text-white shadow-sm hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {sincronizandoVagas ? "⏳ Atualizando..." : "🔄 Atualizar Trampolim"}
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <div className="mb-6 grid gap-3 sm:grid-cols-2">
-          <a
-            href="/admin-master/telefones"
-            className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 hover:bg-amber-100"
-          >
-            <span className="text-2xl">📞</span>
-            <span>
-              <span className="block text-sm font-black text-slate-900">Contatos e Serviços</span>
-              <span className="block text-xs text-slate-500">Aprovar cadastros enviados pela comunidade</span>
-            </span>
-          </a>
-
-          <button
-            type="button"
-            onClick={() => setMenuAberto("noticias")}
-            className="flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left hover:bg-blue-100"
-          >
-            <span className="text-2xl">📰</span>
-            <span>
-              <span className="block text-sm font-black text-slate-900">Giro de Notícias</span>
-              <span className="block text-xs text-slate-500">
-                Atualizar e revisar matérias importadas
-              </span>
-            </span>
-          </button>
-        </div>
 
         <section className="mb-6">
           {menuAberto === "noticias" && (
@@ -1739,65 +1693,21 @@ export default function AdminMasterPage() {
 
         {menuAberto === "anunciantes" && (
           <>
-        <section className="mb-4 grid grid-cols-4 gap-2">
-
-          <div className="rounded-xl bg-white p-3 text-center shadow-sm">
-            <div className="text-sm text-slate-500">
-              Total
-            </div>
-            <div className="mt-1 text-2xl font-bold text-slate-900">
-              {total}
-            </div>
+        <section className="mb-4">
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              ["todos", "Total", total, "text-slate-900"],
+              ["PENDENTE", "Pendentes", pendentes, "text-amber-500"],
+              ["APROVADO", "Aprovados", aprovadas, "text-green-600"],
+              ["SUSPENSO", "Suspensos", suspensas, "text-red-600"],
+            ].map(([valor, titulo, numero, cor]) => (
+              <button key={String(valor)} type="button" onClick={() => setFiltro(String(valor))}
+                className={`rounded-xl border p-2 text-center shadow-sm transition ${filtro === valor ? "border-slate-900 bg-slate-900" : "border-slate-200 bg-white"}`}>
+                <div className={`text-[10px] font-bold sm:text-sm ${filtro === valor ? "text-white" : "text-slate-500"}`}>{String(titulo)}</div>
+                <div className={`mt-1 text-xl font-black sm:text-2xl ${filtro === valor ? "text-white" : String(cor)}`}>{String(numero)}</div>
+              </button>
+            ))}
           </div>
-
-          <div className="rounded-xl bg-white p-3 text-center shadow-sm">
-            <div className="text-sm text-slate-500">
-              Pendentes
-            </div>
-            <div className="mt-1 text-2xl font-bold text-amber-500">
-              {pendentes}
-            </div>
-          </div>
-
-          <div className="rounded-xl bg-white p-3 text-center shadow-sm">
-            <div className="text-sm text-slate-500">
-              Aprovados
-            </div>
-            <div className="mt-1 text-2xl font-bold text-green-600">
-              {aprovadas}
-            </div>
-          </div>
-
-          <div className="rounded-xl bg-white p-3 text-center shadow-sm">
-            <div className="text-sm text-slate-500">
-              Suspensos
-            </div>
-            <div className="mt-1 text-2xl font-bold text-red-600">
-              {suspensas}
-            </div>
-          </div>
-
-        </section>
-
-        <section className="mb-4 grid grid-cols-4 gap-2">
-
-          {FILTROS.map((filtroItem) => (
-            <button
-              key={filtroItem.valor}
-              type="button"
-              onClick={() =>
-                setFiltro(filtroItem.valor)
-              }
-              className={`rounded-xl px-2 py-2 text-xs font-bold transition ${
-                filtro === filtroItem.valor
-                  ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-600 shadow-sm hover:bg-slate-50"
-              }`}
-            >
-              {filtroItem.texto}
-            </button>
-          ))}
-
         </section>
 
         <section className="space-y-4">
