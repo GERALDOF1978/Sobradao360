@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -109,6 +110,16 @@ function interpretarClima(codigo: number, isDay: boolean) {
 
 export default function Cabecalho() {
   const { user, loginWithGoogle, logout } = useAuth();
+  const pathname = usePathname();
+
+  const paginas: Array<[string, string, string]> = [
+    ["/empregos", "💼", "Empregos"], ["/utilidades/transporte", "🚌", "Transporte"],
+    ["/utilidades/coleta-lixo", "🗑️", "Coleta de Lixo"], ["/utilidades/ecopontos", "♻️", "Ecopontos"],
+    ["/utilidades", "📞", "Telefones e Serviços"], ["/noticias", "📰", "Giro de Notícias"],
+    ["/comunidade", "💬", "Voz da Comunidade"], ["/lampada-queimada", "💡", "Lâmpada Queimada"],
+    ["/daae", "💧", "DAAE"], ["/anuncie", "📣", "Classificados"]
+  ];
+  const paginaAtual = paginas.find(([rota]) => pathname.startsWith(rota));
 
   const [clima, setClima] = useState<ClimaData | null>(null);
 
@@ -623,7 +634,13 @@ export default function Cabecalho() {
 
           </div>
 
-          {/* PLANTÃO — LINHA EXCLUSIVA */}
+          {paginaAtual && (
+            <div className="flex h-7 items-center justify-center border-t border-blue-100/70 bg-blue-900 px-3 text-white">
+              <span className="truncate text-[10px] font-black">{paginaAtual[1]} {paginaAtual[2]}</span>
+            </div>
+          )}
+
+                    {/* PLANTÃO — LINHA EXCLUSIVA */}
 
           <div className="flex h-7 items-center border-t border-blue-100/70">
             <span className="mr-2 shrink-0 text-[8px] font-black tracking-wider text-emerald-700 sm:text-[9px]">
