@@ -55,6 +55,11 @@ interface LojaParceira {
   siteUrl?: string;
 
   imagemUrl?: string;
+  bannerUrl?: string;
+  imagemReferenciaUrl?: string;
+  imagemQuadradaUrl?: string;
+  imagemHorizontalUrl?: string;
+  imagemVerticalUrl?: string;
 
   ativo?: boolean;
   status?: string;
@@ -220,6 +225,7 @@ export default function AdminMasterPage() {
 
   const [processando, setProcessando] =
     useState<string | null>(null);
+  const [enviandoArte, setEnviandoArte] = useState<string | null>(null);
 
   const [sincronizandoVagas, setSincronizandoVagas] =
     useState(false);
@@ -701,6 +707,23 @@ export default function AdminMasterPage() {
         error
       );
     }
+  }
+
+  async function enviarArteMaster(loja: LojaParceira, campo: "imagemQuadradaUrl" | "imagemHorizontalUrl" | "imagemVerticalUrl", arquivo?: File) {
+    if (!arquivo) return;
+    if (!arquivo.type.startsWith("image/")) { alert("Escolha um arquivo de imagem."); return; }
+    if (arquivo.size > 10 * 1024 * 1024) { alert("A imagem deve ter no máximo 10 MB."); return; }
+    try {
+      setEnviandoArte(campo);
+      const form = new FormData(); form.append("file", arquivo);
+      const resposta = await fetch("/api/upload-image", { method: "POST", body: form });
+      const resultado = await resposta.json() as { success?: boolean; url?: string; error?: string };
+      if (!resposta.ok || !resultado.success || !resultado.url) throw new Error(resultado.error || "Falha no upload.");
+      await updateDoc(doc(db, "lojas_parceiras", loja.id), { [campo]: resultado.url, atualizadoEm: serverTimestamp() });
+      const atualizada = { ...loja, [campo]: resultado.url };
+      setSelecionada(atualizada); setLojas(lista => lista.map(x => x.id === loja.id ? atualizada : x));
+    } catch (e) { alert(e instanceof Error ? e.message : "Não foi possível enviar a arte."); }
+    finally { setEnviandoArte(null); }
   }
 
   async function carregarContratosMaster() {
@@ -2178,6 +2201,36 @@ export default function AdminMasterPage() {
                   </p>
                 )}
 
+              </div>
+
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                <h3 className="font-black text-blue-950">🎨 Artes publicitárias</h3>
+                <p className="mt-1 text-xs text-blue-800">A imagem enviada pelo anunciante serve como referência. Aqui o Master adiciona as três artes finais. Futuramente o botão de IA poderá gerar estes três formatos automaticamente.</p>
+                <div className="mt-4">
+                  <p className="text-xs font-black uppercase text-slate-500">Imagem original do anunciante</p>
+                  {selecionada.imagemReferenciaUrl ? <img src={selecionada.imagemReferenciaUrl} alt="Referência" className="mt-2 max-h-64 w-full rounded-xl bg-white object-contain p-2" /> : <div className="mt-2 rounded-xl bg-white p-5 text-center text-xs text-slate-400">Ainda não enviada</div>}
+                </div>
+                <button type="button" disabled className="mt-4 w-full rounded-xl bg-violet-200 px-4 py-3 text-xs font-black text-violet-700 opacity-70">✨ Criar 3 artes com IA — em preparação</button>
+                <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                  {([
+                    ["imagemQuadradaUrl","Quadrada","1080 × 1080 px","aspect-square"],
+                    ["imagemHorizontalUrl","Horizontal","1920 × 1080 px (16:9)","aspect-video"],
+                    ["imagemVerticalUrl","Vertical","1080 × 1350 px (4:5)","aspect-[4/5]"],
+                  ] as const).map(([campo,nome,tamanho,aspecto]) => {
+                    const url = selecionada[campo];
+                    return <div key={campo} className="rounded-xl bg-white p-3">
+                      <p className="text-xs font-black text-slate-800">{nome}</p>
+                      <p className="text-[10px] font-bold text-blue-700">{tamanho}</p>
+                      <div className={`mt-2 ${aspecto} overflow-hidden rounded-lg bg-slate-100`}>
+                        {url ? <img src={url} alt={nome} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center p-2 text-center text-[10px] text-slate-400">Sem arte</div>}
+                      </div>
+                      <label className="mt-2 block cursor-pointer rounded-lg bg-slate-900 px-2 py-2 text-center text-[10px] font-black text-white">
+                        {enviandoArte === campo ? "Enviando..." : url ? "Trocar arte" : "Adicionar arte"}
+                        <input type="file" accept="image/*" className="hidden" disabled={!!enviandoArte} onChange={(e) => { void enviarArteMaster(selecionada, campo, e.target.files?.[0]); e.target.value = ""; }} />
+                      </label>
+                    </div>;
+                  })}
+                </div>
               </div>
 
               {selecionada.descricao && (
