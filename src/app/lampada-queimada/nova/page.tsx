@@ -56,6 +56,12 @@ export default function NovaOcorrenciaIluminacaoPage() {
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(true);
   const [selecionado, setSelecionado] = useState<Feature | null>(null);
+  const [pontoConfirmado, setPontoConfirmado] = useState(false);
+  const [nome, setNome] = useState("");
+  const [tipoTelefone, setTipoTelefone] = useState("Celular");
+  const [telefone, setTelefone] = useState("");
+  const [email, setEmail] = useState("");
+  const [observacao, setObservacao] = useState("");
   const mapaRef = useRef<HTMLDivElement | null>(null);
   const mapaObj = useRef<any>(null);
   const camadaRef = useRef<any>(null);
@@ -102,7 +108,7 @@ export default function NovaOcorrenciaIluminacaoPage() {
       camadaRef.current.clearLayers();
       pontos.forEach(({ f, c }) => {
         const marker = L.circleMarker(c, { radius: 5, weight: 1, color: "#a16207", fillColor: "#facc15", fillOpacity: 0.9 });
-        marker.on("click", () => setSelecionado(f));
+        marker.on("click", () => { setSelecionado(f); setPontoConfirmado(false); });
         marker.addTo(camadaRef.current);
       });
       window.setTimeout(() => mapaObj.current?.invalidateSize(), 100);
@@ -161,13 +167,65 @@ export default function NovaOcorrenciaIluminacaoPage() {
           <div className="rounded-3xl border-2 border-emerald-300 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div><p className="text-[10px] font-black uppercase text-emerald-700">Ponto selecionado</p><h2 className="text-xl font-black">{codigo ? `#${codigo}` : "Ponto de iluminação"}</h2></div>
-              <button onClick={() => setSelecionado(null)} className="text-xl text-slate-400">✕</button>
+              <button onClick={() => { setSelecionado(null); setPontoConfirmado(false); }} className="text-xl text-slate-400">✕</button>
             </div>
             {(endereco || bairro) && <p className="mt-3 text-sm font-bold text-slate-700">📍 {[endereco,bairro].filter(Boolean).join(" — ")}</p>}
             {cep && <p className="mt-1 text-xs text-slate-500">CEP {cep}</p>}
             {(luminarias || potencia) && <div className="mt-3 grid grid-cols-2 gap-2 text-xs"><div className="rounded-xl bg-slate-50 p-3"><b>Luminárias</b><br/>{luminarias || "—"}</div><div className="rounded-xl bg-slate-50 p-3"><b>Potência</b><br/>{potencia ? `${potencia} W` : "—"}</div></div>}
-            <button disabled={!tipo} className="mt-4 w-full rounded-2xl bg-emerald-600 px-5 py-4 text-sm font-black text-white disabled:bg-slate-300">✓ Confirmar este ponto</button>
+            <button
+              disabled={!tipo}
+              onClick={() => {
+                setPontoConfirmado(true);
+                window.setTimeout(() => document.getElementById("seus-dados")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+              }}
+              className="mt-4 w-full rounded-2xl bg-emerald-600 px-5 py-4 text-sm font-black text-white disabled:bg-slate-300"
+            >✓ Confirmar este ponto</button>
             {!tipo && <p className="mt-2 text-center text-[10px] text-amber-700">Selecione primeiro o tipo da ocorrência.</p>}
+          </div>
+        )}
+
+        {pontoConfirmado && selecionado && (
+          <div id="seus-dados" className="scroll-mt-28 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-5 flex items-center justify-between text-xs font-black">
+              <span className="text-emerald-700">✓ 1 Problema</span>
+              <span className="text-emerald-700">✓ 2 Local</span>
+              <span className="rounded-full bg-amber-500 px-3 py-2 text-white">3 Seus dados</span>
+            </div>
+
+            <div className="rounded-2xl bg-emerald-50 p-4">
+              <p className="text-[10px] font-black uppercase text-emerald-700">Local confirmado</p>
+              <p className="mt-1 text-sm font-black text-slate-800">{codigo ? `Ponto #${codigo}` : "Ponto de iluminação"}</p>
+              <p className="mt-1 text-xs text-slate-600">{[endereco, bairro].filter(Boolean).join(" — ")}</p>
+              {cep && <p className="mt-1 text-[11px] text-slate-500">CEP {cep}</p>}
+            </div>
+
+            <label className="mt-5 block text-sm font-black" htmlFor="observacao">Descrição do problema</label>
+            <textarea id="observacao" value={observacao} onChange={(e) => setObservacao(e.target.value)} rows={4} placeholder="Descreva o problema incluindo o máximo de informações que puder" className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-amber-500" />
+
+            <h2 className="mt-5 text-base font-black">Dados do solicitante</h2>
+            <label className="mt-3 block text-xs font-black" htmlFor="nome">Nome *</label>
+            <input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" className="mt-1 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-amber-500" />
+
+            <div className="mt-3 grid grid-cols-[120px_1fr] gap-2">
+              <div>
+                <label className="block text-xs font-black" htmlFor="tipoTelefone">Tipo *</label>
+                <select id="tipoTelefone" value={tipoTelefone} onChange={(e) => setTipoTelefone(e.target.value)} className="mt-1 w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm">
+                  <option>Celular</option><option>Residencial</option><option>Comercial</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-black" htmlFor="telefone">Telefone *</label>
+                <input id="telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} inputMode="tel" autoComplete="tel" placeholder="(19) 99999-9999" className="mt-1 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-amber-500" />
+              </div>
+            </div>
+
+            <label className="mt-3 block text-xs font-black" htmlFor="email">E-mail <span className="font-normal text-slate-400">(opcional)</span></label>
+            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" className="mt-1 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-amber-500" />
+
+            <button type="button" disabled className="mt-5 w-full rounded-2xl bg-slate-300 px-5 py-4 text-sm font-black text-white">
+              Registrar ocorrência
+            </button>
+            <p className="mt-2 text-center text-[10px] leading-4 text-slate-500">Nesta fase os dados ficam somente nesta tela. O envio para a SOMASIG ainda está bloqueado até validarmos o retorno e o protocolo.</p>
           </div>
         )}
 
