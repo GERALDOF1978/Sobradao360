@@ -1588,15 +1588,7 @@ function ClassificadosConteudo() {
           ================================================= */}
 
       <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-
-        <Link
-          href="/"
-          className="text-xs bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-3 py-1.5 rounded-xl transition"
-        >
-          ← Início
-        </Link>
-
-        <div className="flex items-center gap-2">
+<div className="flex items-center gap-2">
 
           {isAdmin && (
             <span className="bg-red-100 text-red-700 text-[10px] font-black px-2 py-0.5 rounded-full border border-red-300">
