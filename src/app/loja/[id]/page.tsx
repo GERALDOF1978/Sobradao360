@@ -361,6 +361,11 @@ export default function LojaPage({
                 "lojaId",
                 "==",
                 id
+              ),
+              where(
+                "ativo",
+                "==",
+                true
               )
             );
 
