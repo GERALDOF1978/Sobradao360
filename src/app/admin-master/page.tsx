@@ -644,12 +644,11 @@ export default function AdminMasterPage() {
         "lojas_parceiras"
       );
 
-      const consulta = query(
-        lojasRef,
-        orderBy("criadoEm", "desc")
-      );
-
-      const snapshot = await getDocs(consulta);
+      // Não usar orderBy aqui: documentos provisórios criados pelo Master
+      // podem ainda não possuir criadoEm. O Firestore exclui esses documentos
+      // de consultas com orderBy("criadoEm"), fazendo as artes salvas sumirem
+      // da visualização do Master.
+      const snapshot = await getDocs(lojasRef);
 
       const usuariosSnapshot = await getDocs(
         collection(db, "usuarios")
@@ -709,6 +708,21 @@ export default function AdminMasterPage() {
               "",
           };
         });
+
+      lista.sort((a, b) => {
+        const obterMillis = (valor: unknown): number => {
+          if (
+            valor &&
+            typeof valor === "object" &&
+            "toDate" in valor &&
+            typeof (valor as { toDate?: unknown }).toDate === "function"
+          ) {
+            return (valor as { toDate: () => Date }).toDate().getTime();
+          }
+          return 0;
+        };
+        return obterMillis(b.criadoEm || b.atualizadoEm) - obterMillis(a.criadoEm || a.atualizadoEm);
+      });
 
       setLojas(lista);
     } catch (error: unknown) {
@@ -807,6 +821,7 @@ export default function AdminMasterPage() {
             statusPlano: "AGUARDANDO_CONFIRMACAO",
             status: "PENDENTE_CONTRATO",
             ativo: false,
+            criadoEm: serverTimestamp(),
             atualizadoEm: serverTimestamp(),
           }, { merge: true });
           await carregarLojas();
