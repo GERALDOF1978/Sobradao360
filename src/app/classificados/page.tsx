@@ -1587,8 +1587,8 @@ function ClassificadosConteudo() {
           CABEÇALHO
           ================================================= */}
 
-      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-<div className="flex items-center gap-2">
+      <div className="border-b border-slate-200 pb-3">
+        <div className="flex items-center justify-center gap-2">
 
           {isAdmin && (
             <span className="bg-red-100 text-red-700 text-[10px] font-black px-2 py-0.5 rounded-full border border-red-300">
