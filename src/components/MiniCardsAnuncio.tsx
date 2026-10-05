@@ -9,67 +9,90 @@ type CardAnuncio = {
   id: string;
   lojaId: string;
   nome: string;
-  bannerUrl: string;
+  imagemUrl: string;
 };
 
 export default function MiniCardsAnuncio() {
   const [cards, setCards] = useState<CardAnuncio[]>([]);
+  const [pagina, setPagina] = useState(0);
 
   useEffect(() => {
     async function carregar() {
       try {
-        const lojasSnapshot = await getDocs(
-          query(collection(db, "lojas_parceiras"), where("ativo", "==", true))
-        );
+        const [lojasSnapshot, contratosSnapshot] = await Promise.all([
+          getDocs(query(collection(db, "lojas_parceiras"), where("ativo", "==", true))),
+          getDocs(query(collection(db, "contratos_anuncio"), where("status", "==", "ativo"))),
+        ]);
 
-        const lista: CardAnuncio[] = lojasSnapshot.docs
-          .map((item: (typeof lojasSnapshot.docs)[number]) => {
-            const loja = item.data() as Record<string, unknown>;
-            return {
-              id: item.id,
-              lojaId: item.id,
-              nome: typeof loja.nome === "string" ? loja.nome : "",
-              bannerUrl: typeof loja.bannerUrl === "string" ? loja.bannerUrl : "",
-            };
-          })
-          .filter((item: CardAnuncio) => item.nome || item.bannerUrl);
+        const lojas = new Map<string, Record<string, unknown>>();
+        lojasSnapshot.docs.forEach((item) => lojas.set(item.id, item.data() as Record<string, unknown>));
 
-        setCards(lista.slice(0, 4));
+        const lista: CardAnuncio[] = [];
+        contratosSnapshot.docs.forEach((contratoDoc) => {
+          const contrato = contratoDoc.data() as Record<string, unknown>;
+          const exibicao =
+            contrato.exibicao && typeof contrato.exibicao === "object"
+              ? (contrato.exibicao as Record<string, unknown>)
+              : {};
+          const lojaId = typeof contrato.lojaId === "string" ? contrato.lojaId : "";
+          const loja = lojas.get(lojaId);
+          if (!loja || exibicao.publicidade !== true) return;
+
+          const imagemUrl =
+            typeof loja.artePublicidadeUrl === "string" && loja.artePublicidadeUrl
+              ? loja.artePublicidadeUrl
+              : typeof loja.bannerUrl === "string" && loja.bannerUrl
+                ? loja.bannerUrl
+                : typeof loja.imagemUrl === "string" ? loja.imagemUrl : "";
+
+          if (!imagemUrl) return;
+          lista.push({
+            id: contratoDoc.id,
+            lojaId,
+            nome: typeof loja.nome === "string" ? loja.nome : "Anunciante",
+            imagemUrl,
+          });
+        });
+
+        setCards(lista);
       } catch (erro) {
         console.error("Erro ao carregar mini anúncios:", erro);
         setCards([]);
       }
     }
-
     carregar();
   }, []);
 
+  const totalPaginas = Math.max(1, Math.ceil(cards.length / 4));
+
+  useEffect(() => {
+    if (totalPaginas <= 1) return;
+    const timer = window.setInterval(() => {
+      setPagina((atual) => (atual + 1) % totalPaginas);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [totalPaginas]);
+
   if (cards.length === 0) return null;
+
+  const visiveis = cards.slice(pagina * 4, pagina * 4 + 4);
 
   return (
     <section className="space-y-2">
-      <div className="flex items-center justify-between px-1">
-        <h2 className="text-[10px] font-black uppercase tracking-wider text-slate-500">Publicidade</h2>
-        <span className="text-[9px] font-bold text-slate-400">Anunciantes locais</span>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        {cards.map((card) => (
+      <div className="grid grid-cols-4 gap-1.5">
+        {visiveis.map((card) => (
           <Link
             key={card.id}
             href={`/loja/${card.lojaId}`}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-amber-400 hover:shadow-md"
+            className="aspect-[3/1] w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:border-amber-400"
+            title={card.nome}
           >
-            {card.bannerUrl ? (
-              <div className="aspect-[3/1] w-full overflow-hidden bg-slate-100">
-                <img src={card.bannerUrl} alt={card.nome || "Publicidade"} className="h-full w-full object-cover" loading="lazy" />
-              </div>
-            ) : (
-              <div className="flex min-h-12 items-center justify-center bg-emerald-700 px-2 text-center text-[10px] font-black text-white">
-                {card.nome}
-              </div>
-            )}
-            <div className="truncate px-2 py-1.5 text-[10px] font-bold text-slate-700">{card.nome || "Anunciante"}</div>
+            <img
+              src={card.imagemUrl}
+              alt={card.nome}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
           </Link>
         ))}
       </div>
