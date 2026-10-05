@@ -130,7 +130,7 @@ export default function NovaOcorrenciaIluminacaoPage() {
             </div>
           )}
 
-          {!carregando && !erro && pontos && (
+          {!carregando && !erro && pontos !== null && (
             <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
               <div className="text-sm font-black text-emerald-800">✅ Conexão com os pontos funcionando</div>
               <div className="mt-1 text-xs text-emerald-700">
@@ -146,7 +146,7 @@ export default function NovaOcorrenciaIluminacaoPage() {
 
           <button
             type="button"
-            disabled={!tipo || !pontos || !!erro}
+            disabled={!tipo || pontos === null || !!erro}
             className="mt-4 w-full rounded-2xl bg-slate-900 px-5 py-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             📍 Abrir mapa dos pontos
