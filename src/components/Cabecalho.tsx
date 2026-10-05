@@ -577,9 +577,24 @@ export default function Cabecalho() {
               />
             </button>
 
+            {/* IDENTIDADE DO PORTAL */}
+            <button
+              type="button"
+              onClick={() => (window.location.href = "/")}
+              className="min-w-0 flex-1 px-1 text-center leading-none"
+              aria-label="Sobradão 360 - Portal Comunitário"
+            >
+              <div className="truncate text-[13px] font-black tracking-tight text-blue-900 sm:text-base">
+                SOBRADÃO <span className="text-amber-500">360</span>
+              </div>
+              <div className="mt-1 truncate text-[7px] font-black uppercase tracking-[0.16em] text-slate-400 sm:text-[8px]">
+                Portal Comunitário
+              </div>
+            </button>
+
             {/* CLIMA */}
 
-            <div className="ml-auto flex items-center">
+            <div className="flex shrink-0 items-center">
 
               {clima ? (
                 <button
