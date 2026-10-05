@@ -573,14 +573,7 @@ export default function AnunciePage() {
         {/* CABEÇALHO */}
 
         <div className="flex items-center justify-between mb-6">
-          <Link
-            href="/"
-            className="text-xs bg-white border border-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl shadow-sm"
-          >
-            ← Início
-          </Link>
-
-          <h1 className="text-lg font-black">
+<h1 className="text-lg font-black">
             📢 Anuncie
           </h1>
 
