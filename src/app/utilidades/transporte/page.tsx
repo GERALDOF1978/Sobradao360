@@ -154,7 +154,7 @@ export default function TransportePage() {
         limites.push([lat, lng]);
         const icon = L.divIcon({
           className: "",
-          html: `<div style="position:relative;background:#059669;color:white;border:3px solid white;border-radius:999px;width:46px;height:46px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px #0005;font-size:20px"><span>🚌</span><span style="position:absolute;left:50%;top:-13px;transform:translateX(-50%) rotate(${headingSeguro(v)}deg);transform-origin:50% 24px;font-size:18px;color:#0f172a;text-shadow:0 0 2px white,0 0 2px white">▲</span></div>`,
+          html: `<div style="position:relative;background:#059669;color:white;border:3px solid white;border-radius:999px;width:46px;height:46px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px #0005;font-size:20px"><span>🚌</span><span style="position:absolute;left:50%;top:-25px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;transform:translateX(-50%) rotate(${headingSeguro(v)}deg);transform-origin:50% 35px;color:#0f172a;filter:drop-shadow(0 0 2px white)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 21V5M12 5L6.5 10.5M12 5L17.5 10.5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>`,
           iconSize: [46, 46],
           iconAnchor: [23, 23]
         });
