@@ -125,6 +125,14 @@ interface SolicitacaoDivulgacao {
   instagram?: string;
   site?: string;
   observacoes?: string;
+  imagemReferenciaUrl?: string;
+  planoEscolhidoId?: string;
+  planoEscolhidoNome?: string;
+  planoEscolhidoValor?: number;
+  planoEscolhidoDuracaoDias?: number;
+  planoEscolhidoLimiteProdutos?: number;
+  planoEscolhidoCarrinhoCompras?: boolean;
+  statusPlano?: string;
   status?: string;
   criadoEm?: unknown;
 }
@@ -248,6 +256,7 @@ export default function AdminMasterPage() {
   const [filtroSolicitacao, setFiltroSolicitacao] = useState("todos");
 
   const [menuAberto, setMenuAberto] = useState("anunciantes");
+  const [menuLateralAberto, setMenuLateralAberto] = useState(false);
 
   const [solicitacoes, setSolicitacoes] =
     useState<SolicitacaoDivulgacao[]>([]);
@@ -1100,7 +1109,7 @@ export default function AdminMasterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 p-4 md:p-6">
+    <main className="min-h-screen bg-slate-100 p-4 md:p-6 lg:pl-72">
 
     <div className="mx-auto max-w-7xl">
 
@@ -1136,45 +1145,20 @@ export default function AdminMasterPage() {
         </header>
 
 
-        <section className="mb-6 rounded-2xl bg-white p-4 shadow-sm">
-          <div className="mb-3">
-            <h2 className="text-base font-black text-slate-900">
-              Menu Master
-            </h2>
-            <p className="text-xs text-slate-500">
-              Abra somente a área que você precisa administrar.
-            </p>
+        <button type="button" onClick={() => setMenuLateralAberto(true)} className="fixed left-3 top-1/2 z-40 -translate-y-1/2 rounded-r-2xl bg-slate-950 px-3 py-4 text-xl text-white shadow-xl lg:hidden" aria-label="Abrir menu Master">☰</button>
+        {menuLateralAberto && <button type="button" onClick={() => setMenuLateralAberto(false)} className="fixed inset-0 z-40 bg-black/30 lg:hidden" aria-label="Fechar menu" />}
+        <aside className={`fixed bottom-0 left-0 top-0 z-50 w-64 overflow-y-auto bg-slate-950 p-4 text-white shadow-2xl transition-transform lg:translate-x-0 ${menuLateralAberto ? "translate-x-0" : "-translate-x-full"}`}>
+          <div className="mb-5 flex items-center justify-between border-b border-white/10 pb-4">
+            <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">Sobradão 360</p><p className="text-lg font-black">Painel Master</p></div>
+            <button type="button" onClick={() => setMenuLateralAberto(false)} className="rounded-lg bg-white/10 px-3 py-2 lg:hidden">✕</button>
           </div>
-
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-2">
             {[
-              ["anunciantes", "🏪", "Anunciantes", "Lojas parceiras"],
-              ["solicitacoes", "📨", "Solicitações", solicitacoes.length + " recebida(s)"],
-              ["planos", "💳", "Planos e contratos", "Pacotes e contratos"],
-              ["noticias", "📰", "Giro de Notícias", "Buscar e revisar notícias"],
-              ["painel", "👤", "Painel anunciante", "Abrir painel"],
-            ].map(([id, icone, titulo, descricao]) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setMenuAberto(id)}
-                className={`rounded-xl border p-3 text-left transition ${
-                  menuAberto === id
-                    ? "border-amber-400 bg-amber-50"
-                    : "border-slate-200 bg-white hover:bg-slate-50"
-                }`}
-              >
-                <div className="text-lg">{icone}</div>
-                <div className="mt-1 text-sm font-black text-slate-900">
-                  {titulo}
-                </div>
-                <div className="text-xs text-slate-500">
-                  {descricao}
-                </div>
-              </button>
-            ))}
+              ["anunciantes","🏪","Anunciantes"],["solicitacoes","📨","Solicitações"],["planos","💳","Planos e contratos"],["noticias","📰","Giro de Notícias"],["painel","👤","Painel anunciante"]
+            ].map(([id,icone,titulo]) => <button key={id} type="button" onClick={() => { setMenuAberto(id); setMenuLateralAberto(false); }} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-black ${menuAberto === id ? "bg-amber-400 text-slate-950" : "bg-white/5 text-white hover:bg-white/10"}`}><span>{icone}</span><span>{titulo}</span>{id === "solicitacoes" && solicitacoes.length > 0 && <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px]">{solicitacoes.length}</span>}</button>)}
           </div>
-        </section>
+          <p className="mt-6 border-t border-white/10 pt-4 text-[10px] text-slate-400">{user?.email || "Master"}</p>
+        </aside>
 
         <section className="mb-6">
           <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm">
@@ -1647,7 +1631,20 @@ export default function AdminMasterPage() {
                         </span>
                       </div>
 
-                      <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
+                      <div className="mt-4 grid gap-4 lg:grid-cols-[220px_1fr]">
+                        <div>
+                          <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Imagem original enviada</p>
+                          {item.imagemReferenciaUrl ? (
+                            <a href={item.imagemReferenciaUrl} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                              <img src={item.imagemReferenciaUrl} alt={`Referência de ${item.nomeNegocio || "anunciante"}`} className="aspect-square w-full object-cover" />
+                              <span className="block px-3 py-2 text-center text-xs font-black text-blue-700">🔎 Abrir imagem original</span>
+                            </a>
+                          ) : <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-xs text-slate-400">Nenhuma imagem enviada</div>}
+                        </div>
+                        <div>
+                          <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Dados do anunciante</p>
+
+                      <div className="grid gap-2 text-sm md:grid-cols-2">
                         <div><strong>E-mail:</strong> {item.email || "-"}</div>
                         <div><strong>WhatsApp:</strong> {item.whatsapp || "-"}</div>
                         <div><strong>Telefone:</strong> {item.telefone || "-"}</div>
@@ -1656,7 +1653,16 @@ export default function AdminMasterPage() {
                         <div><strong>Cadastro:</strong> {formatarData(item.criadoEm)}</div>
                       </div>
 
-                      {item.descricao && (
+                        </div>
+                      </div>
+
+                      {item.planoEscolhidoNome && (
+                        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+                          <strong>💳 Plano escolhido:</strong> {item.planoEscolhidoNome} · {Number(item.planoEscolhidoValor || 0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})} · {item.planoEscolhidoDuracaoDias || 0} dias · até {item.planoEscolhidoLimiteProdutos || 0} produtos/serviços
+                        </div>
+                      )}
+
+                                            {item.descricao && (
                         <p className="mt-3 whitespace-pre-wrap text-sm text-slate-600">
                           {item.descricao}
                         </p>
@@ -1669,6 +1675,16 @@ export default function AdminMasterPage() {
                           {item.observacoes && <div><strong>Observações:</strong> {item.observacoes}</div>}
                         </div>
                       )}
+
+                      <div className="mt-4 border-t border-slate-100 pt-4">
+                        <p className="text-xs font-black uppercase tracking-wider text-slate-500">🎨 Produção das artes</p>
+                        <p className="mt-1 text-xs text-slate-500">Use a imagem original acima como referência para preparar as peças nos formatos do portal.</p>
+                        <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
+                          {[
+                            ["📢","Marquee","1200 × 300 px"],["🖼️","Publicidade","1080 × 1080 px"],["⭐","Destaques","1080 × 1350 px"],["🤝","Parceiros","600 × 600 px"]
+                          ].map(([icone,nome,tamanho]) => <div key={nome} className="border-l-2 border-blue-200 py-2 pl-3"><p className="text-xs font-black text-slate-800">{icone} {nome}</p><p className="text-[10px] font-bold text-blue-700">{tamanho}</p></div>)}
+                        </div>
+                      </div>
 
                       <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
                         {item.status !== "APROVADO" && (
