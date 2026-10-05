@@ -256,14 +256,14 @@ export default function ComunidadePage() {
     <main className="min-h-screen bg-slate-50">
       <section className="bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-600 text-white">
         <div className="mx-auto max-w-3xl px-4 py-2.5">
-          <div className="flex items-center justify-between gap-3">
-<div className="text-center">
+          <div className="relative flex items-center justify-center">
+            <div className="text-center">
               <div className="text-lg">🏘️</div>
               <h1 className="text-base font-black">Mural da Comunidade</h1>
             </div>
             <Link
               href="/anuncie?modo=post"
-              className="rounded-xl bg-white px-3 py-2 text-[10px] font-black text-emerald-700 shadow"
+              className="absolute right-0 rounded-xl bg-white px-3 py-2 text-[10px] font-black text-emerald-700 shadow"
             >
               💬 Publicar
             </Link>
