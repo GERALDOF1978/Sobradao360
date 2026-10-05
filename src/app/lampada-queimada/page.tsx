@@ -32,17 +32,28 @@ export default function LampadaQueimadaPage() {
             Use o canal de ocorrências de Rio Claro para informar o endereço e solicitar o reparo da iluminação pública.
           </p>
 
+          <Link
+            href="/lampada-queimada/nova"
+            className="mt-5 block rounded-2xl bg-amber-500 px-5 py-4 text-center font-black text-white shadow-md transition hover:bg-amber-600"
+          >
+            ✨ Testar novo formulário
+          </Link>
+
+          <p className="mt-2 text-center text-[11px] leading-4 text-slate-500">
+            Nova opção do Sobradão 360. O canal oficial continua disponível abaixo.
+          </p>
+
           <a
             href={OCORRENCIAS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-5 block rounded-2xl bg-amber-500 px-5 py-4 text-center font-black text-white shadow-md hover:bg-amber-600 transition"
+            className="mt-4 block rounded-2xl border-2 border-amber-400 bg-white px-5 py-3.5 text-center text-sm font-black text-amber-700 transition hover:bg-amber-50"
           >
-            💡 Solicitar reparo
+            💡 Usar sistema oficial
           </a>
 
           <p className="mt-3 text-center text-xs text-slate-400">
-            Você será direcionado ao sistema oficial de ocorrências de Rio Claro.
+            Se o novo formulário não funcionar, use normalmente o sistema oficial de ocorrências de Rio Claro.
           </p>
         </div>
       </section>
