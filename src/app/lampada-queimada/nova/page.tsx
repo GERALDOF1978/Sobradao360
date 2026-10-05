@@ -270,6 +270,21 @@ export default function NovaOcorrenciaIluminacaoPage() {
                 <p className="mt-2 text-sm font-bold text-slate-600">Protocolo oficial</p>
                 <p className="mt-1 text-3xl font-black tracking-wide text-emerald-700">{protocolo}</p>
                 <p className="mt-2 text-[11px] text-slate-500">Guarde este número para acompanhar a solicitação.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProtocolo("");
+                    setErroEnvio("");
+                    setTipo("");
+                    setSelecionado(null);
+                    setPontoConfirmado(false);
+                    setObservacao("");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="mt-4 w-full rounded-2xl bg-emerald-600 px-5 py-3.5 text-sm font-black text-white"
+                >
+                  ➕ Registrar nova ocorrência
+                </button>
               </div>
             ) : (
               <>
