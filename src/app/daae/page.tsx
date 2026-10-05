@@ -25,12 +25,12 @@ export default function DaaePage() {
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <section className="bg-gradient-to-br from-cyan-700 via-cyan-600 to-blue-700 text-white">
         <div className="mx-auto max-w-3xl px-4 py-2.5">
-          <div className="flex items-center justify-between gap-3">
-<div className="text-center">
+          <div className="relative flex items-center justify-center">
+            <div className="text-center">
               <div className="text-lg">💧</div>
               <h1 className="text-base font-black">DAAE Rio Claro</h1>
             </div>
-            <span className="rounded-lg bg-white/20 px-2 py-1 text-[9px] font-black">Atendimento</span>
+            <span className="absolute right-0 rounded-lg bg-white/20 px-2 py-1 text-[9px] font-black">Atendimento</span>
           </div>
           <p className="mt-1 text-center text-[10px] leading-3 text-white/85">
             Água, esgoto, contas e canais de atendimento.
