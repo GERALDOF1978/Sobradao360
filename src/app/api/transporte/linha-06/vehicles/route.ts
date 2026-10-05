@@ -82,6 +82,14 @@ export async function GET() {
 
     try {
       vehicles = await buscarPelaLinha();
+
+      // O Mobilibus pode responder 200 para route_id sem trip_id,
+      // porém devolver uma lista vazia. Nesse caso, não tratamos como
+      // "sem ônibus": tentamos as viagens conhecidas como contingência.
+      if (vehicles.length === 0) {
+        modo = "fallback-trip";
+        vehicles = await buscarFallback();
+      }
     } catch {
       modo = "fallback-trip";
       vehicles = await buscarFallback();
