@@ -1384,7 +1384,28 @@ corMarca:
                   </button>
                 ))}
               </div>
-              <Link href="/" className="mt-6 block rounded-xl border border-slate-200 px-4 py-3 text-center text-xs font-black text-slate-600">← Voltar ao portal</Link>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuAberto(false);
+                  if (negocios[0]?.ativo) {
+                    abrirNegocio(negocios[0]);
+                  } else {
+                    setMensagem("Sua página ainda não está publicada. Assim que for ativada pelo Sobradão 360, este botão abrirá sua página.");
+                    setSecaoAtiva("inicio");
+                  }
+                }}
+                className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-black ${
+                  negocios[0]?.ativo
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                    : "border border-slate-200 bg-slate-50 text-slate-500"
+                }`}
+              >
+                👁️ Ver minha página
+              </button>
+
+              <Link href="/" className="mt-3 block rounded-xl border border-slate-200 px-4 py-3 text-center text-xs font-black text-slate-600">← Voltar ao portal</Link>
             </aside>
           </>
         )}
