@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 const extras = [
+  { href: "/clima", icone: "🌦️", titulo: "Clima" },
   { href: "/anuncie", icone: "📣", titulo: "Classificados" },
   { href: "/utilidades/transporte", icone: "🚌", titulo: "Transporte" },
   { href: "/utilidades/coleta-lixo", icone: "🗑️", titulo: "Coleta" },
