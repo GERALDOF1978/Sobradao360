@@ -25,10 +25,13 @@ export default function MiniCardsAnuncio() {
         ]);
 
         const lojas = new Map<string, Record<string, unknown>>();
-        lojasSnapshot.docs.forEach((item) => lojas.set(item.id, item.data() as Record<string, unknown>));
+        lojasSnapshot.docs.forEach((item: (typeof lojasSnapshot.docs)[number]) =>
+          lojas.set(item.id, item.data() as Record<string, unknown>)
+        );
 
         const lista: CardAnuncio[] = [];
-        contratosSnapshot.docs.forEach((contratoDoc) => {
+        contratosSnapshot.docs.forEach(
+          (contratoDoc: (typeof contratosSnapshot.docs)[number]) => {
           const contrato = contratoDoc.data() as Record<string, unknown>;
           const exibicao =
             contrato.exibicao && typeof contrato.exibicao === "object"
@@ -52,7 +55,8 @@ export default function MiniCardsAnuncio() {
             nome: typeof loja.nome === "string" ? loja.nome : "Anunciante",
             imagemUrl,
           });
-        });
+        }
+        );
 
         setCards(lista);
       } catch (erro) {
