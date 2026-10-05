@@ -572,12 +572,10 @@ export default function AnunciePage() {
 
         {/* CABEÇALHO */}
 
-        <div className="flex items-center justify-between mb-6">
-<h1 className="text-lg font-black">
+        <div className="mb-6 text-center">
+          <h1 className="text-lg font-black">
             📢 Anuncie
           </h1>
-
-          <div className="w-16" />
         </div>
 
         {/* NÃO LOGADO */}
