@@ -55,7 +55,8 @@ export default function TransportePage() {
   const [pedindoLocalizacao, setPedindoLocalizacao] = useState(false);
   const [mostrarHorarios, setMostrarHorarios] = useState(false);
   const [tipoHorario, setTipoHorario] = useState<"centro" | "bairro">("centro");
-  const [agora, setAgora] = useState(() => new Date());
+  // Evita diferença de texto entre o HTML do servidor e a hidratação do React.
+  const [agora, setAgora] = useState<Date | null>(null);
   const mapaRef = useRef<HTMLDivElement | null>(null);
   const mapaObj = useRef<any>(null);
   const camadaRef = useRef<any>(null);
@@ -96,8 +97,12 @@ export default function TransportePage() {
   }
 
   useEffect(() => {
+    setAgora(new Date());
     atualizar();
-    const timer = window.setInterval(() => { atualizar(); setAgora(new Date()); }, 20000);
+    const timer = window.setInterval(() => {
+      atualizar();
+      setAgora(new Date());
+    }, 20000);
     return () => window.clearInterval(timer);
   }, []);
 
@@ -164,11 +169,13 @@ export default function TransportePage() {
   }, [pontos, localizacao]);
 
   const horarios = horariosHoje(tipoHorario);
-  const minutosAgora = agora.getHours() * 60 + agora.getMinutes();
-  const futuros = horarios.filter((h) => {
-    const [hh, mm] = h.split(":").map(Number);
-    return hh * 60 + mm >= minutosAgora;
-  });
+  const minutosAgora = agora ? agora.getHours() * 60 + agora.getMinutes() : null;
+  const futuros = minutosAgora === null
+    ? []
+    : horarios.filter((h) => {
+        const [hh, mm] = h.split(":").map(Number);
+        return hh * 60 + mm >= minutosAgora;
+      });
   const proximoProgramado = futuros[0];
 
   return (
