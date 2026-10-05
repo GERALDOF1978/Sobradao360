@@ -229,7 +229,7 @@ export default function Home() {
 
         {/* ==========================================
             4. PUBLICIDADE
-            COMPACTA - 2 POR LINHA
+            FORMATO QUADRADO 1080x1080 - 2 POR LINHA
         ========================================== */}
 
         <section className="space-y-2">
@@ -252,7 +252,7 @@ export default function Home() {
                 href={`/loja/${item.lojaId}`}
                 className="block w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-amber-400 hover:shadow-md transition"
               >
-                <div className="aspect-[3/1] w-full bg-slate-200 overflow-hidden">
+                <div className="aspect-square w-full bg-slate-200 overflow-hidden">
                   <img
                     src={item.artePublicidadeUrl || item.bannerUrl}
                     alt={item.nome || "Publicidade"}
@@ -267,7 +267,7 @@ export default function Home() {
 
         {/* ==========================================
             5. DESTAQUES
-            COMPACTOS - 2 POR LINHA
+            FORMATO VERTICAL 1080x1350 - 2 POR LINHA
         ========================================== */}
 
         <section className="space-y-2">
@@ -288,7 +288,7 @@ export default function Home() {
               <Link
                 key={item.id}
                 href={`/loja/${item.lojaId}`}
-                className="aspect-[3/1] w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-amber-400 transition"
+                className="aspect-[4/5] w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-amber-400 transition"
               >
                 <img
                   src={item.arteDestaquesUrl || item.bannerUrl}
