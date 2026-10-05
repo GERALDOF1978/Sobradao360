@@ -55,6 +55,7 @@ interface LojaParceira {
   siteUrl?: string;
 
   imagemUrl?: string;
+  imagemReferenciaUrl?: string;
 
   ativo?: boolean;
   status?: string;
@@ -1154,59 +1155,26 @@ export default function AdminMasterPage() {
           </div>
           <div className="space-y-2">
             {[
-              ["anunciantes","🏪","Anunciantes"],["solicitacoes","📨","Solicitações"],["planos","💳","Planos e contratos"],["noticias","📰","Giro de Notícias"],["painel","👤","Painel anunciante"]
+              ["anunciantes","🏪","Anunciantes"],["solicitacoes","📨","Solicitações"],["planos","💳","Planos e contratos"],["noticias","📰","Giro de Notícias"],["vagas","💼","Atualizar vagas"],["contatos","📞","Contatos e Serviços"],["painel","👤","Painel anunciante"]
             ].map(([id,icone,titulo]) => <button key={id} type="button" onClick={() => { setMenuAberto(id); setMenuLateralAberto(false); }} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-black ${menuAberto === id ? "bg-amber-400 text-slate-950" : "bg-white/5 text-white hover:bg-white/10"}`}><span>{icone}</span><span>{titulo}</span>{id === "solicitacoes" && solicitacoes.length > 0 && <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px]">{solicitacoes.length}</span>}</button>)}
           </div>
           <p className="mt-6 border-t border-white/10 pt-4 text-[10px] text-slate-400">{user?.email || "Master"}</p>
         </aside>
 
-        <section className="mb-6">
-          <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="text-sm font-black text-indigo-950">💼 Atualização de vagas</div>
-                <p className="mt-1 text-xs leading-relaxed text-indigo-800">
-                  Atualize manualmente as vagas do Trampolim / PAT. A integração já está preparada para futuramente ser automatizada pelo n8n.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={sincronizarVagasTrampolim}
-                disabled={sincronizandoVagas}
-                className="rounded-xl bg-indigo-700 px-4 py-2.5 text-xs font-black text-white shadow-sm hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {sincronizandoVagas ? "⏳ Atualizando..." : "🔄 Atualizar Trampolim"}
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <div className="mb-6 grid gap-3 sm:grid-cols-2">
-          <a
-            href="/admin-master/telefones"
-            className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 hover:bg-amber-100"
-          >
-            <span className="text-2xl">📞</span>
-            <span>
-              <span className="block text-sm font-black text-slate-900">Contatos e Serviços</span>
-              <span className="block text-xs text-slate-500">Aprovar cadastros enviados pela comunidade</span>
-            </span>
-          </a>
-
-          <button
-            type="button"
-            onClick={() => setMenuAberto("noticias")}
-            className="flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left hover:bg-blue-100"
-          >
-            <span className="text-2xl">📰</span>
-            <span>
-              <span className="block text-sm font-black text-slate-900">Giro de Notícias</span>
-              <span className="block text-xs text-slate-500">
-                Atualizar e revisar matérias importadas
-              </span>
-            </span>
-          </button>
-        </div>
+        {menuAberto === "vagas" && (
+          <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-black text-slate-900">💼 Atualização de vagas</h2>
+            <p className="mt-1 text-sm text-slate-500">Atualize manualmente as vagas do Trampolim / PAT.</p>
+            <button type="button" onClick={sincronizarVagasTrampolim} disabled={sincronizandoVagas} className="mt-4 w-full rounded-xl bg-indigo-700 px-4 py-3 text-sm font-black text-white disabled:opacity-60">{sincronizandoVagas ? "⏳ Atualizando..." : "🔄 Atualizar Trampolim"}</button>
+          </section>
+        )}
+        {menuAberto === "contatos" && (
+          <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-black text-slate-900">📞 Contatos e Serviços</h2>
+            <p className="mt-1 text-sm text-slate-500">Aprovar cadastros enviados pela comunidade.</p>
+            <a href="/admin-master/telefones" className="mt-4 inline-flex rounded-xl bg-slate-900 px-5 py-3 text-sm font-black text-white">Abrir gerenciamento</a>
+          </section>
+        )}
 
         <section className="mb-6">
           {menuAberto === "noticias" && (
@@ -1740,68 +1708,24 @@ export default function AdminMasterPage() {
 
         {menuAberto === "anunciantes" && (
           <>
-        <section className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <div className="text-sm text-slate-500">
-              Total
-            </div>
-            <div className="mt-1 text-3xl font-bold text-slate-900">
-              {total}
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <div className="text-sm text-slate-500">
-              Pendentes
-            </div>
-            <div className="mt-1 text-3xl font-bold text-amber-500">
-              {pendentes}
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <div className="text-sm text-slate-500">
-              Aprovados
-            </div>
-            <div className="mt-1 text-3xl font-bold text-green-600">
-              {aprovadas}
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <div className="text-sm text-slate-500">
-              Suspensos
-            </div>
-            <div className="mt-1 text-3xl font-bold text-red-600">
-              {suspensas}
-            </div>
-          </div>
-
-        </section>
-
-        <section className="mb-6 flex flex-wrap gap-2">
-
-          {FILTROS.map((filtroItem) => (
-            <button
-              key={filtroItem.valor}
-              type="button"
-              onClick={() =>
-                setFiltro(filtroItem.valor)
-              }
-              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${
-                filtro === filtroItem.valor
-                  ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-600 shadow-sm hover:bg-slate-50"
-              }`}
-            >
-              {filtroItem.texto}
+        <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+          {[
+            ["todos","Total",total,"text-slate-900"],["PENDENTE","Pendentes",pendentes,"text-amber-500"],["APROVADO","Aprovados",aprovadas,"text-green-600"],["SUSPENSO","Suspensos",suspensas,"text-red-600"]
+          ].map(([valor,label,numero,cor]) => (
+            <button key={String(valor)} type="button" onClick={() => setFiltro(String(valor))} className={`rounded-2xl p-4 text-left shadow-sm transition ${filtro === valor ? "bg-slate-900 text-white ring-2 ring-amber-400" : "bg-white"}`}>
+              <div className={`text-xs font-bold ${filtro === valor ? "text-slate-300" : "text-slate-500"}`}>{label}</div>
+              <div className={`mt-1 text-3xl font-black ${filtro === valor ? "text-white" : cor}`}>{numero}</div>
+              <div className={`mt-1 text-[10px] font-bold ${filtro === valor ? "text-amber-300" : "text-slate-400"}`}>Toque para filtrar</div>
             </button>
           ))}
-
         </section>
 
-        <section className="space-y-4">
+        {solicitacoes.some((x) => x.status === "APROVADO") && (
+          <button type="button" onClick={() => { setMenuAberto("solicitacoes"); setFiltroSolicitacao("APROVADO"); }} className="mb-4 flex w-full items-center justify-between rounded-xl border border-green-200 bg-green-50 p-4 text-left">
+            <span><strong className="block text-sm text-green-900">✅ Solicitações já aprovadas</strong><span className="text-xs text-green-700">Há {solicitacoes.filter((x) => x.status === "APROVADO").length} aprovação(ões). Toque para gerenciar e ver a imagem enviada.</span></span><span>›</span>
+          </button>
+        )}
+                <section className="space-y-4">
 
           {lojasFiltradas.length === 0 ? (
             <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
