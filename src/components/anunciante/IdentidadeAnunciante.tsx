@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import {
   doc,
   serverTimestamp,
@@ -55,13 +55,6 @@ export default function IdentidadeAnunciante({
 
   const [mostrarCard, setMostrarCard] =
     useState(mostrarCardInicial !== false);
-
-  const [enviandoLogo, setEnviandoLogo] =
-    useState(false);
-
-  const [enviandoBanner, setEnviandoBanner] =
-    useState(false);
-
   const [salvando, setSalvando] =
     useState(false);
 
@@ -378,22 +371,6 @@ export default function IdentidadeAnunciante({
 
           </div>
 
-          <label className="mt-4 block cursor-pointer rounded-xl bg-blue-900 px-4 py-3 text-center text-xs font-black text-white transition hover:bg-blue-800">
-
-            {enviandoLogo
-              ? "⏳ Enviando logo..."
-              : "📤 Enviar / trocar logo"}
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={selecionarLogo}
-              disabled={enviandoLogo}
-              className="hidden"
-            />
-
-          </label>
-
         </div>
 
         {/* BANNER */}
@@ -448,27 +425,6 @@ export default function IdentidadeAnunciante({
 
           </div>
 
-          <label className="mt-4 block cursor-pointer rounded-xl bg-amber-400 px-4 py-3 text-center text-xs font-black text-blue-950 transition hover:bg-amber-300">
-
-            {enviandoBanner
-              ? "⏳ Enviando banner..."
-              : "📤 Enviar / trocar banner"}
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={selecionarBanner}
-              disabled={enviandoBanner}
-              className="hidden"
-            />
-
-          </label>
-
-          <p className="mt-2 text-center text-[10px] text-slate-400">
-            Recomenda-se imagem horizontal.
-            Máximo 10 MB.
-          </p>
-
         </div>
 
         <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
@@ -519,9 +475,8 @@ export default function IdentidadeAnunciante({
         </h4>
 
         <p className="mt-2 text-xs leading-5 text-blue-800">
-          A posição da sua publicidade é definida pelo contrato comercial
-          aprovado pelo Sobradão 360. Você não precisa configurar Marquee,
-          Publicidade, Destaques ou Parceiros aqui.
+          As artes são preparadas pelo Sobradão 360 a partir da imagem enviada no cadastro.
+          Cada formato abaixo mostra o tamanho recomendado e onde a peça será exibida.
         </p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -531,8 +486,9 @@ export default function IdentidadeAnunciante({
             <p className="mt-2 text-xs font-black text-slate-800">
               Marquee
             </p>
+            <p className="mt-1 text-[10px] font-bold text-blue-700">1200 × 300 px · horizontal</p>
             <p className="mt-1 text-[10px] text-slate-500">
-              Definido pelo contrato.
+              Faixa de lojas/parceiros do portal.
             </p>
           </div>
 
@@ -541,8 +497,9 @@ export default function IdentidadeAnunciante({
             <p className="mt-2 text-xs font-black text-slate-800">
               Publicidade
             </p>
+            <p className="mt-1 text-[10px] font-bold text-blue-700">1080 × 1080 px · quadrado</p>
             <p className="mt-1 text-[10px] text-slate-500">
-              Definido pelo contrato.
+              Espaços publicitários do portal.
             </p>
           </div>
 
@@ -551,8 +508,9 @@ export default function IdentidadeAnunciante({
             <p className="mt-2 text-xs font-black text-slate-800">
               Destaques
             </p>
+            <p className="mt-1 text-[10px] font-bold text-blue-700">1080 × 1350 px · vertical</p>
             <p className="mt-1 text-[10px] text-slate-500">
-              Definido pelo contrato.
+              Área de destaques do portal.
             </p>
           </div>
 
@@ -561,8 +519,9 @@ export default function IdentidadeAnunciante({
             <p className="mt-2 text-xs font-black text-slate-800">
               Parceiros
             </p>
+            <p className="mt-1 text-[10px] font-bold text-blue-700">600 × 600 px · quadrado</p>
             <p className="mt-1 text-[10px] text-slate-500">
-              Definido pelo contrato.
+              Card da lista de parceiros.
             </p>
           </div>
 
