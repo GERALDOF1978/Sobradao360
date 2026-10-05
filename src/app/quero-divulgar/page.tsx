@@ -86,8 +86,8 @@ export default function QueroDivulgarPage() {
     const site = String(formulario.get("site") || "").trim();
     const observacoes = String(formulario.get("observacoes") || "").trim();
 
-    if (!nomeResponsavel || !nomeNegocio || !tipoNegocio || !whatsapp || !email || !planoId) {
-      setErro("Preencha os campos obrigatórios.");
+    if (!nomeResponsavel || !nomeNegocio || !tipoNegocio || !whatsapp || !email || !planoId || !imagemReferenciaUrl) {
+      setErro(!imagemReferenciaUrl ? "Envie uma imagem do negócio antes de continuar." : "Preencha os campos obrigatórios.");
       return;
     }
 
