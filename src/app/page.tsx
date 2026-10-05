@@ -19,6 +19,9 @@ type AnuncioHome = {
   lojaId: string;
   nome: string;
   bannerUrl: string;
+  artePublicidadeUrl: string;
+  arteDestaquesUrl: string;
+  arteParceirosUrl: string;
   exibicao: Exibicao;
 };
 
@@ -79,7 +82,12 @@ export default function Home() {
           lojasSnapshot.docs
             .map((doc: (typeof lojasSnapshot.docs)[number]) => {
               const dados = doc.data() as Record<string, unknown>;
-              const bannerUrl = typeof dados.bannerUrl === "string" ? dados.bannerUrl : "";
+              const bannerUrl =
+                typeof dados.arteParceirosUrl === "string" && dados.arteParceirosUrl
+                  ? dados.arteParceirosUrl
+                  : typeof dados.bannerUrl === "string" && dados.bannerUrl
+                    ? dados.bannerUrl
+                    : typeof dados.imagemUrl === "string" ? dados.imagemUrl : "";
               const nome = typeof dados.nome === "string" ? dados.nome : "";
               return { id: doc.id, nome, bannerUrl };
             })
@@ -98,10 +106,16 @@ export default function Home() {
             return;
           }
 
-          const bannerUrl = typeof loja.bannerUrl === "string" ? loja.bannerUrl : "";
-          if (!bannerUrl) {
-            return;
-          }
+          const bannerUrl =
+            typeof loja.bannerUrl === "string" && loja.bannerUrl
+              ? loja.bannerUrl
+              : typeof loja.imagemUrl === "string" ? loja.imagemUrl : "";
+          const artePublicidadeUrl =
+            typeof loja.artePublicidadeUrl === "string" ? loja.artePublicidadeUrl : "";
+          const arteDestaquesUrl =
+            typeof loja.arteDestaquesUrl === "string" ? loja.arteDestaquesUrl : "";
+          const arteParceirosUrl =
+            typeof loja.arteParceirosUrl === "string" ? loja.arteParceirosUrl : "";
 
           const inicio = dataTimestamp(contrato.inicio);
           const vencimento = dataTimestamp(contrato.vencimento);
@@ -122,6 +136,9 @@ export default function Home() {
             lojaId,
             nome: typeof loja.nome === "string" ? loja.nome : "",
             bannerUrl,
+            artePublicidadeUrl,
+            arteDestaquesUrl,
+            arteParceirosUrl,
             exibicao,
           });
         });
@@ -237,7 +254,7 @@ export default function Home() {
               >
                 <div className="aspect-[3/1] w-full bg-slate-200 overflow-hidden">
                   <img
-                    src={item.bannerUrl}
+                    src={item.artePublicidadeUrl || item.bannerUrl}
                     alt={item.nome || "Publicidade"}
                     className="block h-full w-full object-cover"
                   />
@@ -274,7 +291,7 @@ export default function Home() {
                 className="aspect-[3/1] w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 transition"
               >
                 <img
-                  src={item.bannerUrl}
+                  src={item.arteDestaquesUrl || item.bannerUrl}
                   alt={item.nome || "Destaque"}
                   className="block h-full w-full object-cover"
                 />
