@@ -8,6 +8,7 @@ import MenuInferior from "@/components/MenuInferior";
 import "./globals.css";
 
 export const metadata = {
+  metadataBase: new URL("https://sobradao360-sgvm.vercel.app"),
   title: "Sobradão 360",
   description: "Portal Comunitário da Região do Sobradão",
   manifest: "/manifest.webmanifest",
@@ -17,9 +18,19 @@ export const metadata = {
     apple: "https://i.ibb.co/357pp0LQ/logo-sobradao-webp.webp",
   },
   openGraph: {
+    type: "website",
+    url: "https://sobradao360-sgvm.vercel.app",
+    siteName: "Sobradão 360",
     title: "Sobradão 360",
     description: "Tudo da nossa região em um só lugar.",
-    images: ["https://i.ibb.co/nM8R8VKy/banner-sobradao-webp.webp"],
+    images: [
+      {
+        url: "https://i.ibb.co/nM8R8VKy/banner-sobradao-webp.webp",
+        width: 1200,
+        height: 630,
+        alt: "Sobradão 360 - Portal Comunitário",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
