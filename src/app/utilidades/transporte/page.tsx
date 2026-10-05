@@ -14,6 +14,8 @@ type Veiculo = {
   delay?: number;
   seq?: number;
   tripId?: string;
+  tripDesc?: string;
+  directionId?: number;
 };
 
 type Localizacao = { lat: number; lng: number; accuracy?: number };
@@ -44,6 +46,16 @@ function distanciaMetros(a: Localizacao, b: { lat?: number; lng?: number }) {
 function distanciaTexto(m: number | null) {
   if (m === null) return "";
   return m < 1000 ? `${Math.round(m)} m de você` : `${(m / 1000).toFixed(1).replace(".", ",")} km de você`;
+}
+function sentidoTexto(v: Veiculo) {
+  if (v.tripDesc) return v.tripDesc;
+  if (v.directionId === 0) return "Sentido Centro";
+  if (v.directionId === 1) return "Sentido bairro";
+  return "Sentido não informado";
+}
+function headingSeguro(v: Veiculo) {
+  const h = Number(v.heading);
+  return Number.isFinite(h) ? h : 0;
 }
 
 export default function TransportePage() {
@@ -142,11 +154,11 @@ export default function TransportePage() {
         limites.push([lat, lng]);
         const icon = L.divIcon({
           className: "",
-          html: `<div style="background:#059669;color:white;border:3px solid white;border-radius:999px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px #0005;font-size:21px">🚌</div>`,
-          iconSize: [42, 42],
-          iconAnchor: [21, 21]
+          html: `<div style="position:relative;background:#059669;color:white;border:3px solid white;border-radius:999px;width:46px;height:46px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px #0005;font-size:20px"><span>🚌</span><span style="position:absolute;left:50%;top:-13px;transform:translateX(-50%) rotate(${headingSeguro(v)}deg);transform-origin:50% 24px;font-size:18px;color:#0f172a;text-shadow:0 0 2px white,0 0 2px white">▲</span></div>`,
+          iconSize: [46, 46],
+          iconAnchor: [23, 23]
         });
-        L.marker([lat, lng], { icon }).bindPopup(`<b>Ônibus ${v.vehicleId || ""}</b><br>Atualizado ${v.positionTime || "agora"}`).addTo(camadaRef.current);
+        L.marker([lat, lng], { icon }).bindPopup(`<b>Ônibus ${v.vehicleId || ""}</b><br><b>↔ ${sentidoTexto(v)}</b><br>Atualizado ${v.positionTime || "agora"}`).addTo(camadaRef.current);
       });
 
       if (localizacao) {
@@ -242,6 +254,7 @@ export default function TransportePage() {
                     </div>
                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
                       {v.startTime && <span>Referência: <b>{v.startTime}</b></span>}
+                      <span>↔️ <b>{sentidoTexto(v)}</b></span>
                       {dist !== null && <span>📍 <b>{distanciaTexto(dist)}</b></span>}
                     </div>
                   </div>
@@ -249,7 +262,7 @@ export default function TransportePage() {
               })}
             </div>
           }
-          <p className="mt-3 text-[9px] leading-4 text-slate-400">O mapa mostra a posição recebida do sistema em tempo real. Não usamos o nome da viagem para afirmar o sentido do ônibus.</p>
+          <p className="mt-3 text-[9px] leading-4 text-slate-400">O mapa mostra a posição recebida em tempo real. O sentido vem da viagem atual informada pelo sistema e a seta acompanha o heading do veículo.</p>
         </section>
 
         <section className="rounded-2xl bg-white p-4 shadow-sm">
