@@ -469,10 +469,37 @@ export default function Cabecalho() {
     }
   }
 
+  function inicioAlertaMs(alerta: AlertaMeteorologico) {
+    if (!alerta.inicio) return 0;
+    const valor = new Date(alerta.inicio).getTime();
+    return Number.isNaN(valor) ? 0 : valor;
+  }
+
+  function alertaEmVigor(alerta: AlertaMeteorologico) {
+    const agora = Date.now();
+    const inicio = inicioAlertaMs(alerta);
+    const fim = alerta.fim ? new Date(alerta.fim).getTime() : Number.POSITIVE_INFINITY;
+    return inicio <= agora && (Number.isNaN(fim) || agora <= fim);
+  }
+
+  const alertasOrdenados = [...alertasMeteorologicos].sort((a, b) => {
+    const aVigente = alertaEmVigor(a);
+    const bVigente = alertaEmVigor(b);
+    if (aVigente !== bVigente) return aVigente ? -1 : 1;
+    if (a.severidadeNivel !== b.severidadeNivel) {
+      return b.severidadeNivel - a.severidadeNivel;
+    }
+    return inicioAlertaMs(a) - inicioAlertaMs(b);
+  });
+
   const alertaPrincipal =
-    alertasMeteorologicos.length > 0
-      ? alertasMeteorologicos[0]
+    alertasOrdenados.length > 0
+      ? alertasOrdenados[0]
       : null;
+
+  function rotuloPeriodo(alerta: AlertaMeteorologico) {
+    return alertaEmVigor(alerta) ? "EM VIGOR AGORA" : "PRÓXIMO ALERTA";
+  }
 
   function estiloAlerta() {
     if (!alertaPrincipal) {
@@ -584,7 +611,7 @@ export default function Cabecalho() {
                   : statusAlertas === "erro"
                   ? "⚠️ INMET INDISPONÍVEL"
                   : alertaPrincipal
-                  ? `${alertaPrincipal.severidadeNivel >= 3 ? "🔴" : alertaPrincipal.severidadeNivel === 2 ? "🟠" : "🟡"} ${alertaPrincipal.titulo.toUpperCase()} · ${alertaPrincipal.severidade.toUpperCase()}`
+                  ? `${alertaPrincipal.severidadeNivel >= 3 ? "🔴" : alertaPrincipal.severidadeNivel === 2 ? "🟠" : "🟡"} ${alertaEmVigor(alertaPrincipal) ? "AGORA" : "PRÓXIMO"} · ${alertaPrincipal.titulo.toUpperCase()} · ${alertaPrincipal.severidade.toUpperCase()}`
                   : "✓ SEM ALERTAS"}
               </button>
 
@@ -711,10 +738,14 @@ export default function Cabecalho() {
 
             <div className="mt-4 space-y-3 text-sm text-slate-600">
 
-              <p>
-                <strong>📍 Área:</strong>{" "}
-                {alertaSelecionado.area}
-              </p>
+              <div className="rounded-xl bg-blue-50 px-4 py-3">
+                <div className="text-[10px] font-black uppercase tracking-wider text-blue-700">
+                  {rotuloPeriodo(alertaSelecionado)}
+                </div>
+                <div className="mt-1 font-black text-slate-800">
+                  📍 Rio Claro — SP
+                </div>
+              </div>
 
               {alertaSelecionado.inicio && (
                 <p>
