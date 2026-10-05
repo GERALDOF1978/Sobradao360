@@ -1,76 +1,105 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const OFICIAL_URL = "https://ip.somasig.com.br/ocorrencias/rioclaro";
+const TIPOS = ["Lâmpada apagada","Lâmpada oscilando","Lâmpada acesa durante o dia","Vandalismo","Problema no poste","Outro problema","Pedido de ponto de iluminação","Pedido de melhoria","Setor apagado","Setor aceso durante o dia"];
 
-const TIPOS = [
-  "Lâmpada apagada",
-  "Lâmpada oscilando",
-  "Lâmpada acesa durante o dia",
-  "Vandalismo",
-  "Problema no poste",
-  "Outro problema",
-  "Pedido de ponto de iluminação",
-  "Pedido de melhoria",
-  "Setor apagado",
-  "Setor aceso durante o dia",
-];
-
-type GeoFeature = {
-  type?: string;
+type Feature = {
   geometry?: { type?: string; coordinates?: unknown };
   properties?: Record<string, unknown>;
 };
 
-function contarPontos(valor: unknown): number {
-  if (!valor || typeof valor !== "object") return 0;
-  const obj = valor as Record<string, unknown>;
-  if (Array.isArray(obj.features)) return obj.features.length;
-  return 0;
+function featuresDe(v: unknown): Feature[] {
+  if (!v || typeof v !== "object") return [];
+  const fs = (v as Record<string, unknown>).features;
+  return Array.isArray(fs) ? (fs as Feature[]) : [];
 }
 
-function amostraFeature(valor: unknown): GeoFeature | null {
-  if (!valor || typeof valor !== "object") return null;
-  const features = (valor as Record<string, unknown>).features;
-  if (!Array.isArray(features) || !features.length) return null;
-  return (features[0] as GeoFeature) || null;
+function coordenada(f: Feature): [number, number] | null {
+  const c = f.geometry?.coordinates;
+  if (!Array.isArray(c) || c.length < 2) return null;
+  const lng = Number(c[0]), lat = Number(c[1]);
+  return Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null;
+}
+
+function valor(p: Record<string, unknown> | undefined, nomes: string[]) {
+  if (!p) return "";
+  for (const nome of nomes) {
+    const achado = Object.keys(p).find((k) => k.toLowerCase() === nome.toLowerCase());
+    if (achado && p[achado] != null) return String(p[achado]);
+  }
+  return "";
 }
 
 export default function NovaOcorrenciaIluminacaoPage() {
   const [tipo, setTipo] = useState("");
-  const [pontos, setPontos] = useState<unknown>(null);
-  const [carregando, setCarregando] = useState(false);
+  const [dados, setDados] = useState<unknown>(null);
   const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(true);
+  const [selecionado, setSelecionado] = useState<Feature | null>(null);
+  const mapaRef = useRef<HTMLDivElement | null>(null);
+  const mapaObj = useRef<any>(null);
+  const camadaRef = useRef<any>(null);
+  const leafletRef = useRef<any>(null);
 
   useEffect(() => {
     let ativo = true;
-
-    async function carregar() {
-      setCarregando(true);
-      setErro("");
-      try {
-        const resposta = await fetch("/api/iluminacao/pontos", { cache: "no-store" });
-        const dados = await resposta.json();
-        if (!resposta.ok) throw new Error(dados?.erro || "Falha ao carregar os pontos.");
-        if (ativo) setPontos(dados);
-      } catch (e) {
-        if (ativo) setErro(e instanceof Error ? e.message : "Falha ao carregar os pontos.");
-      } finally {
-        if (ativo) setCarregando(false);
-      }
-    }
-
-    carregar();
-    return () => {
-      ativo = false;
-    };
+    fetch("/api/iluminacao/pontos", { cache: "no-store" })
+      .then(async (r) => {
+        const d = await r.json();
+        if (!r.ok) throw new Error(d?.erro || "Falha ao carregar os pontos.");
+        if (ativo) setDados(d);
+      })
+      .catch((e) => ativo && setErro(e instanceof Error ? e.message : "Falha ao carregar os pontos."))
+      .finally(() => ativo && setCarregando(false));
+    return () => { ativo = false; };
   }, []);
 
-  const quantidade = useMemo(() => contarPontos(pontos), [pontos]);
-  const amostra = useMemo(() => amostraFeature(pontos), [pontos]);
-  const nomesCampos = amostra?.properties ? Object.keys(amostra.properties) : [];
+  const features = useMemo(() => featuresDe(dados), [dados]);
+  const pontos = useMemo(() => features.map((f) => ({ f, c: coordenada(f) })).filter((x): x is { f: Feature; c: [number, number] } => x.c !== null), [features]);
+
+  useEffect(() => {
+    let cancelado = false;
+    async function montar() {
+      if (!mapaRef.current || carregando || erro || pontos.length === 0) return;
+      if (!leafletRef.current) {
+        const L = await import("leaflet");
+        if (cancelado) return;
+        leafletRef.current = L;
+        if (!document.getElementById("leaflet-iluminacao-css")) {
+          const link = document.createElement("link");
+          link.id = "leaflet-iluminacao-css";
+          link.rel = "stylesheet";
+          link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+          document.head.appendChild(link);
+        }
+      }
+      const L = leafletRef.current;
+      if (!mapaObj.current) {
+        mapaObj.current = L.map(mapaRef.current, { preferCanvas: true }).setView([-22.4114, -47.5614], 13);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapaObj.current);
+        camadaRef.current = L.layerGroup().addTo(mapaObj.current);
+      }
+      camadaRef.current.clearLayers();
+      pontos.forEach(({ f, c }) => {
+        const marker = L.circleMarker(c, { radius: 5, weight: 1, color: "#a16207", fillColor: "#facc15", fillOpacity: 0.9 });
+        marker.on("click", () => setSelecionado(f));
+        marker.addTo(camadaRef.current);
+      });
+      window.setTimeout(() => mapaObj.current?.invalidateSize(), 100);
+    }
+    montar().catch(() => setErro("O mapa não pôde ser carregado agora."));
+    return () => { cancelado = true; };
+  }, [pontos, carregando, erro]);
+
+  const prop = selecionado?.properties;
+  const codigo = valor(prop, ["codigo","id","id_ponto_iluminacao","idPontoIluminacao","numero","cod_ponto"]);
+  const endereco = valor(prop, ["endereco","logradouro","descricao_endereco","ds_endereco"]);
+  const bairro = valor(prop, ["bairro","nome_bairro"]);
+  const luminarias = valor(prop, ["luminarias","quantidade_luminarias","qtd_luminarias"]);
+  const potencia = valor(prop, ["potencia","potencia_lampada"]);
 
   return (
     <main className="min-h-screen bg-slate-50 pb-24 text-slate-900">
@@ -86,88 +115,43 @@ export default function NovaOcorrenciaIluminacaoPage() {
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-5 flex items-center justify-between text-xs font-black">
             <span className="rounded-full bg-amber-500 px-3 py-2 text-white">1 Problema</span>
-            <span className="text-slate-400">2 Local</span>
-            <span className="text-slate-400">3 Seus dados</span>
+            <span className="text-slate-500">2 Local</span><span className="text-slate-400">3 Seus dados</span>
           </div>
-
-          <label className="text-sm font-black text-slate-800" htmlFor="tipo">
-            Tipo da ocorrência
-          </label>
-          <select
-            id="tipo"
-            value={tipo}
-            onChange={(e) => setTipo(e.target.value)}
-            className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-sm font-semibold outline-none focus:border-amber-500"
-          >
+          <label className="text-sm font-black" htmlFor="tipo">Tipo da ocorrência</label>
+          <select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value)} className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-sm font-semibold">
             <option value="">Selecione o problema</option>
-            {TIPOS.map((item) => (
-              <option key={item} value={item}>{item}</option>
-            ))}
+            {TIPOS.map((x) => <option key={x}>{x}</option>)}
           </select>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="text-2xl">🗺️</div>
-            <div>
-              <h2 className="font-black">Pontos de iluminação</h2>
-              <p className="mt-1 text-xs leading-5 text-slate-500">
-                Primeiro estamos validando a leitura dos pontos oficiais. O envio de ocorrência ainda não está liberado nesta tela.
-              </p>
-            </div>
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="p-5 pb-3">
+            <h2 className="font-black">🗺️ Escolha o ponto de iluminação</h2>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Aproxime o mapa e toque no ponto amarelo correspondente ao poste.</p>
           </div>
-
-          {carregando && (
-            <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-600">
-              Carregando pontos de iluminação…
-            </div>
-          )}
-
-          {!carregando && erro && (
-            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4">
-              <div className="text-sm font-black text-red-700">Não conseguimos carregar os pontos.</div>
-              <div className="mt-1 text-xs leading-5 text-red-600">{erro}</div>
-            </div>
-          )}
-
-          {!carregando && !erro && pontos !== null && (
-            <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-              <div className="text-sm font-black text-emerald-800">✅ Conexão com os pontos funcionando</div>
-              <div className="mt-1 text-xs text-emerald-700">
-                {quantidade > 0 ? `${quantidade.toLocaleString("pt-BR")} pontos recebidos.` : "Resposta recebida da API."}
-              </div>
-              {nomesCampos.length > 0 && (
-                <div className="mt-3 rounded-xl bg-white/70 p-3 text-[11px] leading-5 text-slate-600">
-                  Campos encontrados no ponto: {nomesCampos.slice(0, 12).join(", ")}
-                </div>
-              )}
-            </div>
-          )}
-
-          <button
-            type="button"
-            disabled={!tipo || pontos === null || !!erro}
-            className="mt-4 w-full rounded-2xl bg-slate-900 px-5 py-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-          >
-            📍 Abrir mapa dos pontos
-          </button>
-          <p className="mt-2 text-center text-[11px] text-slate-400">
-            O mapa será habilitado depois de confirmarmos os campos recebidos da API.
-          </p>
+          {carregando ? <div className="m-5 rounded-2xl bg-slate-50 p-4 text-sm font-bold">Carregando pontos…</div> :
+           erro ? <div className="m-5 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">{erro}</div> :
+           pontos.length === 0 ? <div className="m-5 rounded-2xl bg-amber-50 p-4 text-sm font-bold text-amber-800">A API respondeu, mas não encontramos coordenadas válidas nos pontos.</div> :
+           <div ref={mapaRef} className="h-[430px] w-full bg-slate-200" />}
+          {!carregando && !erro && pontos.length > 0 && <div className="px-5 py-3 text-[10px] font-bold text-slate-500">{pontos.length.toLocaleString("pt-BR")} pontos carregados • toque em um ponto amarelo</div>}
         </div>
 
-        <a
-          href={OFICIAL_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block rounded-2xl border-2 border-amber-400 bg-white px-5 py-3.5 text-center text-sm font-black text-amber-700"
-        >
-          💡 Usar sistema oficial
-        </a>
+        {selecionado && (
+          <div className="rounded-3xl border-2 border-emerald-300 bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div><p className="text-[10px] font-black uppercase text-emerald-700">Ponto selecionado</p><h2 className="text-xl font-black">{codigo ? `#${codigo}` : "Ponto de iluminação"}</h2></div>
+              <button onClick={() => setSelecionado(null)} className="text-xl text-slate-400">✕</button>
+            </div>
+            {(endereco || bairro) && <p className="mt-3 text-sm font-bold text-slate-700">📍 {[endereco,bairro].filter(Boolean).join(" — ")}</p>}
+            {(luminarias || potencia) && <div className="mt-3 grid grid-cols-2 gap-2 text-xs"><div className="rounded-xl bg-slate-50 p-3"><b>Luminárias</b><br/>{luminarias || "—"}</div><div className="rounded-xl bg-slate-50 p-3"><b>Potência</b><br/>{potencia || "—"}</div></div>}
+            <button disabled={!tipo} className="mt-4 w-full rounded-2xl bg-emerald-600 px-5 py-4 text-sm font-black text-white disabled:bg-slate-300">✓ Confirmar este ponto</button>
+            {!tipo && <p className="mt-2 text-center text-[10px] text-amber-700">Selecione primeiro o tipo da ocorrência.</p>}
+          </div>
+        )}
 
-        <Link href="/lampada-queimada" className="block text-center text-xs font-bold text-slate-500">
-          Voltar para Lâmpada Queimada
-        </Link>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-center text-[11px] font-bold text-amber-800">🚧 Teste: ainda não estamos enviando ocorrências.</div>
+        <a href={OFICIAL_URL} target="_blank" rel="noopener noreferrer" className="block rounded-2xl border-2 border-amber-400 bg-white px-5 py-3.5 text-center text-sm font-black text-amber-700">💡 Usar sistema oficial</a>
+        <Link href="/lampada-queimada" className="block text-center text-xs font-bold text-slate-500">Voltar para Lâmpada Queimada</Link>
       </section>
     </main>
   );
