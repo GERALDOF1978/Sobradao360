@@ -13,7 +13,24 @@ type Feature = {
 
 function featuresDe(v: unknown): Feature[] {
   if (!v || typeof v !== "object") return [];
-  const fs = (v as Record<string, unknown>).features;
+  const obj = v as Record<string, unknown>;
+
+  // A SOMASIG devolve: { code, status, data: [{ fc: { type: "FeatureCollection", features: [...] } }] }
+  const data = obj.data;
+  if (Array.isArray(data)) {
+    const todas: Feature[] = [];
+    for (const item of data) {
+      if (!item || typeof item !== "object") continue;
+      const fc = (item as Record<string, unknown>).fc;
+      if (!fc || typeof fc !== "object") continue;
+      const fs = (fc as Record<string, unknown>).features;
+      if (Array.isArray(fs)) todas.push(...(fs as Feature[]));
+    }
+    if (todas.length) return todas;
+  }
+
+  // Mantém compatibilidade caso a API passe a devolver o GeoJSON diretamente.
+  const fs = obj.features;
   return Array.isArray(fs) ? (fs as Feature[]) : [];
 }
 
@@ -95,11 +112,15 @@ export default function NovaOcorrenciaIluminacaoPage() {
   }, [pontos, carregando, erro]);
 
   const prop = selecionado?.properties;
-  const codigo = valor(prop, ["codigo","id","id_ponto_iluminacao","idPontoIluminacao","numero","cod_ponto"]);
-  const endereco = valor(prop, ["endereco","logradouro","descricao_endereco","ds_endereco"]);
-  const bairro = valor(prop, ["bairro","nome_bairro"]);
-  const luminarias = valor(prop, ["luminarias","quantidade_luminarias","qtd_luminarias"]);
-  const potencia = valor(prop, ["potencia","potencia_lampada"]);
+  const codigo = valor(prop, ["id"]);
+  const tipoLogradouro = valor(prop, ["tipo_logradouro"]);
+  const logradouro = valor(prop, ["logradouro"]);
+  const numero = valor(prop, ["numero"]);
+  const bairro = valor(prop, ["bairro"]);
+  const cep = valor(prop, ["cep"]);
+  const luminarias = valor(prop, ["quantidade_pontos_luminosos"]);
+  const potencia = valor(prop, ["potencia_total"]);
+  const endereco = [tipoLogradouro, logradouro, numero && `nº ${numero}`].filter(Boolean).join(" ");
 
   return (
     <main className="min-h-screen bg-slate-50 pb-24 text-slate-900">
@@ -143,7 +164,8 @@ export default function NovaOcorrenciaIluminacaoPage() {
               <button onClick={() => setSelecionado(null)} className="text-xl text-slate-400">✕</button>
             </div>
             {(endereco || bairro) && <p className="mt-3 text-sm font-bold text-slate-700">📍 {[endereco,bairro].filter(Boolean).join(" — ")}</p>}
-            {(luminarias || potencia) && <div className="mt-3 grid grid-cols-2 gap-2 text-xs"><div className="rounded-xl bg-slate-50 p-3"><b>Luminárias</b><br/>{luminarias || "—"}</div><div className="rounded-xl bg-slate-50 p-3"><b>Potência</b><br/>{potencia || "—"}</div></div>}
+            {cep && <p className="mt-1 text-xs text-slate-500">CEP {cep}</p>}
+            {(luminarias || potencia) && <div className="mt-3 grid grid-cols-2 gap-2 text-xs"><div className="rounded-xl bg-slate-50 p-3"><b>Luminárias</b><br/>{luminarias || "—"}</div><div className="rounded-xl bg-slate-50 p-3"><b>Potência</b><br/>{potencia ? `${potencia} W` : "—"}</div></div>}
             <button disabled={!tipo} className="mt-4 w-full rounded-2xl bg-emerald-600 px-5 py-4 text-sm font-black text-white disabled:bg-slate-300">✓ Confirmar este ponto</button>
             {!tipo && <p className="mt-2 text-center text-[10px] text-amber-700">Selecione primeiro o tipo da ocorrência.</p>}
           </div>
