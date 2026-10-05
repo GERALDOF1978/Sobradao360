@@ -10,8 +10,7 @@ export default function UtilidadesPage() {
       <header className="bg-gradient-to-r from-slate-700 via-slate-800 to-slate-700 text-white shadow-md">
         <div className="max-w-md mx-auto px-4 py-2.5">
           <div className="flex items-center justify-between gap-3">
-            <Link href="/" className="text-xs font-bold text-white/90 hover:text-white">← Início</Link>
-            <div className="text-center"><div className="text-lg">📞</div><h1 className="text-base font-black">Telefones e Serviços</h1></div>
+<div className="text-center"><div className="text-lg">📞</div><h1 className="text-base font-black">Telefones e Serviços</h1></div>
             <span className="rounded-lg bg-amber-400 px-2 py-1 text-[9px] font-black text-slate-950">Rio Claro</span>
           </div>
           <p className="mt-1 text-center text-[10px] leading-3 text-white/85">Telefones públicos, profissionais e serviços da nossa região em um só lugar.</p>
