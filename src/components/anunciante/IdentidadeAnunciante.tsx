@@ -321,69 +321,28 @@ export default function IdentidadeAnunciante({
 
       </div>
 
-      {/* EXIBIÇÃO CONTROLADA PELO MASTER */}
-
-      <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-4">
-
-        <h4 className="text-sm font-black text-blue-950">
-          📢 Exibição da publicidade
-        </h4>
-
-        <p className="mt-2 text-xs leading-5 text-blue-800">
-          As artes são preparadas pelo Sobradão 360 a partir da imagem enviada no cadastro.
-          Cada formato abaixo mostra o tamanho recomendado e onde a peça será exibida.
-        </p>
-
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-
-          <div className="rounded-2xl bg-white p-4">
-            <div className="text-xl">📢</div>
-            <p className="mt-2 text-xs font-black text-slate-800">
-              Marquee
-            </p>
-            <p className="mt-1 text-[10px] font-bold text-blue-700">1200 × 300 px · horizontal</p>
-            <p className="mt-1 text-[10px] text-slate-500">
-              Faixa de lojas/parceiros do portal.
-            </p>
+      {/* FORMATOS DE DIVULGAÇÃO — apenas informativo */}
+      <div className="mt-6 border-t border-slate-200 pt-5">
+        <h4 className="text-sm font-black text-slate-900">📢 Formatos de divulgação</h4>
+        <p className="mt-1 text-xs leading-5 text-slate-500">As artes são preparadas pelo Sobradão 360 a partir da imagem enviada no cadastro.</p>
+        <div className="mt-4 divide-y divide-slate-100 border-y border-slate-100 sm:grid sm:grid-cols-2 sm:divide-y-0">
+          <div className="py-3 sm:pr-4">
+            <p className="text-xs font-black text-slate-800">📢 Marquee <span className="font-bold text-blue-700">· 1200 × 300 px</span></p>
+            <p className="mt-1 text-[11px] text-slate-500">Faixa de lojas/parceiros do portal.</p>
           </div>
-
-          <div className="rounded-2xl bg-white p-4">
-            <div className="text-xl">🖼️</div>
-            <p className="mt-2 text-xs font-black text-slate-800">
-              Publicidade
-            </p>
-            <p className="mt-1 text-[10px] font-bold text-blue-700">1080 × 1080 px · quadrado</p>
-            <p className="mt-1 text-[10px] text-slate-500">
-              Espaços publicitários do portal.
-            </p>
+          <div className="py-3 sm:border-l sm:border-slate-100 sm:pl-4">
+            <p className="text-xs font-black text-slate-800">🖼️ Publicidade <span className="font-bold text-blue-700">· 1080 × 1080 px</span></p>
+            <p className="mt-1 text-[11px] text-slate-500">Espaços publicitários do portal.</p>
           </div>
-
-          <div className="rounded-2xl bg-white p-4">
-            <div className="text-xl">⭐</div>
-            <p className="mt-2 text-xs font-black text-slate-800">
-              Destaques
-            </p>
-            <p className="mt-1 text-[10px] font-bold text-blue-700">1080 × 1350 px · vertical</p>
-            <p className="mt-1 text-[10px] text-slate-500">
-              Área de destaques do portal.
-            </p>
+          <div className="py-3 sm:pr-4 sm:border-t sm:border-slate-100">
+            <p className="text-xs font-black text-slate-800">⭐ Destaques <span className="font-bold text-blue-700">· 1080 × 1350 px</span></p>
+            <p className="mt-1 text-[11px] text-slate-500">Área de destaques do portal.</p>
           </div>
-
-          <div className="rounded-2xl bg-white p-4">
-            <div className="text-xl">🤝</div>
-            <p className="mt-2 text-xs font-black text-slate-800">
-              Parceiros
-            </p>
-            <p className="mt-1 text-[10px] font-bold text-blue-700">600 × 600 px · quadrado</p>
-            <p className="mt-1 text-[10px] text-slate-500">
-              Card da lista de parceiros.
-            </p>
+          <div className="py-3 sm:border-l sm:border-t sm:border-slate-100 sm:pl-4">
+            <p className="text-xs font-black text-slate-800">🤝 Parceiros <span className="font-bold text-blue-700">· 600 × 600 px</span></p>
+            <p className="mt-1 text-[11px] text-slate-500">Card da lista de parceiros.</p>
           </div>
-
         </div>
-
-        
-
       </div>
 
     </section>
