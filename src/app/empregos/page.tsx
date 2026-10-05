@@ -952,8 +952,7 @@ export default function EmpregosPage() {
       <header className="bg-gradient-to-r from-indigo-700 via-blue-700 to-indigo-700 text-white shadow-md">
         <div className="max-w-md mx-auto px-4 py-2.5">
           <div className="flex items-center justify-between gap-3">
-            <Link href="/" className="text-xs font-bold text-white/90 hover:text-white">← Início</Link>
-            <div className="text-center">
+<div className="text-center">
               <div className="text-lg">💼</div>
               <h1 className="text-base font-black">Empregos</h1>
             </div>
