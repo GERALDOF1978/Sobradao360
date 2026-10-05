@@ -62,6 +62,9 @@ export default function NovaOcorrenciaIluminacaoPage() {
   const [telefone, setTelefone] = useState("");
   const [email, setEmail] = useState("");
   const [observacao, setObservacao] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [erroEnvio, setErroEnvio] = useState("");
+  const [protocolo, setProtocolo] = useState("");
   const mapaRef = useRef<HTMLDivElement | null>(null);
   const mapaObj = useRef<any>(null);
   const camadaRef = useRef<any>(null);
@@ -127,6 +130,45 @@ export default function NovaOcorrenciaIluminacaoPage() {
   const luminarias = valor(prop, ["quantidade_pontos_luminosos"]);
   const potencia = valor(prop, ["potencia_total"]);
   const endereco = [tipoLogradouro, logradouro, numero && `nº ${numero}`].filter(Boolean).join(" ");
+  const podeEnviar = Boolean(tipo && codigo && nome.trim() && telefone.trim());
+
+  async function registrarOcorrencia() {
+    if (!podeEnviar || !selecionado) return;
+    setEnviando(true);
+    setErroEnvio("");
+    setProtocolo("");
+    try {
+      const coord = coordenada(selecionado);
+      const resposta = await fetch("/api/iluminacao/ocorrencias", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tipo,
+          id_ponto_iluminacao: Number(codigo),
+          tipo_logradouro: tipoLogradouro,
+          logradouro,
+          numero,
+          bairro,
+          cep: cep || null,
+          complemento: valor(prop, ["complemento"]) || null,
+          observacao_ocorrencia: observacao.trim() || null,
+          solicitante_nome: nome.trim(),
+          solicitante_tipo_telefone: tipoTelefone,
+          solicitante_telefone_celular: telefone.trim(),
+          solicitante_email: email.trim() || null,
+          latitude: coord?.[0] ?? null,
+          longitude: coord?.[1] ?? null,
+        }),
+      });
+      const retorno = await resposta.json();
+      if (!resposta.ok || !retorno?.sucesso) throw new Error(retorno?.erro || "Não foi possível registrar a ocorrência.");
+      setProtocolo(String(retorno.protocolo || ""));
+    } catch (e) {
+      setErroEnvio(e instanceof Error ? e.message : "Não foi possível registrar a ocorrência.");
+    } finally {
+      setEnviando(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-slate-50 pb-24 text-slate-900">
@@ -222,14 +264,27 @@ export default function NovaOcorrenciaIluminacaoPage() {
             <label className="mt-3 block text-xs font-black" htmlFor="email">E-mail <span className="font-normal text-slate-400">(opcional)</span></label>
             <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" className="mt-1 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-amber-500" />
 
-            <button type="button" disabled className="mt-5 w-full rounded-2xl bg-slate-300 px-5 py-4 text-sm font-black text-white">
-              Registrar ocorrência
-            </button>
-            <p className="mt-2 text-center text-[10px] leading-4 text-slate-500">Nesta fase os dados ficam somente nesta tela. O envio para a SOMASIG ainda está bloqueado até validarmos o retorno e o protocolo.</p>
+            {protocolo ? (
+              <div className="mt-5 rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-5 text-center">
+                <p className="text-xs font-black uppercase text-emerald-700">Ocorrência registrada</p>
+                <p className="mt-2 text-sm font-bold text-slate-600">Protocolo oficial</p>
+                <p className="mt-1 text-3xl font-black tracking-wide text-emerald-700">{protocolo}</p>
+                <p className="mt-2 text-[11px] text-slate-500">Guarde este número para acompanhar a solicitação.</p>
+              </div>
+            ) : (
+              <>
+                <button type="button" disabled={!podeEnviar || enviando} onClick={registrarOcorrencia} className="mt-5 w-full rounded-2xl bg-emerald-600 px-5 py-4 text-sm font-black text-white disabled:bg-slate-300">
+                  {enviando ? "Registrando…" : "Registrar ocorrência"}
+                </button>
+                {!podeEnviar && <p className="mt-2 text-center text-[10px] text-amber-700">Preencha nome e telefone para registrar.</p>}
+                {erroEnvio && <p className="mt-3 rounded-xl bg-red-50 p-3 text-center text-xs font-bold text-red-700">{erroEnvio}</p>}
+              </>
+            )}
+            <p className="mt-2 text-center text-[10px] leading-4 text-slate-500">O registro é enviado ao sistema de iluminação de Rio Claro e o protocolo exibido é o retornado pelo serviço oficial.</p>
           </div>
         )}
 
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-center text-[11px] font-bold text-amber-800">🚧 Teste: ainda não estamos enviando ocorrências.</div>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-center text-[11px] font-bold text-amber-800">🧪 Integração em teste • confira o protocolo também no sistema oficial.</div>
         <a href={OFICIAL_URL} target="_blank" rel="noopener noreferrer" className="block rounded-2xl border-2 border-amber-400 bg-white px-5 py-3.5 text-center text-sm font-black text-amber-700">💡 Usar sistema oficial</a>
         <Link href="/lampada-queimada" className="block text-center text-xs font-bold text-slate-500">Voltar para Lâmpada Queimada</Link>
       </section>
