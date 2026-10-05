@@ -15,6 +15,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
@@ -56,6 +57,10 @@ interface LojaParceira {
 
   imagemUrl?: string;
   imagemReferenciaUrl?: string;
+  arteMarqueeUrl?: string;
+  artePublicidadeUrl?: string;
+  arteDestaquesUrl?: string;
+  arteParceirosUrl?: string;
 
   ativo?: boolean;
   status?: string;
@@ -229,6 +234,7 @@ export default function AdminMasterPage() {
 
   const [processando, setProcessando] =
     useState<string | null>(null);
+  const [enviandoArte, setEnviandoArte] = useState<string | null>(null);
 
   const [sincronizandoVagas, setSincronizandoVagas] =
     useState(false);
@@ -776,6 +782,37 @@ export default function AdminMasterPage() {
         atualizadoEm: serverTimestamp(),
       });
 
+      if (status === "APROVADO") {
+        const snap = await getDoc(solicitacaoRef);
+        const dados = snap.data() as Omit<SolicitacaoDivulgacao, "id"> | undefined;
+        if (dados) {
+          await setDoc(doc(db, "lojas_parceiras", id), {
+            nomeResponsavel: dados.nomeResponsavel || "",
+            emailDono: String(dados.email || "").trim().toLowerCase(),
+            nome: dados.nomeNegocio || "",
+            titulo: dados.nomeNegocio || "",
+            subtitulo: dados.tipoNegocio || "",
+            descricao: dados.descricao || "",
+            telefone: dados.telefone || "",
+            whatsapp: dados.whatsapp || "",
+            siteUrl: dados.site || "",
+            tipoPresenca: "pagina_sobradao",
+            imagemReferenciaUrl: dados.imagemReferenciaUrl || "",
+            imagemUrl: dados.imagemReferenciaUrl || "",
+            planoEscolhidoId: dados.planoEscolhidoId || "",
+            planoEscolhidoNome: dados.planoEscolhidoNome || "",
+            planoEscolhidoValor: dados.planoEscolhidoValor || 0,
+            planoEscolhidoDuracaoDias: dados.planoEscolhidoDuracaoDias || 0,
+            planoEscolhidoLimiteProdutos: dados.planoEscolhidoLimiteProdutos || 0,
+            statusPlano: "AGUARDANDO_CONFIRMACAO",
+            status: "PENDENTE_CONTRATO",
+            ativo: false,
+            atualizadoEm: serverTimestamp(),
+          }, { merge: true });
+          await carregarLojas();
+        }
+      }
+
       setSolicitacoes((lista) =>
         lista.map((item) =>
           item.id === id ? { ...item, status } : item
@@ -786,6 +823,27 @@ export default function AdminMasterPage() {
       alert("Não foi possível atualizar esta solicitação.");
     } finally {
       setProcessando(null);
+    }
+  }
+
+  async function enviarArteFinal(item: SolicitacaoDivulgacao, campo: "arteMarqueeUrl" | "artePublicidadeUrl" | "arteDestaquesUrl" | "arteParceirosUrl", arquivo?: File) {
+    if (!arquivo) return;
+    if (!arquivo.type.startsWith("image/")) { alert("Selecione uma imagem válida."); return; }
+    const chave = item.id + ":" + campo;
+    setEnviandoArte(chave);
+    try {
+      const fd = new FormData();
+      fd.append("file", arquivo);
+      const resposta = await fetch("/api/upload-image", { method: "POST", body: fd });
+      const dados = await resposta.json();
+      if (!resposta.ok || !dados.url) throw new Error(dados.error || "Falha no upload");
+      await setDoc(doc(db, "lojas_parceiras", item.id), { [campo]: String(dados.url), atualizadoEm: serverTimestamp() }, { merge: true });
+      await carregarLojas();
+    } catch (error) {
+      console.error("Erro ao enviar arte:", error);
+      alert("Não foi possível enviar esta arte.");
+    } finally {
+      setEnviandoArte(null);
     }
   }
 
@@ -1646,11 +1704,27 @@ export default function AdminMasterPage() {
 
                       <div className="mt-4 border-t border-slate-100 pt-4">
                         <p className="text-xs font-black uppercase tracking-wider text-slate-500">🎨 Produção das artes</p>
-                        <p className="mt-1 text-xs text-slate-500">Use a imagem original acima como referência para preparar as peças nos formatos do portal.</p>
-                        <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
-                          {[
-                            ["📢","Marquee","1200 × 300 px"],["🖼️","Publicidade","1080 × 1080 px"],["⭐","Destaques","1080 × 1350 px"],["🤝","Parceiros","600 × 600 px"]
-                          ].map(([icone,nome,tamanho]) => <div key={nome} className="border-l-2 border-blue-200 py-2 pl-3"><p className="text-xs font-black text-slate-800">{icone} {nome}</p><p className="text-[10px] font-bold text-blue-700">{tamanho}</p></div>)}
+                        <p className="mt-1 text-xs text-slate-500">Depois de aprovar o cadastro, envie aqui as artes finais produzidas a partir da imagem original.</p>
+                        <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                          {([
+                            ["arteMarqueeUrl","📢","Marquee","1200 × 300 px"],
+                            ["artePublicidadeUrl","🖼️","Publicidade","1080 × 1080 px"],
+                            ["arteDestaquesUrl","⭐","Destaques","1080 × 1350 px"],
+                            ["arteParceirosUrl","🤝","Parceiros","600 × 600 px"]
+                          ] as const).map(([campo,icone,nome,tamanho]) => {
+                            const loja = lojas.find((x) => x.id === item.id);
+                            const url = loja?.[campo];
+                            const chave = item.id + ":" + campo;
+                            return <div key={campo} className="rounded-xl border border-slate-200 p-3">
+                              <p className="text-xs font-black text-slate-800">{icone} {nome}</p>
+                              <p className="text-[10px] font-bold text-blue-700">{tamanho}</p>
+                              {url ? <img src={url} alt={nome} className="mt-2 aspect-square w-full rounded-lg bg-slate-50 object-contain" /> : <div className="mt-2 flex aspect-square items-center justify-center rounded-lg bg-slate-50 text-[10px] text-slate-400">Arte ainda não enviada</div>}
+                              {item.status === "APROVADO" && <label className="mt-2 block cursor-pointer rounded-lg bg-slate-900 px-2 py-2 text-center text-[10px] font-black text-white">
+                                {enviandoArte === chave ? "Enviando..." : url ? "Trocar arte" : "Subir arte"}
+                                <input type="file" accept="image/*" className="hidden" disabled={enviandoArte === chave} onChange={(e) => void enviarArteFinal(item, campo, e.target.files?.[0])} />
+                              </label>}
+                            </div>;
+                          })}
                         </div>
                       </div>
 
