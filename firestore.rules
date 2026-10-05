@@ -388,8 +388,11 @@ service cloud.firestore {
     }
 
     match /contratos_anuncio/{contratoId} {
+      // O portal público precisa ler somente contratos ativos para decidir
+      // em quais espaços cada anunciante deve aparecer.
       allow read:
-        if isMaster()
+        if resource.data.status == "ativo"
+        || isMaster()
         ||
         (
           request.auth != null
