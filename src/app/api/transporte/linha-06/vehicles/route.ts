@@ -2,15 +2,23 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+const PROJECT_ID = "964";
 const ROUTE_ID = "942470";
-
-// Fallback temporário: só é usado se o Mobilibus não aceitar a consulta
-// direta pela linha. A consulta principal NÃO depende mais destes trip_ids.
-const TRIP_IDS_FALLBACK = ["8300811", "8300812", "8300813", "8300814"] as const;
 
 type VeiculoMobilibus = Record<string, unknown> & {
   vehicleId?: unknown;
   positionTime?: unknown;
+};
+
+type TimetableMobilibus = {
+  timetable?: {
+    trips?: Array<{
+      tripId?: number | string;
+      tripDesc?: string;
+      directionId?: number;
+      seq?: number;
+    }>;
+  };
 };
 
 function segundos(hora: unknown) {
@@ -20,7 +28,7 @@ function segundos(hora: unknown) {
   return (p[0] || 0) * 3600 + (p[1] || 0) * 60 + (p[2] || 0);
 }
 
-async function consultar(url: string): Promise<VeiculoMobilibus[]> {
+async function consultarVeiculos(url: string): Promise<VeiculoMobilibus[]> {
   const resposta = await fetch(url, {
     cache: "no-store",
     headers: { Accept: "application/json" },
@@ -32,6 +40,31 @@ async function consultar(url: string): Promise<VeiculoMobilibus[]> {
 
   const dados: unknown = await resposta.json();
   return Array.isArray(dados) ? (dados as VeiculoMobilibus[]) : [];
+}
+
+async function descobrirTripsAtuais(): Promise<string[]> {
+  const resposta = await fetch(
+    `https://mobilibus.com/api/timetable?origin=web&v=2&project_id=${PROJECT_ID}&route_id=${ROUTE_ID}`,
+    {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    }
+  );
+
+  if (!resposta.ok) {
+    throw new Error(`Timetable Mobilibus respondeu ${resposta.status}`);
+  }
+
+  const dados = (await resposta.json()) as TimetableMobilibus;
+  const trips = dados?.timetable?.trips ?? [];
+
+  return Array.from(
+    new Set(
+      trips
+        .map((trip) => String(trip.tripId ?? "").trim())
+        .filter(Boolean)
+    )
+  );
 }
 
 function removerDuplicados(veiculos: VeiculoMobilibus[]) {
@@ -50,21 +83,16 @@ function removerDuplicados(veiculos: VeiculoMobilibus[]) {
   return Array.from(porVeiculo.values());
 }
 
-async function buscarPelaLinha() {
-  // A linha é a referência estável. O Mobilibus decide quais viagens e
-  // veículos estão vinculados a ela naquele momento.
-  return consultar(
-    `https://mobilibus.com/api/vehicles?origin=web&route_id=${ROUTE_ID}`
-  );
-}
-
-async function buscarFallback() {
+async function buscarPorTrips(tripIds: string[]) {
   const resultados = await Promise.all(
-    TRIP_IDS_FALLBACK.map(async (tripId) => {
+    tripIds.map(async (tripId) => {
       try {
-        const vehicles = await consultar(
-          `https://mobilibus.com/api/vehicles?origin=web&trip_id=${tripId}&route_id=${ROUTE_ID}`
+        const vehicles = await consultarVeiculos(
+          `https://mobilibus.com/api/vehicles?origin=web&trip_id=${encodeURIComponent(
+            tripId
+          )}&route_id=${ROUTE_ID}`
         );
+
         return vehicles.map((v) => ({ ...v, tripId }));
       } catch {
         return [] as VeiculoMobilibus[];
@@ -77,28 +105,34 @@ async function buscarFallback() {
 
 export async function GET() {
   try {
-    let vehicles: VeiculoMobilibus[] = [];
-    let modo: "linha" | "fallback-trip" = "linha";
+    // O trip_id do Mobilibus pode mudar quando a programação é atualizada.
+    // Por isso, primeiro consultamos o timetable oficial da própria linha
+    // e descobrimos dinamicamente todos os trip_ids vigentes publicados.
+    const tripIds = await descobrirTripsAtuais();
 
-    try {
-      vehicles = await buscarPelaLinha();
-
-      // O Mobilibus pode responder 200 para route_id sem trip_id,
-      // porém devolver uma lista vazia. Nesse caso, não tratamos como
-      // "sem ônibus": tentamos as viagens conhecidas como contingência.
-      if (vehicles.length === 0) {
-        modo = "fallback-trip";
-        vehicles = await buscarFallback();
-      }
-    } catch {
-      modo = "fallback-trip";
-      vehicles = await buscarFallback();
+    if (tripIds.length === 0) {
+      return NextResponse.json(
+        {
+          projectId: PROJECT_ID,
+          routeId: ROUTE_ID,
+          modo: "timetable",
+          tripIds: [],
+          updatedAt: new Date().toISOString(),
+          vehicles: [],
+          error: "Nenhuma viagem encontrada para a Linha 06.",
+        },
+        { headers: { "Cache-Control": "no-store, max-age=0" } }
+      );
     }
+
+    const vehicles = await buscarPorTrips(tripIds);
 
     return NextResponse.json(
       {
+        projectId: PROJECT_ID,
         routeId: ROUTE_ID,
-        modo,
+        modo: "timetable",
+        tripIds,
         updatedAt: new Date().toISOString(),
         vehicles: removerDuplicados(vehicles),
       },
@@ -107,11 +141,14 @@ export async function GET() {
   } catch {
     return NextResponse.json(
       {
+        projectId: PROJECT_ID,
         routeId: ROUTE_ID,
+        modo: "timetable",
+        tripIds: [],
         vehicles: [],
         error: "Não foi possível consultar os ônibus agora.",
       },
-      { status: 502 }
+      { status: 502, headers: { "Cache-Control": "no-store, max-age=0" } }
     );
   }
 }
