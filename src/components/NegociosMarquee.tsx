@@ -16,6 +16,7 @@ type Negocio = {
   whatsapp?: string;
   imagemUrl?: string;
   bannerUrl?: string;
+  arteMarqueeUrl?: string;
   ativo?: boolean;
   status?: string;
   tipoPresenca?: string;
@@ -112,6 +113,10 @@ export default function NegociosMarquee() {
             bannerUrl:
               typeof dados.bannerUrl === "string"
                 ? dados.bannerUrl
+                : "",
+            arteMarqueeUrl:
+              typeof dados.arteMarqueeUrl === "string"
+                ? dados.arteMarqueeUrl
                 : "",
             ativo: dados.ativo === true,
             status:
@@ -270,9 +275,9 @@ export default function NegociosMarquee() {
                     bg-slate-900
                   "
                 >
-                  {negocio.bannerUrl ? (
+                  {negocio.arteMarqueeUrl || negocio.bannerUrl ? (
                     <img
-                      src={negocio.bannerUrl}
+                      src={negocio.arteMarqueeUrl || negocio.bannerUrl}
                       alt={negocio.nome || "Negócio"}
                       className="
                         absolute
