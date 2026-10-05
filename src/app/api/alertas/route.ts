@@ -309,15 +309,10 @@ function formatarAlerta(item: unknown): AlertaNormalizado {
         "recomendação",
       ]) || "",
 
-    area:
-      campo(alerta, [
-        "area",
-        "área",
-        "areaDesc",
-        "municipios",
-        "municipios_afetados",
-        "municipiosAfetados",
-      ]) || "Rio Claro e região",
+    // Esta rota já filtra os avisos pelo código IBGE/nome de Rio Claro.
+    // Não exibimos o identificador bruto da área do INMET (ex.: "1195"),
+    // pois ele não é útil para o morador.
+    area: "Rio Claro - SP",
 
     fonte:
       campo(alerta, [
@@ -410,7 +405,20 @@ export async function GET() {
     .map((item) => encontrarObjetoAlerta(item))
     .filter(alertaVigente)
     .map((item) => formatarAlerta(item))
-    .sort((a, b) => b.severidadeNivel - a.severidadeNivel);
+    .sort((a, b) => {
+      const agora = Date.now();
+      const inicioA = a.inicio ? new Date(a.inicio).getTime() : 0;
+      const inicioB = b.inicio ? new Date(b.inicio).getTime() : 0;
+      const vigenteA = !Number.isNaN(inicioA) && inicioA <= agora;
+      const vigenteB = !Number.isNaN(inicioB) && inicioB <= agora;
+
+      // Primeiro os avisos que já estão em vigor; depois os futuros.
+      if (vigenteA !== vigenteB) return vigenteA ? -1 : 1;
+      if (a.severidadeNivel !== b.severidadeNivel) {
+        return b.severidadeNivel - a.severidadeNivel;
+      }
+      return inicioA - inicioB;
+    });
 
   return NextResponse.json({
     sucesso: true, cidade: "Rio Claro", estado: UF,
