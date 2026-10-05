@@ -17,6 +17,11 @@ export default function MenuInferior() {
   const pathname = usePathname();
   const [aberto, setAberto] = useState(false);
   const ativo = (href: string) => href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const ambienteGestao =
+    pathname.startsWith("/painel-anunciante") ||
+    pathname.startsWith("/admin-master");
+
+  if (ambienteGestao) return null;
 
   return (
     <>
