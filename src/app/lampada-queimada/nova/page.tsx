@@ -65,6 +65,11 @@ export default function NovaOcorrenciaIluminacaoPage() {
   const [enviando, setEnviando] = useState(false);
   const [erroEnvio, setErroEnvio] = useState("");
   const [protocolo, setProtocolo] = useState("");
+  const [codigoPlaca, setCodigoPlaca] = useState("");
+  const [buscandoPlaca, setBuscandoPlaca] = useState(false);
+  const [erroPlaca, setErroPlaca] = useState("");
+  const [mostrarMapa, setMostrarMapa] = useState(false);
+  const [localizando, setLocalizando] = useState(false);
   const mapaRef = useRef<HTMLDivElement | null>(null);
   const mapaObj = useRef<any>(null);
   const camadaRef = useRef<any>(null);
@@ -86,10 +91,43 @@ export default function NovaOcorrenciaIluminacaoPage() {
   const features = useMemo(() => featuresDe(dados), [dados]);
   const pontos = useMemo(() => features.map((f) => ({ f, c: coordenada(f) })).filter((x): x is { f: Feature; c: [number, number] } => x.c !== null), [features]);
 
+  async function buscarPlaca() {
+    const placa=codigoPlaca.replace(/\D/g,"");
+    if(!placa){ setErroPlaca("Digite o número da plaqueta."); return; }
+    setBuscandoPlaca(true); setErroPlaca("");
+    try{
+      const r=await fetch(`/api/iluminacao/ponto?codigo=${encodeURIComponent(placa)}`,{cache:"no-store"});
+      const d=await r.json();
+      if(!r.ok || d?.status!=="success") throw new Error(d?.erro || "Poste não encontrado.");
+      const encontrados=featuresDe(d);
+      const ponto=encontrados[0];
+      if(!ponto) throw new Error("O sistema encontrou a plaqueta, mas não retornou os dados do poste.");
+      setSelecionado(ponto); setPontoConfirmado(false);
+      const c=coordenada(ponto);
+      if(c && mapaObj.current) mapaObj.current.setView(c,18);
+      window.setTimeout(()=>document.getElementById("ponto-selecionado")?.scrollIntoView({behavior:"smooth",block:"center"}),50);
+    }catch(e){ setErroPlaca(e instanceof Error?e.message:"Não foi possível buscar a plaqueta."); }
+    finally{ setBuscandoPlaca(false); }
+  }
+
+  function usarMinhaLocalizacao(){
+    if(!navigator.geolocation){ setErroPlaca("Seu navegador não oferece localização."); return; }
+    setMostrarMapa(true); setLocalizando(true); setErroPlaca("");
+    navigator.geolocation.getCurrentPosition(
+      p=>{
+        const c:[number,number]=[p.coords.latitude,p.coords.longitude];
+        window.setTimeout(()=>{ mapaObj.current?.setView(c,18); leafletRef.current?.circleMarker(c,{radius:8,weight:3,color:"#2563eb",fillColor:"#60a5fa",fillOpacity:1}).addTo(mapaObj.current); },250);
+        setLocalizando(false);
+      },
+      ()=>{ setErroPlaca("Não foi possível acessar sua localização. Você ainda pode procurar o poste no mapa."); setLocalizando(false); },
+      {enableHighAccuracy:true,timeout:10000,maximumAge:30000}
+    );
+  }
+
   useEffect(() => {
     let cancelado = false;
     async function montar() {
-      if (!mapaRef.current || carregando || erro || pontos.length === 0) return;
+      if (!mostrarMapa || !mapaRef.current || carregando || erro || pontos.length === 0) return;
       if (!leafletRef.current) {
         const L = await import("leaflet");
         if (cancelado) return;
@@ -118,7 +156,7 @@ export default function NovaOcorrenciaIluminacaoPage() {
     }
     montar().catch(() => setErro("O mapa não pôde ser carregado agora."));
     return () => { cancelado = true; };
-  }, [pontos, carregando, erro]);
+  }, [pontos, carregando, erro, mostrarMapa]);
 
   const prop = selecionado?.properties;
   const codigo = valor(prop, ["id"]);
@@ -176,7 +214,7 @@ export default function NovaOcorrenciaIluminacaoPage() {
         <div className="mx-auto max-w-2xl px-4 py-4 text-center">
           <div className="text-3xl">💡</div>
           <h1 className="mt-1 text-lg font-black">Nova ocorrência de iluminação</h1>
-          <p className="mt-1 text-xs text-white/90">Teste da integração • Rio Claro</p>
+          <p className="mt-1 text-xs text-white/90">Informe o problema e identifique o poste • Rio Claro</p>
         </div>
       </section>
 
@@ -193,20 +231,47 @@ export default function NovaOcorrenciaIluminacaoPage() {
           </select>
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="p-5 pb-3">
-            <h2 className="font-black">🗺️ Escolha o ponto de iluminação</h2>
-            <p className="mt-1 text-xs leading-5 text-slate-500">Aproxime o mapa e toque no ponto amarelo correspondente ao poste.</p>
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between text-xs font-black">
+            <span className="text-emerald-700">✓ 1 Problema</span>
+            <span className="rounded-full bg-amber-500 px-3 py-2 text-white">2 Local</span>
+            <span className="text-slate-400">3 Seus dados</span>
           </div>
-          {carregando ? <div className="m-5 rounded-2xl bg-slate-50 p-4 text-sm font-bold">Carregando pontos…</div> :
-           erro ? <div className="m-5 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">{erro}</div> :
-           pontos.length === 0 ? <div className="m-5 rounded-2xl bg-amber-50 p-4 text-sm font-bold text-amber-800">A API respondeu, mas não encontramos coordenadas válidas nos pontos.</div> :
-           <div ref={mapaRef} className="h-[430px] w-full bg-slate-200" />}
-          {!carregando && !erro && pontos.length > 0 && <div className="px-5 py-3 text-[10px] font-bold text-slate-500">{pontos.length.toLocaleString("pt-BR")} pontos carregados • toque em um ponto amarelo</div>}
+
+          <h2 className="font-black">🏷️ 1ª opção — Código da plaqueta</h2>
+          <p className="mt-1 text-xs leading-5 text-slate-500">Procure no poste a plaqueta metálica de identificação. Digite somente o número.</p>
+          <div className="mt-3 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-4">
+            <div className="mx-auto flex max-w-[260px] items-center gap-4">
+              <div className="h-24 w-10 rounded-lg bg-slate-600 shadow-inner"><div className="mx-auto mt-5 h-10 w-8 rounded bg-white p-1 text-center text-[7px] font-black text-slate-900"><div>IPRC</div><div className="mt-1 text-[10px]">7163</div><div className="mt-1 h-2 bg-[repeating-linear-gradient(90deg,#111_0,#111_1px,transparent_1px,transparent_3px)]" /></div></div>
+              <div><p className="text-sm font-black">Onde encontrar?</p><p className="mt-1 text-[11px] leading-4 text-slate-500">A plaqueta fica presa ao poste. O número abaixo de <b>IPRC</b> identifica aquele ponto.</p></div>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <input inputMode="numeric" value={codigoPlaca} onChange={e=>setCodigoPlaca(e.target.value.replace(/\D/g,""))} onKeyDown={e=>{if(e.key==="Enter")buscarPlaca();}} placeholder="Ex.: 7163" className="min-w-0 flex-1 rounded-2xl border border-slate-300 px-4 py-3.5 text-base font-black outline-none focus:border-amber-500" />
+            <button type="button" disabled={buscandoPlaca} onClick={buscarPlaca} className="rounded-2xl bg-slate-900 px-5 text-sm font-black text-white disabled:opacity-50">{buscandoPlaca?"Buscando…":"Buscar"}</button>
+          </div>
+          {erroPlaca && <p className="mt-3 rounded-xl bg-red-50 p-3 text-xs font-bold text-red-700">{erroPlaca}</p>}
+
+          <div className="my-5 flex items-center gap-3"><div className="h-px flex-1 bg-slate-200"/><span className="text-[10px] font-black uppercase text-slate-400">ou</span><div className="h-px flex-1 bg-slate-200"/></div>
+          <h2 className="font-black">🗺️ 2ª opção — Encontrar no mapa</h2>
+          <p className="mt-1 text-xs leading-5 text-slate-500">Se não souber o código, use sua localização para abrir o mapa perto de você.</p>
+          <button type="button" onClick={usarMinhaLocalizacao} className="mt-3 w-full rounded-2xl bg-blue-600 px-5 py-3.5 text-sm font-black text-white">📍 {localizando?"Localizando…":"Usar minha localização"}</button>
+          <button type="button" onClick={()=>setMostrarMapa(v=>!v)} className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-700">{mostrarMapa?"Ocultar mapa":"Abrir mapa sem localização"}</button>
         </div>
 
+        {mostrarMapa && (
+          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="p-5 pb-3"><h2 className="font-black">🗺️ Toque no poste</h2><p className="mt-1 text-xs text-slate-500">Aproxime e selecione o ponto amarelo correspondente.</p></div>
+            {carregando ? <div className="m-5 rounded-2xl bg-slate-50 p-4 text-sm font-bold">Carregando pontos…</div> :
+             erro ? <div className="m-5 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">{erro}</div> :
+             pontos.length===0 ? <div className="m-5 rounded-2xl bg-amber-50 p-4 text-sm font-bold text-amber-800">Nenhum ponto com coordenadas foi encontrado.</div> :
+             <div ref={mapaRef} className="h-[430px] w-full bg-slate-200" />}
+            {!carregando&&!erro&&pontos.length>0&&<div className="px-5 py-3 text-[10px] font-bold text-slate-500">{pontos.length.toLocaleString("pt-BR")} pontos carregados</div>}
+          </div>
+        )}
+
         {selecionado && (
-          <div className="rounded-3xl border-2 border-emerald-300 bg-white p-5 shadow-sm">
+          <div id="ponto-selecionado" className="scroll-mt-24 rounded-3xl border-2 border-emerald-300 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div><p className="text-[10px] font-black uppercase text-emerald-700">Ponto selecionado</p><h2 className="text-xl font-black">{codigo ? `#${codigo}` : "Ponto de iluminação"}</h2></div>
               <button onClick={() => { setSelecionado(null); setPontoConfirmado(false); }} className="text-xl text-slate-400">✕</button>
