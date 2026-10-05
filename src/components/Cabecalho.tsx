@@ -620,42 +620,6 @@ export default function Cabecalho() {
                 </span>
               )}
 
-              {/* ALERTA */}
-
-              <button
-                type="button"
-                disabled={
-                  statusAlertas !== "ok" ||
-                  !alertaPrincipal
-                }
-                onClick={() => {
-                  if (alertaPrincipal) {
-                    setAlertaSelecionado(
-                      alertaPrincipal
-                    );
-                  }
-                }}
-                className={`ml-1 max-w-[210px] rounded-lg px-2.5 py-1.5 text-left leading-tight sm:max-w-[300px] ${estiloAlerta()}`}
-              >
-                {statusAlertas === "carregando" ? (
-                  <span className="text-[9px] font-black">⏳ VERIFICANDO</span>
-                ) : statusAlertas === "erro" ? (
-                  <span className="text-[9px] font-black">⚠️ INMET INDISPONÍVEL</span>
-                ) : alertaPrincipal ? (
-                  <>
-                    <span className="block text-[8px] font-black uppercase tracking-wide sm:text-[9px]">
-                      {alertaPrincipal.severidadeNivel >= 3 ? "🔴" : alertaPrincipal.severidadeNivel === 2 ? "🟠" : "🟡"}{" "}
-                      {textoAlertaCabecalho(alertaPrincipal).periodo}
-                    </span>
-                    <span className="mt-0.5 block truncate text-[9px] font-bold uppercase sm:text-[10px]">
-                      {textoAlertaCabecalho(alertaPrincipal).descricao}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-[9px] font-black">✓ SEM ALERTAS</span>
-                )}
-              </button>
-
             </div>
 
             {/* COMPARTILHAR */}
@@ -715,9 +679,21 @@ export default function Cabecalho() {
               PLANTÃO
             </span>
 
-            <span className="min-w-0 truncate text-[9px] text-slate-500 sm:text-[10px]">
-              {plantao[plantaoAtual]}
+            <span className="min-w-0 flex-1 truncate text-[9px] text-slate-500 sm:text-[10px]">
+              {alertaPrincipal
+                ? `⚠️ ${textoAlertaCabecalho(alertaPrincipal).periodo} · ${textoAlertaCabecalho(alertaPrincipal).descricao}`
+                : plantao[plantaoAtual]}
             </span>
+
+            {alertaPrincipal && (
+              <button
+                type="button"
+                onClick={() => setAlertaSelecionado(alertaPrincipal)}
+                className="ml-2 shrink-0 text-[8px] font-black text-orange-700"
+              >
+                VER
+              </button>
+            )}
           </div>
 
         </div>
