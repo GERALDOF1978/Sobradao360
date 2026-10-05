@@ -501,6 +501,33 @@ export default function Cabecalho() {
     return alertaEmVigor(alerta) ? "EM VIGOR AGORA" : "PRÓXIMO ALERTA";
   }
 
+  function horarioAlerta(data: string | null) {
+    if (!data) return "";
+    const valor = new Date(data);
+    if (Number.isNaN(valor.getTime())) return "";
+    return valor.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function textoAlertaCabecalho(alerta: AlertaMeteorologico) {
+    const vigente = alertaEmVigor(alerta);
+    const horario = horarioAlerta(vigente ? alerta.fim : alerta.inicio);
+    const periodo = vigente
+      ? horario
+        ? `ALERTA INMET · ATÉ ${horario}`
+        : "ALERTA INMET · EM VIGOR"
+      : horario
+      ? `PRÓXIMO ALERTA · ${horario}`
+      : "PRÓXIMO ALERTA";
+
+    return {
+      periodo,
+      descricao: `${alerta.titulo} · ${alerta.severidade}`,
+    };
+  }
+
   function estiloAlerta() {
     if (!alertaPrincipal) {
       return "bg-emerald-50 text-emerald-700";
@@ -573,12 +600,16 @@ export default function Cabecalho() {
                     {clima.icone}
                   </span>
 
-                  <div className="leading-none text-left">
+                  <div className="text-left leading-none">
                     <div className="text-sm font-black text-slate-800">
                       {clima.temp}°C
                     </div>
 
-                    <div className="max-w-[90px] truncate text-[9px] font-semibold text-slate-500 sm:max-w-[130px] sm:text-[10px]">
+                    <div className="mt-0.5 max-w-[90px] truncate text-[8px] font-black uppercase tracking-wide text-slate-400 sm:max-w-[130px]">
+                      AGORA
+                    </div>
+
+                    <div className="mt-0.5 max-w-[90px] truncate text-[9px] font-semibold text-slate-500 sm:max-w-[130px] sm:text-[10px]">
                       {clima.condicao}
                     </div>
                   </div>
@@ -604,15 +635,25 @@ export default function Cabecalho() {
                     );
                   }
                 }}
-                className={`ml-1 max-w-[210px] rounded-lg px-2.5 py-1.5 text-[9px] font-black leading-tight sm:max-w-[300px] sm:text-[10px] ${estiloAlerta()}`}
+                className={`ml-1 max-w-[210px] rounded-lg px-2.5 py-1.5 text-left leading-tight sm:max-w-[300px] ${estiloAlerta()}`}
               >
-                {statusAlertas === "carregando"
-                  ? "⏳ VERIFICANDO"
-                  : statusAlertas === "erro"
-                  ? "⚠️ INMET INDISPONÍVEL"
-                  : alertaPrincipal
-                  ? `${alertaPrincipal.severidadeNivel >= 3 ? "🔴" : alertaPrincipal.severidadeNivel === 2 ? "🟠" : "🟡"} ${alertaEmVigor(alertaPrincipal) ? "AGORA" : "PRÓXIMO"} · ${alertaPrincipal.titulo.toUpperCase()} · ${alertaPrincipal.severidade.toUpperCase()}`
-                  : "✓ SEM ALERTAS"}
+                {statusAlertas === "carregando" ? (
+                  <span className="text-[9px] font-black">⏳ VERIFICANDO</span>
+                ) : statusAlertas === "erro" ? (
+                  <span className="text-[9px] font-black">⚠️ INMET INDISPONÍVEL</span>
+                ) : alertaPrincipal ? (
+                  <>
+                    <span className="block text-[8px] font-black uppercase tracking-wide sm:text-[9px]">
+                      {alertaPrincipal.severidadeNivel >= 3 ? "🔴" : alertaPrincipal.severidadeNivel === 2 ? "🟠" : "🟡"}{" "}
+                      {textoAlertaCabecalho(alertaPrincipal).periodo}
+                    </span>
+                    <span className="mt-0.5 block truncate text-[9px] font-bold uppercase sm:text-[10px]">
+                      {textoAlertaCabecalho(alertaPrincipal).descricao}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-[9px] font-black">✓ SEM ALERTAS</span>
+                )}
               </button>
 
             </div>
