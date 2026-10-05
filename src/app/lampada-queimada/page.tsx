@@ -11,8 +11,7 @@ export default function LampadaQueimadaPage() {
       <section className="bg-gradient-to-br from-amber-500 via-amber-400 to-orange-500 text-white">
         <div className="mx-auto max-w-2xl px-4 py-2.5">
           <div className="flex items-center justify-between gap-3">
-            <Link href="/" className="text-xs font-bold text-white/90 hover:text-white">← Início</Link>
-            <div className="text-center">
+<div className="text-center">
               <div className="text-lg">💡</div>
               <h1 className="text-base font-black">Lâmpada Queimada</h1>
             </div>
