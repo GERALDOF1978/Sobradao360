@@ -117,7 +117,7 @@ export default function Cabecalho() {
     ["/utilidades/coleta-lixo", "🗑️", "Coleta de Lixo"], ["/utilidades/ecopontos", "♻️", "Ecopontos"],
     ["/utilidades", "📞", "Telefones e Serviços"], ["/noticias", "📰", "Giro de Notícias"],
     ["/comunidade", "💬", "Voz da Comunidade"], ["/lampada-queimada", "💡", "Lâmpada Queimada"],
-    ["/daae", "💧", "DAAE"], ["/anuncie", "📣", "Classificados"]
+    ["/daae", "💧", "DAAE"], ["/anuncie", "📣", "Classificados"], ["/clima", "🌦️", "Clima em Rio Claro"]
   ];
   const paginaAtual = paginas.find(([rota]) => pathname.startsWith(rota));
 
@@ -599,15 +599,7 @@ export default function Cabecalho() {
               {clima ? (
                 <button
                   type="button"
-                  onClick={() =>
-                    alert(
-                      `📍 Sobradão • Rio Claro/SP\n\n` +
-                        `${clima.icone} ${clima.condicao}\n` +
-                        `🌡️ ${clima.temp}°C\n` +
-                        `💧 Umidade: ${clima.umidade}%\n` +
-                        `💨 Vento: ${clima.vento} km/h`
-                    )
-                  }
+                  onClick={() => (window.location.href = "/clima")}
                   className="flex items-center gap-1 rounded-lg px-1.5 py-1 hover:bg-slate-100"
                   title="Ver clima"
                 >
