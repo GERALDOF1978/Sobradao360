@@ -229,7 +229,7 @@ export default function Home() {
 
         {/* ==========================================
             4. PUBLICIDADE
-            ATÉ 3 BANNERS POR VEZ
+            COMPACTA - 2 POR LINHA
         ========================================== */}
 
         <section className="space-y-2">
@@ -245,12 +245,12 @@ export default function Home() {
             )}
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
             {publicidadeVisiveis.map((item) => (
               <Link
                 key={item.id}
                 href={`/loja/${item.lojaId}`}
-                className="block w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 hover:shadow-md transition"
+                className="block w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-amber-400 hover:shadow-md transition"
               >
                 <div className="aspect-[3/1] w-full bg-slate-200 overflow-hidden">
                   <img
@@ -267,7 +267,7 @@ export default function Home() {
 
         {/* ==========================================
             5. DESTAQUES
-            ATÉ 6 CARDS MÉDIOS POR VEZ
+            COMPACTOS - 2 POR LINHA
         ========================================== */}
 
         <section className="space-y-2">
@@ -288,7 +288,7 @@ export default function Home() {
               <Link
                 key={item.id}
                 href={`/loja/${item.lojaId}`}
-                className="aspect-[3/1] w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-amber-400 transition"
+                className="aspect-[3/1] w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-amber-400 transition"
               >
                 <img
                   src={item.arteDestaquesUrl || item.bannerUrl}
