@@ -45,7 +45,7 @@ function Atendimento({ painel }: { painel: Painel }) {
           ))}
           {(painel.classificacao || []).length > 0 && (
             <div className="pt-1"><p className="mb-2 text-[10px] font-black uppercase text-slate-500">Classificações registradas no período</p>
-              <div className="flex flex-wrap gap-2">{painel.classificacao.map(c => <span key={c.codigo} className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700">{c.descricao}: {c.quantidadeAtendimentos}</span>)}</div>
+              <div className="flex flex-wrap gap-2">{painel.classificacao.map(c => <span key={c.codigo} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700"><i className="h-3 w-3 rounded-full border border-black/10" style={{ backgroundColor: c.cor }} />{c.descricao}: {c.quantidadeAtendimentos}</span>)}</div>
             </div>
           )}
         </div>
