@@ -240,7 +240,7 @@ export default function Home() {
             {publicidade.length > 0 && <span className="text-[10px] font-bold text-slate-400">{publicidade.length} anunciante{publicidade.length === 1 ? "" : "s"}</span>}
           </div>
           {publicidade.length > 0 && (
-            <div ref={publicidadeRef} className="h-[330px] overflow-y-auto overscroll-contain rounded-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div ref={publicidadeRef} className="aspect-square overflow-y-auto overscroll-contain rounded-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="space-y-2 pb-2">
                 {[...publicidade, ...publicidade].map((item, indice) => (
                   <Link key={`${item.id}-pub-${indice}`} href={`/loja/${item.lojaId}`} className="block w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
