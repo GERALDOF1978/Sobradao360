@@ -185,23 +185,6 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, [publicidade.length]);
 
-  useEffect(() => {
-    const mover = (el: HTMLDivElement | null, sentido: number) => {
-      if (!el || el.scrollWidth <= el.clientWidth) return;
-      el.scrollLeft += sentido;
-      const metade = el.scrollWidth / 2;
-      if (sentido > 0 && el.scrollLeft >= metade) el.scrollLeft -= metade;
-      if (sentido < 0 && el.scrollLeft <= 0) el.scrollLeft += metade;
-    };
-    // A primeira linha anda para a direita e a segunda para a esquerda.
-    if (destaque1Ref.current) destaque1Ref.current.scrollLeft = destaque1Ref.current.scrollWidth / 2;
-    const timer = window.setInterval(() => {
-      mover(destaque1Ref.current, -1);
-      mover(destaque2Ref.current, 1);
-    }, 40);
-    return () => window.clearInterval(timer);
-  }, [destaques.length]);
-
   const lojasFiltradas = lojasAtivas.filter((loja: LojaHome) =>
     loja.nome.toLocaleLowerCase("pt-BR").includes(buscaLoja.trim().toLocaleLowerCase("pt-BR"))
   );
@@ -240,7 +223,7 @@ export default function Home() {
             {publicidade.length > 0 && <span className="text-[10px] font-bold text-slate-400">{publicidade.length} anunciante{publicidade.length === 1 ? "" : "s"}</span>}
           </div>
           {publicidade.length > 0 && (
-            <div ref={publicidadeRef} className="aspect-square overflow-y-auto overscroll-contain rounded-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div ref={publicidadeRef} className="aspect-[3/1] overflow-y-auto overscroll-contain rounded-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="space-y-2 pb-2">
                 {[...publicidade, ...publicidade].map((item, indice) => (
                   <Link key={`${item.id}-pub-${indice}`} href={`/loja/${item.lojaId}`} className="block w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
