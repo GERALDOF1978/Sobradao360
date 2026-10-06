@@ -139,7 +139,7 @@ export default function NegociosMarquee() {
         }
 
         if (ativo) {
-          setNegocios(lista);
+          setNegocios([...lista].sort(() => Math.random() - 0.5));
         }
       } catch (erro) {
         console.error(
@@ -222,9 +222,11 @@ export default function NegociosMarquee() {
 
   // O Marquee mostra somente lojas com contrato ativo e posição Marquee.
   // Mesmo com uma única loja, ela continua rodando no loop.
-  const itens = negocios.length > 0
-    ? [...negocios, ...negocios]
-    : [];
+  // Garante uma faixa-base mais larga que a tela mesmo com apenas 1 ou 2 lojas.
+  // Depois duplicamos a faixa inteira para o ponto de reinício ficar invisível.
+  const repeticoesBase = negocios.length === 1 ? 4 : negocios.length === 2 ? 3 : negocios.length === 3 ? 2 : 1;
+  const faixaBase = Array.from({ length: repeticoesBase }, () => negocios).flat();
+  const itens = faixaBase.length > 0 ? [...faixaBase, ...faixaBase] : [];
 
   return (
     <section className="w-full overflow-hidden">
