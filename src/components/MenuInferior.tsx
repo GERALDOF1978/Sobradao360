@@ -6,6 +6,7 @@ import { useState } from "react";
 
 const extras = [
   { href: "/clima", icone: "🌦️", titulo: "Clima" },
+  { href: "/utilidades/upas", icone: "🏥", titulo: "UPAs Agora" },
   { href: "/anuncie", icone: "📣", titulo: "Classificados" },
   { href: "/utilidades/transporte", icone: "🚌", titulo: "Transporte" },
   { href: "/utilidades/coleta-lixo", icone: "🗑️", titulo: "Coleta" },
