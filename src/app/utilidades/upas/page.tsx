@@ -95,6 +95,19 @@ export default function UpasPage() {
             {g.paineis.map(p => <Atendimento key={p.id} painel={p} />)}
           </section>
         ))}
+        {dados && (
+          <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+            <h2 className="text-xs font-black text-slate-800">🎨 Entenda as cores da classificação de risco</h2>
+            <p className="mt-1 text-[9px] leading-4 text-slate-500">Legenda apenas para orientação. A prioridade do atendimento é definida pela equipe de saúde.</p>
+            <div className="mt-3 space-y-2 text-[10px]">
+              <div className="flex items-center gap-2"><span className="h-3 w-3 shrink-0 rounded-full bg-blue-600" /><span><b>Azul:</b> casos não urgentes.</span></div>
+              <div className="flex items-center gap-2"><span className="h-3 w-3 shrink-0 rounded-full bg-green-500" /><span><b>Verde:</b> casos pouco urgentes.</span></div>
+              <div className="flex items-center gap-2"><span className="h-3 w-3 shrink-0 rounded-full bg-yellow-400" /><span><b>Amarelo:</b> casos urgentes.</span></div>
+              <div className="flex items-center gap-2"><span className="h-3 w-3 shrink-0 rounded-full bg-orange-500" /><span><b>Laranja:</b> casos muito urgentes.</span></div>
+              <div className="flex items-center gap-2"><span className="h-3 w-3 shrink-0 rounded-full bg-red-600" /><span><b>Vermelho:</b> emergência, atendimento imediato.</span></div>
+            </div>
+          </section>
+        )}
         {dados && <div className="rounded-2xl bg-white p-3 text-center text-[9px] leading-4 text-slate-500">Fonte: {dados.fonte}. Atualização automática a cada 30 segundos.<br/>Os totais de triagens, consultas e classificações referem-se ao período informado pela fonte.</div>}
         <div className="text-center"><Link href="/utilidades" className="text-xs font-black text-blue-700">← Telefones e Serviços</Link></div>
       </main>
