@@ -18,6 +18,9 @@ export default function UtilidadesPage() {
       </header>
       <main className="max-w-md mx-auto px-4 py-3 space-y-4">
         <MiniCardsAnuncio />
+        <Link href="/utilidades/upas" className="block rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-700 to-cyan-600 p-4 text-white shadow-md">
+          <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-wider text-cyan-100">Saúde em tempo real</p><h2 className="mt-0.5 text-lg font-black">🏥 UPAs Agora</h2><p className="mt-1 text-[10px] text-white/85">Veja filas de triagem e atendimento da UPA 29 e Cervezão.</p></div><span className="text-2xl">›</span></div>
+        </Link>
         <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-black text-slate-800">Conhece um profissional ou serviço?</p><p className="mt-0.5 text-[10px] text-slate-500">Envie as informações básicas para aprovação.</p></div><Link href="/utilidades/cadastrar" className="shrink-0 rounded-xl bg-amber-500 px-3 py-2 text-[10px] font-black text-white shadow-sm hover:bg-amber-600">➕ Cadastrar contato</Link></div>
         </section>
