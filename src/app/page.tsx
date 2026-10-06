@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -61,8 +61,10 @@ export default function Home() {
   const [anunciosHome, setAnunciosHome] = useState<AnuncioHome[]>([]);
   const [lojasAtivas, setLojasAtivas] = useState<LojaHome[]>([]);
   const [buscaLoja, setBuscaLoja] = useState("");
-  const [indicePublicidade, setIndicePublicidade] = useState(0);
-  const [indiceDestaques, setIndiceDestaques] = useState(0);
+  const [ordemAleatoria, setOrdemAleatoria] = useState(0);
+  const publicidadeRef = useRef<HTMLDivElement | null>(null);
+  const destaque1Ref = useRef<HTMLDivElement | null>(null);
+  const destaque2Ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     async function carregarAnunciosHome() {
@@ -142,9 +144,12 @@ export default function Home() {
             exibicao,
           });
         });
-
-
+        // Em cada carregamento a ordem muda, evitando que os mesmos anunciantes
+        // fiquem sempre nas primeiras posições.
+        lista.sort(() => Math.random() - 0.5);
         setAnunciosHome(lista);
+        setLojasAtivas((atuais) => [...atuais].sort(() => Math.random() - 0.5));
+        setOrdemAleatoria((n) => n + 1);
       } catch (erro) {
         console.error("Erro ao carregar publicidade dos parceiros:", erro);
         setAnunciosHome([]);
@@ -154,47 +159,48 @@ export default function Home() {
     carregarAnunciosHome();
   }, []);
 
-  const publicidade = anunciosHome.filter((item) => item.exibicao.publicidade);
-  const destaques = anunciosHome.filter((item) => item.exibicao.destaques);
+  const publicidade = useMemo(
+    () => anunciosHome.filter((item) => item.exibicao.publicidade),
+    [anunciosHome, ordemAleatoria]
+  );
+  const destaques = useMemo(
+    () => anunciosHome.filter((item) => item.exibicao.destaques),
+    [anunciosHome, ordemAleatoria]
+  );
   const parceiros = anunciosHome.filter((item) => item.exibicao.parceiros);
 
-  useEffect(() => {
-    const paginas = Math.max(1, Math.ceil(publicidade.length / 3));
-    if (indicePublicidade >= paginas) {
-      setIndicePublicidade(0);
-    }
-    if (paginas <= 1) return;
-
-    const timer = window.setInterval(() => {
-      setIndicePublicidade((indice) => (indice + 1) % paginas);
-    }, 5000);
-
-    return () => window.clearInterval(timer);
-  }, [publicidade.length, indicePublicidade]);
+  // Duas linhas de Destaques, independentes entre si.
+  const destaqueLinha1 = useMemo(() => destaques.filter((_, i) => i % 2 === 0), [destaques]);
+  const destaqueLinha2 = useMemo(() => destaques.filter((_, i) => i % 2 === 1), [destaques]);
 
   useEffect(() => {
-    const paginas = Math.max(1, Math.ceil(destaques.length / 6));
-    if (indiceDestaques >= paginas) {
-      setIndiceDestaques(0);
-    }
-    if (paginas <= 1) return;
-
+    const el = publicidadeRef.current;
+    if (!el || publicidade.length < 2) return;
     const timer = window.setInterval(() => {
-      setIndiceDestaques((indice) => (indice + 1) % paginas);
-    }, 5000);
-
+      if (!el) return;
+      el.scrollTop += 1;
+      const metade = el.scrollHeight / 2;
+      if (el.scrollTop >= metade) el.scrollTop -= metade;
+    }, 35);
     return () => window.clearInterval(timer);
-  }, [destaques.length, indiceDestaques]);
+  }, [publicidade.length]);
 
-  const publicidadeVisiveis = publicidade.slice(
-    indicePublicidade * 3,
-    indicePublicidade * 3 + 3
-  );
-
-  const destaquesVisiveis = destaques.slice(
-    indiceDestaques * 6,
-    indiceDestaques * 6 + 6
-  );
+  useEffect(() => {
+    const mover = (el: HTMLDivElement | null, sentido: number) => {
+      if (!el || el.scrollWidth <= el.clientWidth) return;
+      el.scrollLeft += sentido;
+      const metade = el.scrollWidth / 2;
+      if (sentido > 0 && el.scrollLeft >= metade) el.scrollLeft -= metade;
+      if (sentido < 0 && el.scrollLeft <= 0) el.scrollLeft += metade;
+    };
+    // A primeira linha anda para a direita e a segunda para a esquerda.
+    if (destaque1Ref.current) destaque1Ref.current.scrollLeft = destaque1Ref.current.scrollWidth / 2;
+    const timer = window.setInterval(() => {
+      mover(destaque1Ref.current, -1);
+      mover(destaque2Ref.current, 1);
+    }, 40);
+    return () => window.clearInterval(timer);
+  }, [destaques.length]);
 
   const lojasFiltradas = lojasAtivas.filter((loja: LojaHome) =>
     loja.nome.toLocaleLowerCase("pt-BR").includes(buscaLoja.trim().toLocaleLowerCase("pt-BR"))
@@ -227,78 +233,44 @@ export default function Home() {
 
         <NegociosMarquee />
 
-        {/* ==========================================
-            4. PUBLICIDADE
-            FORMATO BANNER 3x1 - 2 POR LINHA
-        ========================================== */}
-
+        {/* PUBLICIDADE — 3 banners visíveis, rolagem vertical contínua */}
         <section className="space-y-2">
-
           <div className="px-1 flex items-center justify-between gap-2">
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
-              Publicidade
-            </h2>
-            {publicidade.length > 0 && (
-              <span className="text-[10px] font-bold text-slate-400">
-                {publicidade.length} anunciante{publicidade.length === 1 ? "" : "s"}
-              </span>
-            )}
+            <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">Publicidade</h2>
+            {publicidade.length > 0 && <span className="text-[10px] font-bold text-slate-400">{publicidade.length} anunciante{publicidade.length === 1 ? "" : "s"}</span>}
           </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            {publicidadeVisiveis.map((item) => (
-              <Link
-                key={item.id}
-                href={`/loja/${item.lojaId}`}
-                className="block w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-amber-400 hover:shadow-md transition"
-              >
-                <div className="aspect-[3/1] w-full bg-slate-200 overflow-hidden">
-                  <img
-                    src={item.artePublicidadeUrl || item.bannerUrl}
-                    alt={item.nome || "Publicidade"}
-                    className="block h-full w-full object-cover"
-                  />
-                </div>
-              </Link>
-            ))}
-          </div>
-
+          {publicidade.length > 0 && (
+            <div ref={publicidadeRef} className="h-[330px] overflow-y-auto overscroll-contain rounded-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="space-y-2 pb-2">
+                {[...publicidade, ...publicidade].map((item, indice) => (
+                  <Link key={`${item.id}-pub-${indice}`} href={`/loja/${item.lojaId}`} className="block w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <div className="aspect-[3/1] w-full overflow-hidden bg-slate-200">
+                      <img src={item.artePublicidadeUrl || item.bannerUrl} alt={item.nome || "Publicidade"} className="h-full w-full object-cover" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
-        {/* ==========================================
-            5. DESTAQUES
-            FORMATO VERTICAL 1x2 - 2 POR LINHA
-        ========================================== */}
-
+        {/* DESTAQUES — duas linhas horizontais independentes */}
         <section className="space-y-2">
-
           <div className="px-1 flex items-center justify-between gap-2">
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
-              Destaques
-            </h2>
-            {destaques.length > 0 && (
-              <span className="text-[10px] font-bold text-slate-400">
-                {destaques.length} anunciante{destaques.length === 1 ? "" : "s"}
-              </span>
-            )}
+            <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">Destaques</h2>
+            {destaques.length > 0 && <span className="text-[10px] font-bold text-slate-400">{destaques.length} anunciante{destaques.length === 1 ? "" : "s"}</span>}
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {destaquesVisiveis.map((item) => (
-              <Link
-                key={item.id}
-                href={`/loja/${item.lojaId}`}
-                className="aspect-[1/2] w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-amber-400 transition"
-              >
-                <img
-                  src={item.arteDestaquesUrl || item.bannerUrl}
-                  alt={item.nome || "Destaque"}
-                  className="block h-full w-full object-cover"
-                />
-              </Link>
-            ))}
-          </div>
-
+          {[{lista:destaqueLinha1.length ? destaqueLinha1 : destaques, ref:destaque1Ref}, {lista:destaqueLinha2.length ? destaqueLinha2 : destaques, ref:destaque2Ref}].map((linha, linhaIndex) => (
+            <div key={linhaIndex} ref={linha.ref} className="flex gap-2 overflow-x-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {[...linha.lista, ...linha.lista].map((item, indice) => (
+                <Link key={`${item.id}-dest-${linhaIndex}-${indice}`} href={`/loja/${item.lojaId}`} className="w-[118px] shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                  <div className="aspect-[1/2] w-full overflow-hidden">
+                    <img src={item.arteDestaquesUrl || item.bannerUrl} alt={item.nome || "Destaque"} className="h-full w-full object-cover" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ))}
         </section>
 
         {/* ==========================================
