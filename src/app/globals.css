@@ -11,6 +11,6 @@
 }
 
 .negocios-marquee {
-  animation: negocios-marquee 28s linear infinite;
+  animation: negocios-marquee 16s linear infinite;
   will-change: transform;
 }
