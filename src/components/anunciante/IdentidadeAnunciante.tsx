@@ -226,6 +226,37 @@ export default function IdentidadeAnunciante({
 
           </div>
 
+          <label className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-900 px-4 py-3 text-xs font-black text-white shadow-sm hover:bg-blue-800">
+            📷 {imagemUrl ? "Trocar logo" : "Enviar logo"}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const arquivo = e.target.files?.[0];
+                if (!arquivo) return;
+                try {
+                  setSalvando(true);
+                  setErro("");
+                  const url = await enviarImagem(arquivo);
+                  await updateDoc(doc(db, "lojas_parceiras", lojaId), {
+                    imagemUrl: url,
+                    atualizadoEm: serverTimestamp(),
+                  });
+                  setImagemUrl(url);
+                  setMensagem("Logo atualizado com sucesso.");
+                  onAtualizado?.();
+                } catch (error) {
+                  console.error("Erro ao enviar logo:", error);
+                  setErro("Não foi possível enviar o logo.");
+                } finally {
+                  setSalvando(false);
+                  e.target.value = "";
+                }
+              }}
+            />
+          </label>
+
         </div>
 
         {/* BANNER */}
@@ -279,6 +310,37 @@ export default function IdentidadeAnunciante({
             )}
 
           </div>
+
+          <label className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-900 px-4 py-3 text-xs font-black text-white shadow-sm hover:bg-blue-800">
+            🖼️ {bannerUrl ? "Trocar banner" : "Enviar banner"}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const arquivo = e.target.files?.[0];
+                if (!arquivo) return;
+                try {
+                  setSalvando(true);
+                  setErro("");
+                  const url = await enviarImagem(arquivo);
+                  await updateDoc(doc(db, "lojas_parceiras", lojaId), {
+                    bannerUrl: url,
+                    atualizadoEm: serverTimestamp(),
+                  });
+                  setBannerUrl(url);
+                  setMensagem("Banner atualizado com sucesso.");
+                  onAtualizado?.();
+                } catch (error) {
+                  console.error("Erro ao enviar banner:", error);
+                  setErro("Não foi possível enviar o banner.");
+                } finally {
+                  setSalvando(false);
+                  e.target.value = "";
+                }
+              }}
+            />
+          </label>
 
         </div>
 
