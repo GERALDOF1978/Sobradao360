@@ -103,8 +103,14 @@ async function obterCadastrosRioClaro() {
 }
 
 async function lerArquivo(url: string) {
-  const res = await fetch(url, { next: { revalidate: 21600 } });
-  if (!res.ok) throw new Error("Não foi possível baixar os preços da ANP.");
+  const res = await fetch(url, {
+    next: { revalidate: 21600 },
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; Sobradao360/1.0)",
+      "Accept": "text/csv,application/vnd.ms-excel,application/octet-stream,*/*",
+    },
+  });
+  if (!res.ok) throw new Error(`ANP respondeu ${res.status} ao baixar o arquivo semanal.`);
   const buffer = await res.arrayBuffer();
   const texto = new TextDecoder("windows-1252").decode(buffer);
   const linhas = texto.replace(/^\uFEFF/, "").split(/\r?\n/).filter(Boolean);
@@ -203,6 +209,17 @@ export async function GET() {
     );
   } catch (error) {
     console.error("Erro ANP combustíveis:", error);
-    return NextResponse.json({ sucesso: false, erro: "Não foi possível carregar os preços da ANP agora." }, { status: 502 });
+    const detalhe = error instanceof Error ? error.message : String(error);
+    return NextResponse.json(
+      {
+        sucesso: false,
+        erro: "Não foi possível carregar os preços da ANP agora.",
+        detalhe,
+      },
+      {
+        status: 502,
+        headers: { "Cache-Control": "no-store" },
+      }
+    );
   }
 }
