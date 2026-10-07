@@ -736,12 +736,27 @@ export default function EmpregosPage() {
             <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1">
               Empregos
             </p>
-            <Link
-              href="/empregos/cadastrar"
-              className="rounded-xl bg-emerald-600 px-3 py-2 text-[10px] font-black text-white shadow-sm hover:bg-emerald-700"
-            >
-              ➕ Cadastrar vaga
-            </Link>
+            <div className="flex items-center gap-1.5">
+              <Link
+                href="/empregos/cadastrar"
+                className="rounded-xl bg-emerald-600 px-2.5 py-2 text-[9px] font-black text-white shadow-sm hover:bg-emerald-700"
+              >
+                ➕ Cadastrar vaga
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setAba("curriculos");
+                  setBusca("");
+                  window.setTimeout(() => {
+                    window.dispatchEvent(new Event("abrir-cadastro-curriculo"));
+                  }, 0);
+                }}
+                className="rounded-xl bg-amber-400 px-2.5 py-2 text-[9px] font-black text-slate-950 shadow-sm hover:bg-amber-300"
+              >
+                📄 Cadastrar currículo
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-4 gap-2">
