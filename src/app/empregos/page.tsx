@@ -29,8 +29,9 @@ interface Vaga {
   quantidadeVagas?: number | string | null;
   prazo?: string | null;
   urlTrampolim?: string | null;
+  codigoVaga?: string | null;
   imagemUrl?: string | null;
-  origem: "trampolim" | "manual";
+  origem: "trampolim" | "rhbrasil" | "manual";
   createdAt?: any;
   autorNome?: string;
   contato?: string | null;
@@ -637,7 +638,38 @@ async function buscarVagas(): Promise<Vaga[]> {
 
   /*
    * =====================================================
-   * 2. VAGAS MANUAIS / COMUNIDADE
+   * 2. RHBrasil — vagas de Rio Claro
+   * =====================================================
+   */
+  try {
+    const response = await fetch("/api/rhbrasil", { cache: "no-store" });
+    if (response.ok) {
+      const dados = await response.json();
+      const vagasRh = Array.isArray(dados?.vagas) ? dados.vagas : [];
+      vagasRh.forEach((vaga: any) => {
+        const codigo = textoSeguro(vaga.NR_REQUISICAO);
+        const tituloBruto = textoSeguro(vaga.NM_CARGO) || "Vaga RHBrasil";
+        lista.push({
+          id: codigo || `rh-${textoSeguro(vaga.CD_CARGO)}-${tituloBruto}`,
+          titulo: tituloBruto.replace(/\s*-\s*\d+\s*$/, "").trim(),
+          descricao: textoSeguro(vaga.DS_OBSERVACAO_INTERNET),
+          empresa: "RHBrasil",
+          cidade: textoSeguro(vaga.NM_CIDADE_DIVULGA) || textoSeguro(vaga.NM_CIDADE) || textoSeguro(vaga.NM_CIDADE_UNIDADE) || "Rio Claro",
+          bairro: null, salario: null, beneficios: null, escolaridade: null,
+          experiencia: null, turno: null, formatoTrabalho: null, tipoContrato: null,
+          quantidadeVagas: quantidadeSegura(vaga.QTD_VAGAS_REQ), prazo: null,
+          urlTrampolim: "https://www.rhbrasil.com.br/portaldocandidato/view/buscar-vagas-publica.php",
+          codigoVaga: codigo || null, imagemUrl: null, origem: "rhbrasil", createdAt: null,
+        });
+      });
+    }
+  } catch (error) {
+    console.warn("Não foi possível consultar as vagas da RHBrasil:", error);
+  }
+
+  /*
+   * =====================================================
+   * 3. VAGAS MANUAIS / COMUNIDADE
    * =====================================================
    */
   try {
@@ -815,6 +847,7 @@ async function buscarVagas(): Promise<Vaga[]> {
 
 type AbaEmpregos =
   | "trampolim"
+  | "rhbrasil"
   | "manual"
   | "curriculos";
 
@@ -893,6 +926,10 @@ export default function EmpregosPage() {
             vaga.origem !==
               "trampolim"
           ) {
+            return false;
+          }
+
+          if (aba === "rhbrasil" && vaga.origem !== "rhbrasil") {
             return false;
           }
 
@@ -981,7 +1018,7 @@ export default function EmpregosPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
 
             {/* TRAMPOLIM */}
             <button
@@ -1001,7 +1038,11 @@ export default function EmpregosPage() {
             >
               🌐
               <br />
-              Trampolim
+              PAT
+            </button>
+
+            <button type="button" onClick={() => { setAba("rhbrasil"); setBusca(""); }} className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "rhbrasil" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
+              💼<br />RHBrasil
             </button>
 
             {/* VAGAS MANUAIS */}
@@ -1082,7 +1123,7 @@ export default function EmpregosPage() {
               "trampolim" && (
               <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900 text-white p-5 rounded-3xl shadow-lg">
                 <span className="inline-flex bg-amber-400 text-slate-950 px-2.5 py-1 rounded-lg text-[10px] font-black">
-                  🌐 TRAMPOLIM / PAT
+                  🏢 PAT
                 </span>
 
                 <h3 className="font-black text-base mt-2">
@@ -1090,8 +1131,17 @@ export default function EmpregosPage() {
                 </h3>
 
                 <p className="text-xs text-indigo-100 mt-2 leading-relaxed">
-                  Consulte as oportunidades disponibilizadas pelo Trampolim para Rio Claro.
+                  Consulte as oportunidades oficiais disponíveis para Rio Claro.
                 </p>
+              </div>
+            )}
+
+            {/* BANNER RHBrasil */}
+            {aba === "rhbrasil" && (
+              <div className="bg-gradient-to-br from-sky-900 via-blue-800 to-indigo-900 text-white p-5 rounded-3xl shadow-lg">
+                <span className="inline-flex bg-white/15 px-2.5 py-1 rounded-lg text-[10px] font-black">RHBrasil</span>
+                <h3 className="font-black text-base mt-2">Vagas RHBrasil</h3>
+                <p className="text-xs text-blue-100 mt-2 leading-relaxed">Oportunidades encontradas para Rio Claro, atualizadas diretamente da RHBrasil.</p>
               </div>
             )}
 
@@ -1201,10 +1251,7 @@ export default function EmpregosPage() {
                           {/* ORIGEM / DATA */}
                           <div className="flex justify-between items-start gap-2">
                             <span className="text-[9px] font-black bg-indigo-100 text-indigo-800 px-2 py-1 rounded-lg">
-                              {vaga.origem ===
-                              "trampolim"
-                                ? "🌐 TRAMPOLIM"
-                                : "👤 COMUNIDADE"}
+                              {vaga.origem === "trampolim" ? "🏢 PAT" : vaga.origem === "rhbrasil" ? "💼 RHBrasil" : "👤 COMUNIDADE"}
                             </span>
 
                             {formatarData(
@@ -1373,7 +1420,11 @@ export default function EmpregosPage() {
                             </div>
                           )}
 
-                          {/* LINK TRAMPOLIM */}
+                          {vaga.origem === "rhbrasil" && vaga.codigoVaga && (
+                            <div className="mt-3 rounded-xl bg-sky-50 px-3 py-2 text-[11px] font-bold text-sky-800">Código da vaga: {vaga.codigoVaga}</div>
+                          )}
+
+                          {/* LINK DA FONTE */}
                           {vaga.urlTrampolim && (
                             <a
                               href={
@@ -1383,7 +1434,7 @@ export default function EmpregosPage() {
                               rel="noopener noreferrer"
                               className="block mt-4 bg-indigo-600 hover:bg-indigo-700 text-white text-center py-2.5 rounded-xl text-xs font-black"
                             >
-                              🌐 Ver vaga no Trampolim
+                              {vaga.origem === "rhbrasil" ? "Ver / candidatar-se na RHBrasil" : "Ver vaga no PAT"}
                             </a>
                           )}
                         </div>
