@@ -90,6 +90,18 @@ export default function LojaExplicativaPage() {
             >
               💳 Ver planos e condições
             </Link>
+
+            <div className="mt-4 border-t border-white/20 pt-4">
+              <p className="mb-2 text-center text-[11px] font-bold text-emerald-50">
+                Já anuncia no Sobradão 360?
+              </p>
+              <Link
+                href="/painel-anunciante"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-emerald-800 shadow-sm transition hover:bg-emerald-50"
+              >
+                🤝 Já sou parceiro
+              </Link>
+            </div>
           </div>
         </section>
 
