@@ -62,8 +62,9 @@ export default function Home() {
   const [lojasAtivas, setLojasAtivas] = useState<LojaHome[]>([]);
   const [buscaLoja, setBuscaLoja] = useState("");
   const [ordemAleatoria, setOrdemAleatoria] = useState(0);
-  const publicidadeRef = useRef<HTMLDivElement | null>(null);
   const destaque1Ref = useRef<HTMLDivElement | null>(null);
+  const [publicidadeAtual, setPublicidadeAtual] = useState(0);
+  const [publicidadeVisivel, setPublicidadeVisivel] = useState(true);
 
   useEffect(() => {
     async function carregarAnunciosHome() {
@@ -171,14 +172,20 @@ export default function Home() {
   // Destaques em uma única linha horizontal, rolada manualmente pelo usuário.
 
   useEffect(() => {
-    const el = publicidadeRef.current;
-    if (!el || publicidade.length < 2) return;
+    setPublicidadeAtual(0);
+    setPublicidadeVisivel(true);
+
+    if (publicidade.length < 2) return;
+
     const timer = window.setInterval(() => {
-      if (!el) return;
-      el.scrollTop += 1;
-      const metade = el.scrollHeight / 2;
-      if (el.scrollTop >= metade) el.scrollTop -= metade;
-    }, 35);
+      setPublicidadeVisivel(false);
+
+      window.setTimeout(() => {
+        setPublicidadeAtual((atual) => (atual + 1) % publicidade.length);
+        setPublicidadeVisivel(true);
+      }, 350);
+    }, 5000);
+
     return () => window.clearInterval(timer);
   }, [publicidade.length]);
 
@@ -213,7 +220,7 @@ export default function Home() {
 
         <NegociosMarquee />
 
-        {/* PUBLICIDADE — mantém formato 3:1 e rolagem vertical contínua */}
+        {/* PUBLICIDADE — formato 3:1, um anunciante por vez com transição suave */}
         <section className="space-y-2">
           <div className="px-1 flex items-end justify-between gap-2">
             <div>
@@ -222,17 +229,18 @@ export default function Home() {
             </div>
             {publicidade.length > 0 && <span className="text-[10px] font-bold text-slate-400">{publicidade.length} anunciante{publicidade.length === 1 ? "" : "s"}</span>}
           </div>
-          {publicidade.length > 0 && (
-            <div ref={publicidadeRef} className="aspect-[3/1] overflow-y-auto overscroll-contain rounded-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div className="space-y-2 pb-2">
-                {[...publicidade, ...publicidade].map((item, indice) => (
-                  <Link key={`${item.id}-pub-${indice}`} href={`/loja/${item.lojaId}`} className="block w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                    <div className="aspect-[3/1] w-full overflow-hidden bg-slate-200">
-                      <img src={item.artePublicidadeUrl || item.bannerUrl} alt={item.nome || "Publicidade"} className="h-full w-full object-cover" />
-                    </div>
-                  </Link>
-                ))}
-              </div>
+          {publicidade.length > 0 && publicidade[publicidadeAtual] && (
+            <div className="aspect-[3/1] overflow-hidden rounded-2xl">
+              <Link
+                href={`/loja/${publicidade[publicidadeAtual].lojaId}`}
+                className={`block h-full w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-opacity duration-300 ${publicidadeVisivel ? "opacity-100" : "opacity-0"}`}
+              >
+                <img
+                  src={publicidade[publicidadeAtual].artePublicidadeUrl || publicidade[publicidadeAtual].bannerUrl}
+                  alt={publicidade[publicidadeAtual].nome || "Publicidade"}
+                  className="h-full w-full object-cover"
+                />
+              </Link>
             </div>
           )}
         </section>
