@@ -1474,85 +1474,32 @@ corMarca:
 
                 </div>
 
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                  <label className="text-xs font-black text-amber-900">
-                    E-mail da conta
-                  </label>
-
-                  <input
-                    value={negocios.find((item) => item.id === negocioEditando)?.emailDono || usuario?.email || ""}
-                    readOnly
-                    className="mt-1 w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none"
-                  />
-
-                  <p className="mt-1 text-[11px] text-amber-800">
-                    Este e-mail está vinculado à sua conta de acesso e não pode ser alterado aqui.
+                <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                  <p className="text-[10px] font-black uppercase text-slate-400">Conta de acesso 🔒</p>
+                  <p className="mt-1 break-all text-xs font-bold text-slate-600">
+                    {negocios.find((item) => item.id === negocioEditando)?.emailDono || usuario?.email || ""}
                   </p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-
-                  <div>
-
-                    <label className="text-xs font-black text-slate-700">
-                      Nome do negócio *
-                    </label>
-
-                    <input
-                      value={nome}
-                      onChange={(e) =>
-                        setNome(
-                          e.target.value
-                        )
-                      }
-                      className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-700"
-                    />
-
-                  </div>
-
-                  <div>
-
-                    <label className="text-xs font-black text-slate-700">
-                      Título
-                    </label>
-
-                    <input
-                      value={titulo}
-                      onChange={(e) =>
-                        setTitulo(
-                          e.target.value
-                        )
-                      }
-                      className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-700"
-                    />
-
-                  </div>
-
-                </div>
-
                 <div>
-
                   <label className="text-xs font-black text-slate-700">
-                    Subtítulo
+                    Nome do negócio *
                   </label>
-
                   <input
-                    value={subtitulo}
-                    onChange={(e) =>
-                      setSubtitulo(
-                        e.target.value
-                      )
-                    }
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    placeholder="Ex.: Barbearia do João"
                     className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-700"
                   />
-
                 </div>
 
                 <div>
-
                   <label className="text-xs font-black text-slate-700">
-                    Descrição *
+                    Sobre o negócio *
                   </label>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Conte de forma simples o que você oferece aos clientes.
+                  </p>
 
                   <textarea
                     value={descricao}
