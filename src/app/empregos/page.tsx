@@ -658,7 +658,7 @@ async function buscarVagas(): Promise<Vaga[]> {
           bairro: null, salario: null, beneficios: null, escolaridade: null,
           experiencia: null, turno: null, formatoTrabalho: null, tipoContrato: null,
           quantidadeVagas: quantidadeSegura(vaga.QTD_VAGAS_REQ), prazo: null,
-          urlTrampolim: "https://www.rhbrasil.com.br/portaldocandidato/view/buscar-vagas-publica.php",
+          urlTrampolim: codigo\n            ? `https://www.rhbrasil.com.br/portaldocandidato/view/ver-vagas.php?cod=${encodeURIComponent(codigo)}`\n            : "https://www.rhbrasil.com.br/portaldocandidato/view/buscar-vagas-publica.php",
           codigoVaga: codigo || null, imagemUrl: null, origem: "rhbrasil", createdAt: null,
         });
       });
