@@ -318,322 +318,46 @@ async function buscarVagas(): Promise<Vaga[]> {
 
   /*
    * =====================================================
-   * 1. VAGAS DO TRAMPOLIM
+   * 1. PAT / TRAMPOLIM — consulta automática
    * =====================================================
-   *
-   * Se a coleção "vagas" não estiver liberada pelas
-   * regras do Firestore, a página não quebra.
-   * Apenas seguimos para as vagas da comunidade.
    */
   try {
-    const snapshot = await getDocs(
-      collection(db, "vagas")
-    );
+    const response = await fetch("/api/pat", { cache: "no-store" });
 
-    snapshot.forEach((docSnap: any) => {
-      const vaga = docSnap.data() || {};
+    if (response.ok) {
+      const dados = await response.json();
+      const vagasPat = Array.isArray(dados?.vagas) ? dados.vagas : [];
 
-      const enterprise =
-        vaga.enterprise || {};
-
-      const empresa =
-        textoSeguro(
-          enterprise.fantasy_name
-        ) ||
-        textoSeguro(
-          enterprise.corporate_name
-        ) ||
-        textoSeguro(vaga.company) ||
-        textoSeguro(vaga.companyName) ||
-        textoSeguro(vaga.empresa) ||
-        null;
-
-      const cidade =
-        textoSeguro(
-          vaga.address?.city
-        ) ||
-        textoSeguro(vaga.city) ||
-        textoSeguro(vaga.cidade) ||
-        "Rio Claro";
-
-      const bairro =
-        textoSeguro(
-          vaga.address?.neighborhood
-        ) ||
-        textoSeguro(
-          vaga.neighborhood
-        ) ||
-        textoSeguro(vaga.bairro) ||
-        null;
-
-      const titulo =
-        textoSeguro(vaga.name) ||
-        textoSeguro(vaga.title) ||
-        textoSeguro(vaga.titulo) ||
-        textoSeguro(vaga.position) ||
-        textoSeguro(vaga.job_title) ||
-        "Vaga de emprego";
-
-      let salario: string | null = null;
-
-      if (
-        vaga.salary_value !==
-          undefined &&
-        vaga.salary_value !== null
-      ) {
-        salario =
-          formatarSalario(
-            vaga.salary_value
-          );
-      } else if (
-        vaga.salary_final_value !==
-          undefined &&
-        vaga.salary_final_value !== null
-      ) {
-        salario =
-          formatarSalario(
-            vaga.salary_final_value
-          );
-      } else if (
-        vaga.salary_type !== undefined
-      ) {
-        salario =
-          formatarSalario(
-            vaga.salary_type
-          );
-      } else if (
-        vaga.salary !== undefined
-      ) {
-        salario =
-          formatarSalario(
-            vaga.salary
-          );
-      } else if (
-        vaga.salario !== undefined
-      ) {
-        salario =
-          formatarSalario(
-            vaga.salario
-          );
-      }
-
-      let beneficios: string | null =
-        null;
-
-      if (
-        Array.isArray(
-          vaga.benefits
-        )
-      ) {
-        beneficios =
-          vaga.benefits
-            .map((item: any) =>
-              textoSeguro(item)
-            )
-            .filter(Boolean)
-            .join(" • ");
-      } else if (
-        vaga.benefits
-      ) {
-        beneficios =
-          textoSeguro(
-            vaga.benefits
-          );
-      } else if (
-        vaga.beneficios
-      ) {
-        beneficios =
-          textoSeguro(
-            vaga.beneficios
-          );
-      }
-
-      let urlTrampolim:
-        | string
-        | null = null;
-
-      if (
-        vaga.absolute_url
-      ) {
-        const url =
-          urlSeguro(
-            vaga.absolute_url
-          );
-
-        if (url) {
-          if (
-            url.startsWith("http")
-          ) {
-            urlTrampolim =
-              url;
-          } else {
-            urlTrampolim =
-              `https://www.trampolim.sp.gov.br${url}`;
-          }
-        }
-      } else if (
-        vaga.url
-      ) {
-        urlTrampolim =
-          urlSeguro(vaga.url);
-      } else if (
-        vaga.urlTrampolim
-      ) {
-        urlTrampolim =
-          urlSeguro(
-            vaga.urlTrampolim
-          );
-      } else if (
-        vaga.id ||
-        docSnap.id
-      ) {
-        urlTrampolim =
-          `https://www.trampolim.sp.gov.br/pt/vagas/${
-            textoSeguro(
-              vaga.id ||
-                docSnap.id
-            )
-          }/`;
-      }
-
-      const imagemUrl =
-        urlSeguro(
-          enterprise.logo
-        ) ||
-        urlSeguro(vaga.logo) ||
-        urlSeguro(
-          vaga.imageUrl
-        ) ||
-        urlSeguro(
-          vaga.imagemUrl
-        );
-
-      lista.push({
-        id: docSnap.id,
-
-        titulo,
-
-        descricao:
-          textoSeguro(
-            vaga.description
-          ) ||
-          textoSeguro(
-            vaga.descricao
-          ),
-
-        empresa,
-
-        cidade,
-
-        bairro,
-
-        salario,
-
-        beneficios,
-
-        escolaridade:
-          textoSeguro(
-            vaga.min_education
-          ) ||
-          textoSeguro(
-            vaga.education
-          ) ||
-          textoSeguro(
-            vaga.escolaridade
-          ) ||
-          null,
-
-        experiencia:
-          textoSeguro(
-            vaga.min_experience
-          ) ||
-          textoSeguro(
-            vaga.experience
-          ) ||
-          textoSeguro(
-            vaga.experiencia
-          ) ||
-          null,
-
-        turno:
-          textoSeguro(
-            vaga.work_shift
-          ) ||
-          textoSeguro(
-            vaga.shift
-          ) ||
-          textoSeguro(
-            vaga.turno
-          ) ||
-          null,
-
-        formatoTrabalho:
-          textoSeguro(
-            vaga.work_format
-          ) ||
-          textoSeguro(
-            vaga.formatoTrabalho
-          ) ||
-          null,
-
-        tipoContrato:
-          textoSeguro(
-            vaga.work_relationship
-          ) ||
-          textoSeguro(
-            vaga.contract_type
-          ) ||
-          textoSeguro(
-            vaga.tipoContrato
-          ) ||
-          null,
-
-        quantidadeVagas:
-          quantidadeSegura(
-            vaga.number_vacancies ??
-              vaga.quantity ??
-              vaga.quantity_vacancies ??
-              vaga.quantidadeVagas
-          ),
-
-        prazo:
-          textoSeguro(
-            vaga.vacancy_viewing_deadline
-          ) ||
-          textoSeguro(
-            vaga.deadline
-          ) ||
-          textoSeguro(
-            vaga.prazo
-          ) ||
-          null,
-
-        urlTrampolim,
-
-        imagemUrl,
-
-        origem: "trampolim",
-
-        createdAt:
-          vaga.publication_date ||
-          vaga.createdAt ||
-          vaga.created_at ||
-          vaga.updatedAt ||
-          null,
+      vagasPat.forEach((vaga: any) => {
+        lista.push({
+          id: textoSeguro(vaga.id) || textoSeguro(vaga.idTrampolim),
+          titulo: textoSeguro(vaga.titulo) || "Vaga de emprego",
+          descricao: textoSeguro(vaga.descricao),
+          empresa: textoSeguro(vaga.empresa) || "PAT / Trampolim",
+          cidade: textoSeguro(vaga.cidade) || "Rio Claro",
+          bairro: textoSeguro(vaga.bairro) || null,
+          salario: formatarSalario(vaga.salario),
+          beneficios: textoSeguro(vaga.beneficios) || null,
+          escolaridade: null,
+          experiencia: null,
+          turno: null,
+          formatoTrabalho: null,
+          tipoContrato: null,
+          quantidadeVagas: quantidadeSegura(vaga.quantidadeVagas),
+          prazo: textoSeguro(vaga.prazo) || null,
+          urlTrampolim:
+            urlSeguro(vaga.url) ||
+            (vaga.idTrampolim
+              ? `https://www.trampolim.sp.gov.br/pt/vagas/${textoSeguro(vaga.idTrampolim)}/`
+              : null),
+          imagemUrl: null,
+          origem: "trampolim",
+          createdAt: vaga.createdAt || null,
+        });
       });
-    });
+    }
   } catch (error) {
-    /*
-     * Não interrompe a página.
-     *
-     * Se as regras do Firestore não permitirem
-     * leitura de "vagas", as vagas da comunidade
-     * continuam funcionando.
-     */
-    console.warn(
-      "Não foi possível consultar a coleção vagas do Trampolim:",
-      error
-    );
+    console.warn("Não foi possível consultar as vagas automáticas do PAT:", error);
   }
 
   /*
