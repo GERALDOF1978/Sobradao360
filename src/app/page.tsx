@@ -169,9 +169,7 @@ export default function Home() {
   );
   const parceiros = anunciosHome.filter((item) => item.exibicao.parceiros);
 
-  // Duas linhas de Destaques, independentes entre si.
-  const destaqueLinha1 = useMemo(() => destaques.filter((_, i) => i % 2 === 0), [destaques]);
-  const destaqueLinha2 = useMemo(() => destaques.filter((_, i) => i % 2 === 1), [destaques]);
+  // Destaques em uma única linha horizontal, rolada manualmente pelo usuário.
 
   useEffect(() => {
     const el = publicidadeRef.current;
@@ -237,23 +235,26 @@ export default function Home() {
           )}
         </section>
 
-        {/* DESTAQUES — duas linhas horizontais independentes */}
+        {/* DESTAQUES — uma linha horizontal, nome legível sobre o rodapé da imagem */}
         <section className="space-y-2">
           <div className="px-1 flex items-center justify-between gap-2">
             <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">Destaques</h2>
             {destaques.length > 0 && <span className="text-[10px] font-bold text-slate-400">{destaques.length} anunciante{destaques.length === 1 ? "" : "s"}</span>}
           </div>
-          {[{lista:destaqueLinha1.length ? destaqueLinha1 : destaques, ref:destaque1Ref}, {lista:destaqueLinha2.length ? destaqueLinha2 : destaques, ref:destaque2Ref}].map((linha, linhaIndex) => (
-            <div key={linhaIndex} ref={linha.ref} className="flex gap-2 overflow-x-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {[...linha.lista, ...linha.lista].map((item, indice) => (
-                <Link key={`${item.id}-dest-${linhaIndex}-${indice}`} href={`/loja/${item.lojaId}`} className="w-[118px] shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                  <div className="aspect-[1/2] w-full overflow-hidden">
-                    <img src={item.arteDestaquesUrl || item.bannerUrl} alt={item.nome || "Destaque"} className="h-full w-full object-cover" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ))}
+          <div ref={destaque1Ref} className="flex gap-2 overflow-x-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {destaques.map((item) => (
+              <Link key={`${item.id}-dest`} href={`/loja/${item.lojaId}`} className="relative w-[118px] shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div className="aspect-[1/2] w-full overflow-hidden">
+                  <img src={item.arteDestaquesUrl || item.bannerUrl} alt={item.nome || "Destaque"} className="h-full w-full object-cover" />
+                </div>
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/75 to-transparent px-2 pb-2 pt-8">
+                  <p className="line-clamp-2 text-center text-[11px] font-black leading-tight text-white drop-shadow-[0_2px_3px_rgba(0,0,0,1)]">
+                    {item.nome || "Destaque"}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </section>
 
         {/* ==========================================
