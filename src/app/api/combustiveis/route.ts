@@ -4,7 +4,7 @@ import * as cheerio from "cheerio";
 export const revalidate = 21600;
 
 const FONTE =
-  "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/serie-historica-de-precos-de-combustiveis";
+  "https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/levantamento-de-precos-de-combustiveis-ultimas-semanas-pesquisadas";
 
 function linhaCsv(linha: string) {
   const saida: string[] = [];
@@ -35,36 +35,37 @@ function parseData(valor: string) {
 }
 
 async function obterLinksRecentes() {
-  const res = await fetch(FONTE, { next: { revalidate: 21600 } });
-  if (!res.ok) throw new Error("Não foi possível consultar a página de dados da ANP.");
+  const res = await fetch(FONTE, {
+    next: { revalidate: 21600 },
+    headers: { "User-Agent": "Sobradão360/1.0" },
+  });
+  if (!res.ok) throw new Error("Não foi possível consultar o levantamento semanal da ANP.");
+
   const html = await res.text();
   const $ = cheerio.load(html);
-  const links: string[] = [];
+  const candidatos: string[] = [];
 
-  $("h3").each((_, el) => {
-    if (!normalizar($(el).text()).includes("QUATRO ULTIMAS SEMANAS")) return;
-    let no = $(el).next();
-    for (let i = 0; i < 6 && no.length; i++, no = no.next()) {
-      no.find("a").each((__, a) => {
-        const texto = normalizar($(a).text());
-        const href = $(a).attr("href");
-        if (href && (texto.includes("ETANOL") || texto.includes("DIESEL"))) {
-          links.push(new URL(href, FONTE).toString());
-        }
-      });
+  // A página oficial publica, semana a semana, um único arquivo completo
+  // "Preços por posto revendedor (combustíveis automotivos e GLP P13)".
+  // Pegamos o PRIMEIRO link correspondente, que é a semana mais recente.
+  $("a").each((_, a) => {
+    const texto = normalizar($(a).text());
+    const href = $(a).attr("href");
+    if (!href) return;
+
+    if (
+      texto.includes("PRECOS POR POSTO REVENDEDOR") ||
+      (texto.includes("POSTO REVENDEDOR") && texto.includes("COMBUST"))
+    ) {
+      candidatos.push(new URL(href, FONTE).toString());
     }
   });
 
-  if (!links.length) {
-    $("a").each((_, a) => {
-      const href = $(a).attr("href") || "";
-      const texto = normalizar($(a).text());
-      if (href.toLowerCase().includes(".csv") && (texto.includes("ETANOL") || texto.includes("DIESEL"))) {
-        links.push(new URL(href, FONTE).toString());
-      }
-    });
+  if (!candidatos.length) {
+    throw new Error("Arquivo semanal por posto revendedor não encontrado na página da ANP.");
   }
-  return [...new Set(links)].slice(-2);
+
+  return [candidatos[0]];
 }
 
 type CadastroANP = {
