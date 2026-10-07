@@ -64,7 +64,6 @@ export default function Home() {
   const [ordemAleatoria, setOrdemAleatoria] = useState(0);
   const publicidadeRef = useRef<HTMLDivElement | null>(null);
   const destaque1Ref = useRef<HTMLDivElement | null>(null);
-  const destaque2Ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     async function carregarAnunciosHome() {
@@ -190,7 +189,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-16 font-sans">
 
-      <main className="max-w-md mx-auto px-3 sm:px-4 py-4 space-y-5">
+      <main className="max-w-md mx-auto px-3 sm:px-4 py-4 space-y-6">
 
         {/* ==========================================
             1. BANNER PRINCIPAL
@@ -214,10 +213,13 @@ export default function Home() {
 
         <NegociosMarquee />
 
-        {/* PUBLICIDADE — 3 banners visíveis, rolagem vertical contínua */}
+        {/* PUBLICIDADE — mantém formato 3:1 e rolagem vertical contínua */}
         <section className="space-y-2">
-          <div className="px-1 flex items-center justify-between gap-2">
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">Publicidade</h2>
+          <div className="px-1 flex items-end justify-between gap-2">
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">Publicidade</h2>
+              <p className="mt-0.5 text-[10px] text-slate-400">Negócios e serviços da nossa região</p>
+            </div>
             {publicidade.length > 0 && <span className="text-[10px] font-bold text-slate-400">{publicidade.length} anunciante{publicidade.length === 1 ? "" : "s"}</span>}
           </div>
           {publicidade.length > 0 && (
@@ -237,8 +239,11 @@ export default function Home() {
 
         {/* DESTAQUES — uma linha horizontal, nome legível sobre o rodapé da imagem */}
         <section className="space-y-2">
-          <div className="px-1 flex items-center justify-between gap-2">
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">Destaques</h2>
+          <div className="px-1 flex items-end justify-between gap-2">
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">Destaques</h2>
+              <p className="mt-0.5 text-[10px] text-slate-400">Arraste para o lado e descubra mais</p>
+            </div>
             {destaques.length > 0 && <span className="text-[10px] font-bold text-slate-400">{destaques.length} anunciante{destaques.length === 1 ? "" : "s"}</span>}
           </div>
           <div ref={destaque1Ref} className="flex gap-2 overflow-x-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -264,10 +269,13 @@ export default function Home() {
 
         <section className="space-y-2">
 
-          <div className="px-1 flex items-center justify-between gap-2">
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
-              Todas as lojas
-            </h2>
+          <div className="px-1 flex items-end justify-between gap-2">
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
+                Todas as lojas
+              </h2>
+              <p className="mt-0.5 text-[10px] text-slate-400">Encontre comércio e serviços perto de você</p>
+            </div>
             <span className="text-[10px] font-bold text-slate-400">
               {lojasFiltradas.length} loja{lojasFiltradas.length === 1 ? "" : "s"}
             </span>
