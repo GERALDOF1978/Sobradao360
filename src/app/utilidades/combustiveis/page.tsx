@@ -6,6 +6,11 @@ import { useEffect, useMemo, useState } from "react";
 type Preco = {
   revenda: string; cnpj: string; endereco: string; bairro: string; cep: string;
   produto: string; dataColeta: string; valor: number; bandeira: string;
+  cadastroANP?: {
+    codigoSIMP: string; autorizacao: string; distribuidora: string;
+    produtos: Array<{ produto?: string; tancagem?: number; unidMedidaTancagem?: string; qtdeBicos?: number }>;
+    latitude: string; longitude: string; validacao: string; statusSIGAF: string;
+  } | null;
 };
 type Resposta = { sucesso: boolean; atualizadoEm: string | null; precos: Preco[]; aviso?: string; erro?: string };
 
@@ -71,7 +76,8 @@ export default function CombustiveisPage() {
                 <div className="min-w-0">
                   {i === 0 && <span className="mb-1 inline-block rounded-full bg-amber-100 px-2 py-1 text-[9px] font-black text-amber-800">🏆 MENOR PREÇO PESQUISADO</span>}
                   <h2 className="text-sm font-black leading-5 text-slate-900">{p.revenda}</h2>
-                  <p className="mt-0.5 text-[10px] font-bold text-slate-500">{p.bandeira}</p>
+                  <p className="mt-0.5 text-[10px] font-bold text-slate-500">{p.cadastroANP?.distribuidora || p.bandeira}</p>
+                  {p.cadastroANP && <span className="mt-1 inline-block rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black text-emerald-700">✓ Cadastro oficial ANP</span>}
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="text-[9px] font-black uppercase text-slate-400">{p.produto}</p>
@@ -82,8 +88,12 @@ export default function CombustiveisPage() {
               <div className="mt-3 border-t border-slate-100 pt-3 text-[11px] leading-5 text-slate-600">
                 <p>📍 {p.endereco}{p.bairro ? " • " + p.bairro : ""}</p>
                 <p>🗓️ Coleta: {p.dataColeta}</p>
+                {p.cadastroANP?.autorizacao && <p>✅ Autorização ANP: {p.cadastroANP.autorizacao}</p>}
+                {p.cadastroANP?.statusSIGAF && <p>ℹ️ Situação SIGAF: {p.cadastroANP.statusSIGAF}</p>}
               </div>
-              <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco + ", Rio Claro, SP")}`}
+              <a href={p.cadastroANP?.latitude && p.cadastroANP?.longitude
+                  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.cadastroANP.latitude + "," + p.cadastroANP.longitude)}`
+                  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco + ", Rio Claro, SP")}`}
                 target="_blank" rel="noreferrer"
                 className="mt-3 block rounded-xl bg-slate-100 px-3 py-2 text-center text-xs font-black text-slate-700">
                 📍 Ver no mapa
