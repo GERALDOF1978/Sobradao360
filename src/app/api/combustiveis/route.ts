@@ -34,11 +34,21 @@ function parseData(valor: string) {
   return new Date(Number(a), Number(m) - 1, Number(d)).getTime();
 }
 
-async function obterLinksRecentes() {
-  const res = await fetch(FONTE, {
-    next: { revalidate: 21600 },
-    headers: { "User-Agent": "Sobradão360/1.0" },
+async function fetchANP(url: string) {
+  return fetch(url, {
+    cache: "no-store",
+    redirect: "follow",
+    signal: AbortSignal.timeout(15000),
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36",
+      "Accept": "text/html,application/xhtml+xml,text/csv,application/octet-stream,*/*;q=0.8",
+      "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+    },
   });
+}
+
+async function obterLinksRecentes() {
+  const res = await fetchANP(FONTE);
   if (!res.ok) throw new Error("Não foi possível consultar o levantamento semanal da ANP.");
 
   const html = await res.text();
@@ -103,13 +113,7 @@ async function obterCadastrosRioClaro() {
 }
 
 async function lerArquivo(url: string) {
-  const res = await fetch(url, {
-    next: { revalidate: 21600 },
-    headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; Sobradao360/1.0)",
-      "Accept": "text/csv,application/vnd.ms-excel,application/octet-stream,*/*",
-    },
-  });
+  const res = await fetchANP(url);
   if (!res.ok) throw new Error(`ANP respondeu ${res.status} ao baixar o arquivo semanal.`);
   const buffer = await res.arrayBuffer();
   const texto = new TextDecoder("windows-1252").decode(buffer);
@@ -209,7 +213,15 @@ export async function GET() {
     );
   } catch (error) {
     console.error("Erro ANP combustíveis:", error);
-    const detalhe = error instanceof Error ? error.message : String(error);
+    const detalheBase = error instanceof Error ? error.message : String(error);
+    const causa = error instanceof Error && "cause" in error
+      ? (error as Error & { cause?: unknown }).cause
+      : undefined;
+    const detalheCausa =
+      causa && typeof causa === "object" && "message" in causa
+        ? String((causa as { message?: unknown }).message || "")
+        : causa ? String(causa) : "";
+    const detalhe = detalheCausa ? `${detalheBase}: ${detalheCausa}` : detalheBase;
     return NextResponse.json(
       {
         sucesso: false,
