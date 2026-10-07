@@ -18,6 +18,9 @@ export default function UtilidadesPage() {
       </header>
       <main className="max-w-md mx-auto px-4 py-3 space-y-4">
         <MiniCardsAnuncio />
+        <Link href="/utilidades/combustiveis" className="block rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-700 to-emerald-900 p-4 text-white shadow-md">
+          <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-wider text-emerald-100">Pesquisa oficial ANP</p><h2 className="mt-0.5 text-lg font-black">⛽ Combustíveis</h2><p className="mt-1 text-[10px] text-white/85">Compare gasolina, etanol e diesel pesquisados nos postos de Rio Claro.</p></div><span className="text-2xl">›</span></div>
+        </Link>
         <Link href="/utilidades/upas" className="block rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-700 to-cyan-600 p-4 text-white shadow-md">
           <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-wider text-cyan-100">Saúde em tempo real</p><h2 className="mt-0.5 text-lg font-black">🏥 UPAs Agora</h2><p className="mt-1 text-[10px] text-white/85">Veja filas de triagem e atendimento da UPA 29 e Cervezão.</p></div><span className="text-2xl">›</span></div>
         </Link>
