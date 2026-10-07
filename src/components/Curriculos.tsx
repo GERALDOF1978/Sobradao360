@@ -130,6 +130,23 @@ export default function Curriculos() {
     carregarCurriculos();
   }, []);
 
+  useEffect(() => {
+    const abrirCadastro = () => {
+      setMostrarFormulario(true);
+      window.setTimeout(() => {
+        document
+          .getElementById("formulario-curriculo")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    };
+
+    window.addEventListener("abrir-cadastro-curriculo", abrirCadastro);
+
+    return () => {
+      window.removeEventListener("abrir-cadastro-curriculo", abrirCadastro);
+    };
+  }, []);
+
   // ================================
   // SELECIONAR IMAGEM
   // ================================
@@ -461,7 +478,7 @@ export default function Curriculos() {
           FORMULÁRIO
       ================================= */}
       {mostrarFormulario && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div id="formulario-curriculo" className="scroll-mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 
           <h3 className="mb-4 text-base font-bold text-slate-800">
             📄 Meu Currículo
