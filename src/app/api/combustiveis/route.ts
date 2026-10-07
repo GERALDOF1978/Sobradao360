@@ -67,6 +67,34 @@ async function obterLinksRecentes() {
   return [...new Set(links)].slice(-2);
 }
 
+type CadastroANP = {
+  cnpj: string;
+  codigoSIMP?: string;
+  autorizacao?: string;
+  distribuidora?: string;
+  produtos?: Array<{ produto?: string; tancagem?: number; unidMedidaTancagem?: string; qtdeBicos?: number }>;
+  latitude?: string;
+  longitude?: string;
+  latitude_ANP4C?: string;
+  longitude_ANP4C?: string;
+  validacao?: string;
+  statusSIGAF?: string;
+};
+
+async function obterCadastrosRioClaro() {
+  try {
+    const url = "https://revendedoresapi.anp.gov.br/v1/combustivel?municipio=RIO%20CLARO&uf=SP";
+    const res = await fetch(url, { next: { revalidate: 21600 } });
+    if (!res.ok) return new Map<string, CadastroANP>();
+    const json = await res.json();
+    const lista: CadastroANP[] = Array.isArray(json?.data) ? json.data : [];
+    return new Map(lista.filter(x => x.cnpj).map(x => [String(x.cnpj).replace(/\D/g, ""), x]));
+  } catch (error) {
+    console.error("API de revendedores ANP indisponível:", error);
+    return new Map<string, CadastroANP>();
+  }
+}
+
 async function lerArquivo(url: string) {
   const res = await fetch(url, { next: { revalidate: 21600 } });
   if (!res.ok) throw new Error("Não foi possível baixar os preços da ANP.");
@@ -116,7 +144,10 @@ export async function GET() {
     const links = await obterLinksRecentes();
     if (!links.length) throw new Error("A ANP não publicou os arquivos esperados.");
 
-    const grupos = await Promise.all(links.map(lerArquivo));
+    const [grupos, cadastros] = await Promise.all([
+      Promise.all(links.map(lerArquivo)),
+      obterCadastrosRioClaro(),
+    ]);
     const todos = grupos.flat();
 
     if (!todos.length) {
@@ -126,6 +157,24 @@ export async function GET() {
     const ultima = Math.max(...todos.map(x => parseData(x.dataColeta)));
     const precos = todos
       .filter(x => parseData(x.dataColeta) === ultima)
+      .map(x => {
+        const cadastro = cadastros.get(String(x.cnpj).replace(/\D/g, ""));
+        const latitude = cadastro?.latitude || cadastro?.latitude_ANP4C || "";
+        const longitude = cadastro?.longitude || cadastro?.longitude_ANP4C || "";
+        return {
+          ...x,
+          cadastroANP: cadastro ? {
+            codigoSIMP: cadastro.codigoSIMP || "",
+            autorizacao: cadastro.autorizacao || "",
+            distribuidora: cadastro.distribuidora || "",
+            produtos: cadastro.produtos || [],
+            latitude,
+            longitude,
+            validacao: cadastro.validacao || "",
+            statusSIGAF: cadastro.statusSIGAF || "",
+          } : null,
+        };
+      })
       .sort((a, b) => a.valor - b.valor);
 
     const data = precos[0]?.dataColeta || "";
