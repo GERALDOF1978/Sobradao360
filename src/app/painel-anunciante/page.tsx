@@ -1357,10 +1357,17 @@ corMarca:
 
             </div>
 
-            <div className="rounded-2xl bg-emerald-50 p-4">
-              <p className="text-[10px] font-black uppercase text-emerald-600">Acesso</p>
-              <p className="mt-1 text-sm font-black text-emerald-800">✓ Conta vinculada</p>
-            </div>
+            {negocios.length > 0 ? (
+              <div className="rounded-2xl bg-emerald-50 p-4">
+                <p className="text-[10px] font-black uppercase text-emerald-600">Parceiro</p>
+                <p className="mt-1 text-sm font-black text-emerald-800">✓ Negócio vinculado</p>
+              </div>
+            ) : (
+              <div className="rounded-2xl bg-amber-50 p-4">
+                <p className="text-[10px] font-black uppercase text-amber-600">Parceria</p>
+                <p className="mt-1 text-sm font-black text-amber-900">Ainda não é parceiro</p>
+              </div>
+            )}
 
           </div>
 
