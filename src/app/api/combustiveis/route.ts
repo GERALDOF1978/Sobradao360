@@ -150,11 +150,20 @@ export async function GET() {
     const links = await obterLinksRecentes();
     if (!links.length) throw new Error("A ANP não publicou os arquivos esperados.");
 
-    const [grupos, cadastros] = await Promise.all([
-      Promise.all(links.map(lerArquivo)),
+    // Um arquivo da ANP pode ficar temporariamente indisponível. Não derruba
+    // toda a rota por causa disso: usa os arquivos que responderem corretamente.
+    const [resultados, cadastros] = await Promise.all([
+      Promise.allSettled(links.map(lerArquivo)),
       obterCadastrosRioClaro(),
     ]);
+    const grupos = resultados
+      .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof lerArquivo>>> => r.status === "fulfilled")
+      .map(r => r.value);
     const todos = grupos.flat();
+
+    if (grupos.length === 0) {
+      throw new Error("Nenhum arquivo de preços da ANP pôde ser carregado.");
+    }
 
     if (!todos.length) {
       return NextResponse.json({ sucesso: true, cidade: "Rio Claro", uf: "SP", atualizadoEm: null, precos: [], aviso: "A pesquisa mais recente da ANP não contém postos de Rio Claro." });
