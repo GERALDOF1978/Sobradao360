@@ -185,32 +185,8 @@ export async function GET() {
       .sort((a, b) => a.valor - b.valor);
 
     const data = precos[0]?.dataColeta || "";
-    const postos = [...cadastros.values()].map(cadastro => {
-      const cnpj = String(cadastro.cnpj || "").replace(/\D/g, "");
-      const doPosto = precos.filter(p => String(p.cnpj).replace(/\D/g, "") === cnpj);
-      const base = doPosto[0];
-      return {
-        cnpj: cadastro.cnpj || base?.cnpj || "",
-        revenda: cadastro.razaoSocial || base?.revenda || "Posto revendedor",
-        endereco: cadastro.endereco || base?.endereco || "",
-        complemento: cadastro.complemento || "",
-        bairro: cadastro.bairro || base?.bairro || "",
-        cep: cadastro.cep || base?.cep || "",
-        codigoSIMP: cadastro.codigoSIMP || "",
-        autorizacao: cadastro.autorizacao || "",
-        dataPublicacao: cadastro.dataPublicacao || "",
-        distribuidora: cadastro.distribuidora || base?.bandeira || "",
-        produtos: cadastro.produtos || [],
-        latitude: cadastro.latitude || cadastro.latitude_ANP4C || "",
-        longitude: cadastro.longitude || cadastro.longitude_ANP4C || "",
-        validacao: cadastro.validacao || "",
-        statusSIGAF: cadastro.statusSIGAF || "",
-        precos: doPosto.map(p => ({ produto: p.produto, valor: p.valor, dataColeta: p.dataColeta })),
-      };
-    });
-
     return NextResponse.json(
-      { sucesso: true, cidade: "Rio Claro", uf: "SP", atualizadoEm: data, precos, postos, fonte: "ANP - Levantamento de Preços de Combustíveis" },
+      { sucesso: true, cidade: "Rio Claro", uf: "SP", atualizadoEm: data, precos, fonte: "ANP - Levantamento de Preços de Combustíveis" },
       { headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" } }
     );
   } catch (error) {
