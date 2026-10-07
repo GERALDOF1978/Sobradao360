@@ -160,9 +160,10 @@ export async function GET() {
       return NextResponse.json({ sucesso: true, cidade: "Rio Claro", uf: "SP", atualizadoEm: null, precos: [], aviso: "A pesquisa mais recente da ANP não contém postos de Rio Claro." });
     }
 
-    const ultima = Math.max(...todos.map(x => parseData(x.dataColeta)));
+    // Os arquivos da ANP abrangem uma semana de pesquisa. Os postos podem ser
+    // visitados em dias diferentes; filtrar apenas a maior data descartava boa
+    // parte da amostra de Rio Claro (ex.: etanol aparecia com apenas 4 postos).
     const precos = todos
-      .filter(x => parseData(x.dataColeta) === ultima)
       .map(x => {
         const cadastro = cadastros.get(String(x.cnpj).replace(/\D/g, ""));
         const latitude = cadastro?.latitude || cadastro?.latitude_ANP4C || "";
@@ -184,7 +185,8 @@ export async function GET() {
       })
       .sort((a, b) => a.valor - b.valor);
 
-    const data = precos[0]?.dataColeta || "";
+    const ultima = Math.max(...precos.map(x => parseData(x.dataColeta)));
+    const data = precos.find(x => parseData(x.dataColeta) === ultima)?.dataColeta || "";
     return NextResponse.json(
       { sucesso: true, cidade: "Rio Claro", uf: "SP", atualizadoEm: data, precos, fonte: "ANP - Levantamento de Preços de Combustíveis" },
       { headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" } }
