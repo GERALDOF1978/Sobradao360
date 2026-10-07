@@ -10,6 +10,7 @@ const extras = [
   { href: "/anuncie", icone: "📣", titulo: "Classificados" },
   { href: "/utilidades/transporte", icone: "🚌", titulo: "Transporte" },
   { href: "/utilidades/coleta-lixo", icone: "🗑️", titulo: "Coleta" },
+  { href: "/utilidades/catabagulho", icone: "🛋️", titulo: "Catabagulho" },
   { href: "/utilidades/ecopontos", icone: "♻️", titulo: "Ecopontos" },
   { href: "/daae", icone: "💧", titulo: "DAAE" },
   { href: "/lampada-queimada", icone: "💡", titulo: "Iluminação" },
