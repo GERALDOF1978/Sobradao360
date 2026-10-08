@@ -43,7 +43,6 @@ export default function AvisoLancamento() {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Lançamento Sobradão 360">
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-amber-400/40 bg-gradient-to-b from-slate-800 to-slate-950 px-5 py-8 text-center text-white shadow-2xl sm:px-8">
-        <button type="button" onClick={fechar} aria-label="Fechar aviso" className="absolute right-4 top-3 rounded-full p-2 text-xl text-white/80 hover:bg-white/10">×</button>
         <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-400">🚀 Grande lançamento</p>
         <h2 className="mt-3 text-4xl font-black tracking-tight">SOBRADÃO <span className="text-amber-400">360</span></h2>
         <p className="mt-3 text-sm text-slate-200">{lancado ? "🎉 O SOBRADÃO 360 ESTÁ NO AR!" : "Hoje, às 18h, nossa comunidade estará ainda mais conectada!"}</p>
