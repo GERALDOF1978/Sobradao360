@@ -446,6 +446,13 @@ export default function AnunciePage() {
     setSalvando(true);
 
     try {
+      const usuarioAtual = await getDoc(doc(db,"usuarios",user.uid));
+      if (usuarioAtual.exists() && usuarioAtual.data().bloqueado === true) {
+        setIsBloqueado(true);
+        alert("Sua conta está bloqueada para novas publicações pela administração.");
+        return;
+      }
+
       const categoriaPublicacao = subCategoria;
 
       const anuncioRef =

@@ -264,7 +264,34 @@ export default function AdminMasterPage() {
   const [filtroSolicitacao, setFiltroSolicitacao] = useState("todos");
 
 
-  const [postsMoradores, setPostsMoradores] = useState<Array<{id:string;titulo?:string;descricao?:string;texto?:string;autorNome?:string;categoria?:string;origem?:string;tipo?:string;tipoPublicacao?:string;statusModeracao?:string}>>([]);
+  const [postsMoradores, setPostsMoradores] = useState<Array<{id:string;titulo?:string;descricao?:string;texto?:string;autorNome?:string;categoria?:string;origem?:string;tipo?:string;tipoPublicacao?:string;statusModeracao?:string;autorUid?:string}>>([]);
+  const [moradoresBloqueados, setMoradoresBloqueados] = useState<Array<{id:string;nome?:string;email?:string;motivoBloqueio?:string}>>([]);
+  const [motivoBloqueio, setMotivoBloqueio] = useState<Record<string,string>>({});
+  const [carregandoBloqueados, setCarregandoBloqueados] = useState(false);
+  async function carregarMoradoresBloqueados() {
+    setCarregandoBloqueados(true);
+    try {
+      const snap = await getDocs(collection(db,"usuarios"));
+      setMoradoresBloqueados(snap.docs.map(d=>({id:d.id,...d.data()})).filter((d: {bloqueado?:boolean})=>d.bloqueado === true));
+    } catch(e) {console.error(e);setErroPosts("Erro ao carregar moradores bloqueados.");}
+    finally {setCarregandoBloqueados(false);}
+  }
+  async function alterarBloqueioAutor(uid:string,bloquear:boolean,postId?:string) {
+    const motivo=(motivoBloqueio[postId || uid] || "Reincidência ou violação das regras da comunidade").trim();
+    if (!window.confirm(bloquear ? "Bloquear este morador de novas publicações? A publicação só será suspensa se você usar o botão Suspender." : "Desbloquear este morador para novas publicações?")) return;
+    setProcessandoPost(postId || uid);
+    setErroPosts("");
+    try {
+      await updateDoc(doc(db,"usuarios",uid),{
+        bloqueado:bloquear,
+        motivoBloqueio:bloquear?motivo:"",
+        bloqueadoEm:bloquear?serverTimestamp():null,
+        bloqueadoPor:bloquear?(user?.uid || ""):""
+      });
+      await carregarMoradoresBloqueados();
+    } catch(e) {console.error(e);setErroPosts("Não foi possível alterar o bloqueio. Confira se o morador possui cadastro.");}
+    finally {setProcessandoPost(null);}
+  }
   const [carregandoPosts, setCarregandoPosts] = useState(false);
   const [processandoPost, setProcessandoPost] = useState<string | null>(null);
   const [erroPosts, setErroPosts] = useState("");
@@ -1264,7 +1291,7 @@ export default function AdminMasterPage() {
           <div className="space-y-2">
             {[
               ["anunciantes","🏪","Anunciantes"],["solicitacoes","📨","Solicitações"],["planos","💳","Planos e contratos"],["noticias","📰","Giro de Notícias"],["moderacao","🛡️","Voz do Morador"],["vagas","💼","Atualizar vagas"],["contatos","📞","Contatos e Serviços"],["painel","👤","Painel anunciante"]
-            ].map(([id,icone,titulo]) => <button key={id} type="button" onClick={() => { setMenuAberto(id); setMenuLateralAberto(false); if (id === "moderacao") void carregarPostsMoradores(); }} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-black ${menuAberto === id ? "bg-amber-400 text-slate-950" : "bg-white/5 text-white hover:bg-white/10"}`}><span>{icone}</span><span>{titulo}</span>{id === "solicitacoes" && solicitacoes.length > 0 && <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px]">{solicitacoes.length}</span>}</button>)}
+            ].map(([id,icone,titulo]) => <button key={id} type="button" onClick={() => { setMenuAberto(id); setMenuLateralAberto(false); if (id === "moderacao") {void carregarPostsMoradores();void carregarMoradoresBloqueados();} }} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-black ${menuAberto === id ? "bg-amber-400 text-slate-950" : "bg-white/5 text-white hover:bg-white/10"}`}><span>{icone}</span><span>{titulo}</span>{id === "solicitacoes" && solicitacoes.length > 0 && <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px]">{solicitacoes.length}</span>}</button>)}
           </div>
           <p className="mt-6 border-t border-white/10 pt-4 text-[10px] text-slate-400">{user?.email || "Master"}</p>
         </aside>
@@ -1283,16 +1310,22 @@ export default function AdminMasterPage() {
                   <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-black">{post.titulo || "Publicação sem título"}</h3><span className={post.statusModeracao === "SUSPENSO" ? "rounded-full bg-red-100 px-2 py-1 text-xs font-bold text-red-800" : "rounded-full bg-green-100 px-2 py-1 text-xs font-bold text-green-800"}>{post.statusModeracao === "SUSPENSO" ? "Suspensa" : "Publicada"}</span></div>
                   <p className="mt-1 text-xs text-slate-500">{post.autorNome || "Morador"} • {post.categoria || "Comunidade"}</p>
                   <p className="mt-2 line-clamp-3 text-sm text-slate-700">{post.descricao || post.texto || ""}</p>
+                  {post.autorUid && <input aria-label="Motivo do bloqueio do autor" value={motivoBloqueio[post.id] || ""} onChange={e=>setMotivoBloqueio(prev=>({...prev,[post.id]:e.target.value}))} placeholder="Motivo do bloqueio (ex.: reincidência)" className="mt-3 w-full rounded-lg border border-slate-300 p-2 text-sm" />}
                   <div className="mt-3 flex flex-wrap gap-2">
                     {post.statusModeracao === "SUSPENSO" ? <button type="button" disabled={!!processandoPost} onClick={() => void moderarPost(post.id,"ATIVO")} className="rounded-lg bg-green-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Reativar</button> : <button type="button" disabled={!!processandoPost} onClick={() => void moderarPost(post.id,"SUSPENSO")} className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-black disabled:opacity-50">Suspender</button>}
+                    {post.autorUid && <button type="button" disabled={!!processandoPost} onClick={() => void alterarBloqueioAutor(post.autorUid! ,true,post.id)} className="rounded-lg bg-slate-800 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Bloquear autor</button>}
                     <button type="button" disabled={!!processandoPost} onClick={() => void moderarPost(post.id,"EXCLUIR")} className="rounded-lg bg-red-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Excluir definitivamente</button>
                   </div>
                 </article>)}
               </div>
             )}
+            <div className="mt-6 border-t pt-4"><h3 className="font-black">Moradores bloqueados</h3>
+              <button type="button" onClick={()=>void carregarMoradoresBloqueados()} className="my-2 rounded-lg border px-3 py-2 text-sm">Atualizar bloqueados</button>
+              {carregandoBloqueados ? <p>Carregando...</p> : moradoresBloqueados.length===0 ? <p className="text-sm text-slate-500">Nenhum morador bloqueado.</p> : moradoresBloqueados.map(m=><div key={m.id} className="my-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3"><div><strong>{m.nome || m.email || m.id}</strong><p className="text-xs text-slate-500">{m.motivoBloqueio || "Motivo não informado"}</p></div><button type="button" disabled={!!processandoPost} onClick={()=>void alterarBloqueioAutor(m.id,false)} className="rounded-lg bg-green-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Desbloquear autor</button></div>)}
+            </div>
           </section>
         )}
-        {menuAberto === "vagas" && (
+        {menuAberto === "vagas"' && (
           <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
             <h2 className="text-lg font-black text-slate-900">💼 Atualização de vagas</h2>
             <p className="mt-1 text-sm text-slate-500">Atualize manualmente as vagas do Trampolim / PAT.</p>

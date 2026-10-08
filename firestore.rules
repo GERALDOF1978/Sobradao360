@@ -41,13 +41,20 @@ service cloud.firestore {
           && request.auth.uid == userId
           && request.resource.data.perfil == resource.data.perfil
           && request.resource.data.status == resource.data.status
+          && request.resource.data.get("bloqueado", false) == resource.data.get("bloqueado", false)
+          && request.resource.data.get("motivoBloqueio", "") == resource.data.get("motivoBloqueio", "")
+          && request.resource.data.get("bloqueadoPor", "") == resource.data.get("bloqueadoPor", "")
+          && request.resource.data.get("bloqueadoEm", null) == resource.data.get("bloqueadoEm", null)
         );
       allow delete: if false;
     }
 
     match /anuncios/{anuncioId} {
       allow read: if true;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.autorUid == request.auth.uid
+        && (!exists(/databases/$(database)/documents/usuarios/$(request.auth.uid))
+          || get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.get("bloqueado", false) != true);
       allow update, delete:
         if isMaster()
         ||
