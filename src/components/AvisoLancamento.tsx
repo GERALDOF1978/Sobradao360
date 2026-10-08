@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+// Lançamento oficial: 20h de Brasília, 08/10/2026.
 const LANCAMENTO = new Date("2026-10-08T20:00:00-03:00").getTime();
 
 export default function AvisoLancamento() {
