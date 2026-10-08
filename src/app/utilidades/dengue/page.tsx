@@ -1,4 +1,5 @@
 import Link from "next/link";
+import DengueAtualizacao from "./DengueAtualizacao";
 
 export const metadata = {
   title: "Dengue em Rio Claro | Sobradão 360",
@@ -64,6 +65,8 @@ export default function DenguePage() {
             <Link href="/utilidades/upas" className="rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-bold text-slate-800 hover:bg-slate-50">UPAs de Rio Claro →</Link>
           </div>
         </section>
+
+        <DengueAtualizacao />
 
         <section className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="text-xs font-bold uppercase tracking-wide text-red-700">Boletim oficial • 25/09/2026</p>
