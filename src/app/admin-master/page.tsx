@@ -24,6 +24,7 @@ import { getAuth } from "firebase/auth";
 
 import { db } from "@/lib/firebase";
 import ContratosAnuncio from "./ContratosAnuncio";
+import EstatisticasVisitas from "./EstatisticasVisitas";
 
 type UsuarioFirebase = {
   uid: string;
@@ -1333,12 +1334,14 @@ export default function AdminMasterPage() {
           </div>
           <div className="space-y-2">
             {[
-              ["anunciantes","🏪","Anunciantes"],["solicitacoes","📨","Solicitações"],["planos","💳","Planos e contratos"],["noticias","📰","Giro de Notícias"],["moderacao","🛡️","Central de Moderação"],["vagas","💼","Atualizar vagas"],["contatos","📞","Contatos e Serviços"],["painel","👤","Painel anunciante"]
+              ["estatisticas","📊","Visitas do portal"],["anunciantes","🏪","Anunciantes"],["solicitacoes","📨","Solicitações"],["planos","💳","Planos e contratos"],["noticias","📰","Giro de Notícias"],["moderacao","🛡️","Central de Moderação"],["vagas","💼","Atualizar vagas"],["contatos","📞","Contatos e Serviços"],["painel","👤","Painel anunciante"]
             ].map(([id,icone,titulo]) => <button key={id} type="button" onClick={() => { setMenuAberto(id); setMenuLateralAberto(false); if (id === "moderacao") {void carregarPostsMoradores();void carregarMoradoresBloqueados();void carregarCentralModeracao();} }} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-black ${menuAberto === id ? "bg-amber-400 text-slate-950" : "bg-white/5 text-white hover:bg-white/10"}`}><span>{icone}</span><span>{titulo}</span>{id === "solicitacoes" && solicitacoes.length > 0 && <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px]">{solicitacoes.length}</span>}</button>)}
           </div>
           <p className="mt-6 border-t border-white/10 pt-4 text-[10px] text-slate-400">{user?.email || "Master"}</p>
         </aside>
 
+
+        {menuAberto === "estatisticas" && <EstatisticasVisitas />}
 
         {menuAberto === "moderacao" && (
           <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
