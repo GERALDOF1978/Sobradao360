@@ -292,6 +292,49 @@ export default function AdminMasterPage() {
     } catch(e) {console.error(e);setErroPosts("Não foi possível alterar o bloqueio. Confira se o morador possui cadastro.");}
     finally {setProcessandoPost(null);}
   }
+  const [configModeracao,setConfigModeracao] = useState<Record<string,boolean>>({"voz":true,"vagas":true,"curriculos":true,"comentarios":false,"classificados":true,"eventos":true});
+  const [salvandoModeracao,setSalvandoModeracao] = useState(false);
+  const [abaModeracao,setAbaModeracao] = useState<"voz"|"vagas"|"curriculos"|"comentarios">("voz");
+  type RegistroModeracao = {id:string;titulo?:string;nome?:string;profissao?:string;descricao?:string;texto?:string;autorNome?:string;autorUid?:string;uid?:string;statusModeracao?:string;categoria?:string;origem?:string;tipoPublicacao?:string};
+  const [registrosModeracao,setRegistrosModeracao] = useState<Record<string,RegistroModeracao[]>>({});
+  async function carregarCentralModeracao() {
+    try {
+      const [cfg,anuncios,curriculos,comentarios] = await Promise.all([
+        getDoc(doc(db,"configuracoes","moderacao")),
+        getDocs(collection(db,"anuncios")),
+        getDocs(collection(db,"curriculos")),
+        getDocs(collection(db,"comentarios_mural"))
+      ]);
+      if(cfg.exists()) setConfigModeracao(p=>({...p,...cfg.data()}));
+      const anunciosLista=anuncios.docs.map((d:(typeof anuncios.docs)[number])=>({id:d.id,...d.data()}));
+      setRegistrosModeracao({
+        voz:anunciosLista.filter((x:RegistroModeracao)=>x.origem==="morador" || x.tipoPublicacao==="post"),
+        vagas:anunciosLista.filter((x:RegistroModeracao)=>String(x.categoria||"").toLowerCase()==="empregos" && x.origem!=="trampolim"),
+        curriculos:curriculos.docs.map((d:(typeof curriculos.docs)[number])=>({id:d.id,...d.data()})),
+        comentarios:comentarios.docs.map((d:(typeof comentarios.docs)[number])=>({id:d.id,...d.data()}))
+      });
+    } catch(err) {console.error(err);setErroPosts("Não foi possível carregar a central de moderação.");}
+  }
+  async function salvarConfigModeracao(chave:string,valor:boolean) {
+    setSalvandoModeracao(true);setErroPosts("");
+    try {
+      await setDoc(doc(db,"configuracoes","moderacao"),{[chave]:valor},{merge:true});
+      setConfigModeracao(p=>({...p,[chave]:valor}));
+    } catch(err) {console.error(err);setErroPosts("Falha ao salvar a configuração.");}
+    finally {setSalvandoModeracao(false);}
+  }
+  async function moderarRegistro(item:RegistroModeracao,acao:"APROVADO"|"RECUSADO"|"SUSPENSO"|"EXCLUIR") {
+    if(!window.confirm("Confirmar ação "+acao+"?")) return;
+    setProcessandoPost(item.id);setErroPosts("");
+    try {
+      const colecao=abaModeracao==="curriculos"?"curriculos":abaModeracao==="comentarios"?"comentarios_mural":"anuncios";
+      const ref=doc(db,colecao,item.id);
+      if(acao==="EXCLUIR") await deleteDoc(ref);
+      else await updateDoc(ref,{statusModeracao:acao,moderadoEm:serverTimestamp(),moderadoPor:user?.uid||""});
+      await carregarCentralModeracao();
+    } catch(err) {console.error(err);setErroPosts("Não foi possível moderar o cadastro.");}
+    finally {setProcessandoPost(null);}
+  }
   const [carregandoPosts, setCarregandoPosts] = useState(false);
   const [processandoPost, setProcessandoPost] = useState<string | null>(null);
   const [erroPosts, setErroPosts] = useState("");
@@ -1290,8 +1333,8 @@ export default function AdminMasterPage() {
           </div>
           <div className="space-y-2">
             {[
-              ["anunciantes","🏪","Anunciantes"],["solicitacoes","📨","Solicitações"],["planos","💳","Planos e contratos"],["noticias","📰","Giro de Notícias"],["moderacao","🛡️","Voz do Morador"],["vagas","💼","Atualizar vagas"],["contatos","📞","Contatos e Serviços"],["painel","👤","Painel anunciante"]
-            ].map(([id,icone,titulo]) => <button key={id} type="button" onClick={() => { setMenuAberto(id); setMenuLateralAberto(false); if (id === "moderacao") {void carregarPostsMoradores();void carregarMoradoresBloqueados();} }} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-black ${menuAberto === id ? "bg-amber-400 text-slate-950" : "bg-white/5 text-white hover:bg-white/10"}`}><span>{icone}</span><span>{titulo}</span>{id === "solicitacoes" && solicitacoes.length > 0 && <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px]">{solicitacoes.length}</span>}</button>)}
+              ["anunciantes","🏪","Anunciantes"],["solicitacoes","📨","Solicitações"],["planos","💳","Planos e contratos"],["noticias","📰","Giro de Notícias"],["moderacao","🛡️","Central de Moderação"],["vagas","💼","Atualizar vagas"],["contatos","📞","Contatos e Serviços"],["painel","👤","Painel anunciante"]
+            ].map(([id,icone,titulo]) => <button key={id} type="button" onClick={() => { setMenuAberto(id); setMenuLateralAberto(false); if (id === "moderacao") {void carregarPostsMoradores();void carregarMoradoresBloqueados();void carregarCentralModeracao();} }} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-black ${menuAberto === id ? "bg-amber-400 text-slate-950" : "bg-white/5 text-white hover:bg-white/10"}`}><span>{icone}</span><span>{titulo}</span>{id === "solicitacoes" && solicitacoes.length > 0 && <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px]">{solicitacoes.length}</span>}</button>)}
           </div>
           <p className="mt-6 border-t border-white/10 pt-4 text-[10px] text-slate-400">{user?.email || "Master"}</p>
         </aside>
@@ -1300,11 +1343,20 @@ export default function AdminMasterPage() {
         {menuAberto === "moderacao" && (
           <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div><h2 className="text-xl font-black">🛡️ Moderação — Voz do Morador</h2><p className="text-sm text-slate-500">Suspenda, reative ou exclua publicações feitas pela comunidade.</p></div>
+              <div><h2 className="text-xl font-black">🛡️ Central de Moderação</h2><p className="text-sm text-slate-500">Suspenda, reative ou exclua publicações feitas pela comunidade.</p></div>
               <button type="button" onClick={() => void carregarPostsMoradores()} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white">Atualizar lista</button>
             </div>
+            <div className="mt-4 rounded-xl border p-4">
+              <h3 className="font-black">Exigir aprovação antes de publicar</h3>
+              <p className="mb-3 text-xs text-slate-500">Ligado: aguarda o Master. Desligado: publicação automática. Configuração salva no Firebase.</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {([["voz","Voz do Morador"],["vagas","Vagas manuais"],["curriculos","Currículos"],["comentarios","Comentários"],["classificados","Classificados"],["eventos","Eventos"]] as const).map(([chave,nome])=><label key={chave} className="flex items-center justify-between rounded-lg bg-slate-50 p-3 text-sm font-bold"><span>{nome}</span><input type="checkbox" checked={configModeracao[chave]!==false} disabled={salvandoModeracao} onChange={ev=>void salvarConfigModeracao(chave,ev.target.checked)} className="h-5 w-5 accent-amber-500" /></label>)}
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">{([["voz","Voz do Morador"],["vagas","Vagas"],["curriculos","Currículos"],["comentarios","Comentários"]] as const).map(([chave,nome])=><button type="button" key={chave} onClick={()=>setAbaModeracao(chave)} className={`rounded-lg px-3 py-2 text-sm font-bold ${abaModeracao===chave?"bg-amber-400":"bg-slate-100"}`}>{nome}</button>)}</div>
+            {abaModeracao!=="voz" && <div className="mt-4 space-y-3">{(registrosModeracao[abaModeracao]||[]).map(item=><article key={item.id} className="rounded-xl border p-3"><div className="flex justify-between gap-2"><strong>{item.titulo||item.nome||item.autorNome||"Comentário"}</strong><span className="text-xs">{item.statusModeracao||"Sem status"}</span></div><p className="mt-1 line-clamp-3 text-sm">{item.profissao||item.descricao||item.texto||""}</p><div className="mt-3 flex flex-wrap gap-2">{(["APROVADO","RECUSADO","SUSPENSO","EXCLUIR"] as const).map(acao=><button type="button" key={acao} disabled={!!processandoPost} onClick={()=>void moderarRegistro(item,acao)} className="rounded-lg border px-3 py-2 text-xs font-bold disabled:opacity-50">{acao==="EXCLUIR"?"Excluir":acao==="APROVADO"?"Aprovar":acao==="RECUSADO"?"Recusar":"Suspender"}</button>)}</div></article>)}</div>}
             {erroPosts && <p role="alert" className="mt-3 text-sm text-red-700">{erroPosts}</p>}
-            {carregandoPosts ? <p className="mt-4">Carregando publicações...</p> : postsMoradores.length === 0 ? <p className="mt-4 text-slate-500">Nenhuma publicação encontrada.</p> : (
+            {abaModeracao==="voz" && (carregandoPosts ? <p className="mt-4">Carregando publicações...</p> : postsMoradores.length === 0 ? <p className="mt-4 text-slate-500">Nenhuma publicação encontrada.</p> : (
               <div className="mt-5 space-y-3">
                 {postsMoradores.map(post => <article key={post.id} className="rounded-xl border border-slate-200 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-black">{post.titulo || "Publicação sem título"}</h3><span className={post.statusModeracao === "SUSPENSO" ? "rounded-full bg-red-100 px-2 py-1 text-xs font-bold text-red-800" : "rounded-full bg-green-100 px-2 py-1 text-xs font-bold text-green-800"}>{post.statusModeracao === "SUSPENSO" ? "Suspensa" : "Publicada"}</span></div>
@@ -1318,7 +1370,7 @@ export default function AdminMasterPage() {
                   </div>
                 </article>)}
               </div>
-            )}
+            ))}
             <div className="mt-6 border-t pt-4"><h3 className="font-black">Moradores bloqueados</h3>
               <button type="button" onClick={()=>void carregarMoradoresBloqueados()} className="my-2 rounded-lg border px-3 py-2 text-sm">Atualizar bloqueados</button>
               {carregandoBloqueados ? <p>Carregando...</p> : moradoresBloqueados.length===0 ? <p className="text-sm text-slate-500">Nenhum morador bloqueado.</p> : moradoresBloqueados.map(m=><div key={m.id} className="my-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3"><div><strong>{m.nome || m.email || m.id}</strong><p className="text-xs text-slate-500">{m.motivoBloqueio || "Motivo não informado"}</p></div><button type="button" disabled={!!processandoPost} onClick={()=>void alterarBloqueioAutor(m.id,false)} className="rounded-lg bg-green-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Desbloquear autor</button></div>)}
