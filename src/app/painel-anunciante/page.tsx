@@ -15,14 +15,14 @@ import {
 } from "firebase/firestore";
 import {
   onAuthStateChanged,
-  signInWithPopup,
   signOut,
 } from "firebase/auth";
 
 
 
 
-import { auth, db, googleProvider } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
+import { loginGoogleUmaVez } from "@/lib/loginGoogle";
 import GerenciadorProdutos from "@/components/anunciante/GerenciadorProdutos";
 import IdentidadeAnunciante from "@/components/anunciante/IdentidadeAnunciante";
 
@@ -1054,10 +1054,7 @@ corMarca:
         prompt: "select_account",
       });
 
-      await signInWithPopup(
-        auth,
-        googleProvider
-      );
+      await loginGoogleUmaVez();
     } catch (error) {
       console.error(
         "Erro ao entrar com Google:",
