@@ -21,7 +21,7 @@ import {
 
 
 
-import { auth, db } from "@/lib/firebase";
+import { auth, db, googleProvider } from "@/lib/firebase";
 import { loginGoogleUmaVez } from "@/lib/loginGoogle";
 import GerenciadorProdutos from "@/components/anunciante/GerenciadorProdutos";
 import IdentidadeAnunciante from "@/components/anunciante/IdentidadeAnunciante";
