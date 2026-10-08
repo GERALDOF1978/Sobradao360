@@ -272,7 +272,7 @@ export default function AdminMasterPage() {
     setCarregandoBloqueados(true);
     try {
       const snap = await getDocs(collection(db,"usuarios"));
-      setMoradoresBloqueados(snap.docs.map(d=>({id:d.id,...d.data()})).filter((d: {bloqueado?:boolean})=>d.bloqueado === true));
+      setMoradoresBloqueados(snap.docs.map((d: (typeof snap.docs)[number])=>({id:d.id,...d.data()})).filter((d: {bloqueado?:boolean})=>d.bloqueado === true));
     } catch(e) {console.error(e);setErroPosts("Erro ao carregar moradores bloqueados.");}
     finally {setCarregandoBloqueados(false);}
   }
