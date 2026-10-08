@@ -34,6 +34,7 @@ interface Publicacao {
   tipo?: string;
   tipoPublicacao?: string;
   origem?: string;
+  statusModeracao?: string;
   curtidas?: string[];
 }
 
@@ -116,6 +117,7 @@ export default function ComunidadePage() {
       const lista = snap.docs
         .map((docSnap: any) => ({ id: docSnap.id, ...docSnap.data() } as Publicacao))
         .filter((item: Publicacao) => {
+          if (item.statusModeracao === "SUSPENSO") return false;
           const tipo = textoSeguro(item.tipoPublicacao || item.tipo).toLowerCase();
           const origem = textoSeguro(item.origem).toLowerCase();
           const categoria = textoSeguro(item.categoria).toLowerCase();

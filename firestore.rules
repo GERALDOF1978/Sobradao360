@@ -54,6 +54,8 @@ service cloud.firestore {
         (
           request.auth != null
           && request.auth.uid == resource.data.autorUid
+          && resource.data.get("statusModeracao", "ATIVO") != "SUSPENSO"
+          && request.resource.data.get("statusModeracao", "ATIVO") == resource.data.get("statusModeracao", "ATIVO")
         );
 
       match /privado/{documento} {

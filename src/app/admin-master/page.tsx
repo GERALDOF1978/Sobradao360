@@ -9,6 +9,7 @@ type AuthUsuario = {
 import { useEffect, useState } from "react";
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -261,6 +262,40 @@ export default function AdminMasterPage() {
 
   const [filtro, setFiltro] = useState("todos");
   const [filtroSolicitacao, setFiltroSolicitacao] = useState("todos");
+
+
+  const [postsMoradores, setPostsMoradores] = useState<Array<{id:string;titulo?:string;descricao?:string;texto?:string;autorNome?:string;categoria?:string;origem?:string;tipo?:string;tipoPublicacao?:string;statusModeracao?:string}>>([]);
+  const [carregandoPosts, setCarregandoPosts] = useState(false);
+  const [processandoPost, setProcessandoPost] = useState<string | null>(null);
+  const [erroPosts, setErroPosts] = useState("");
+
+  async function carregarPostsMoradores() {
+    setCarregandoPosts(true);
+    setErroPosts("");
+    try {
+      const snap = await getDocs(collection(db, "anuncios"));
+      setPostsMoradores(snap.docs.map(d => ({id:d.id,...d.data()})).filter(p => {
+        const origem = String(p.origem || "").toLowerCase();
+        const tipo = String(p.tipoPublicacao || p.tipo || "").toLowerCase();
+        const categoria = String(p.categoria || "").toLowerCase();
+        return origem === "morador" || tipo === "post" || ["notícias","noticias","comunidade"].includes(categoria);
+      }));
+    } catch(e) { console.error(e); setErroPosts("Não foi possível carregar as publicações."); }
+    finally { setCarregandoPosts(false); }
+  }
+
+  async function moderarPost(id:string, acao:"SUSPENSO"|"ATIVO"|"EXCLUIR") {
+    if (!window.confirm(acao === "EXCLUIR" ? "Excluir definitivamente esta publicação? Esta ação não pode ser desfeita." : acao === "SUSPENSO" ? "Suspender esta publicação da comunidade?" : "Reativar esta publicação?")) return;
+    setProcessandoPost(id);
+    setErroPosts("");
+    try {
+      const ref = doc(db,"anuncios",id);
+      if (acao === "EXCLUIR") await deleteDoc(ref);
+      else await updateDoc(ref,{statusModeracao:acao,moderadoEm:serverTimestamp(),moderadoPor:user?.uid || ""});
+      await carregarPostsMoradores();
+    } catch(e) { console.error(e); setErroPosts("Não foi possível alterar a publicação. Verifique as permissões do Firestore."); }
+    finally { setProcessandoPost(null); }
+  }
 
   const [menuAberto, setMenuAberto] = useState("anunciantes");
   const [menuLateralAberto, setMenuLateralAberto] = useState(false);
@@ -1228,12 +1263,35 @@ export default function AdminMasterPage() {
           </div>
           <div className="space-y-2">
             {[
-              ["anunciantes","🏪","Anunciantes"],["solicitacoes","📨","Solicitações"],["planos","💳","Planos e contratos"],["noticias","📰","Giro de Notícias"],["vagas","💼","Atualizar vagas"],["contatos","📞","Contatos e Serviços"],["painel","👤","Painel anunciante"]
-            ].map(([id,icone,titulo]) => <button key={id} type="button" onClick={() => { setMenuAberto(id); setMenuLateralAberto(false); }} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-black ${menuAberto === id ? "bg-amber-400 text-slate-950" : "bg-white/5 text-white hover:bg-white/10"}`}><span>{icone}</span><span>{titulo}</span>{id === "solicitacoes" && solicitacoes.length > 0 && <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px]">{solicitacoes.length}</span>}</button>)}
+              ["anunciantes","🏪","Anunciantes"],["solicitacoes","📨","Solicitações"],["planos","💳","Planos e contratos"],["noticias","📰","Giro de Notícias"],["moderacao","🛡️","Voz do Morador"],["vagas","💼","Atualizar vagas"],["contatos","📞","Contatos e Serviços"],["painel","👤","Painel anunciante"]
+            ].map(([id,icone,titulo]) => <button key={id} type="button" onClick={() => { setMenuAberto(id); setMenuLateralAberto(false); if (id === "moderacao") void carregarPostsMoradores(); }} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-black ${menuAberto === id ? "bg-amber-400 text-slate-950" : "bg-white/5 text-white hover:bg-white/10"}`}><span>{icone}</span><span>{titulo}</span>{id === "solicitacoes" && solicitacoes.length > 0 && <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px]">{solicitacoes.length}</span>}</button>)}
           </div>
           <p className="mt-6 border-t border-white/10 pt-4 text-[10px] text-slate-400">{user?.email || "Master"}</p>
         </aside>
 
+
+        {menuAberto === "moderacao" && (
+          <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div><h2 className="text-xl font-black">🛡️ Moderação — Voz do Morador</h2><p className="text-sm text-slate-500">Suspenda, reative ou exclua publicações feitas pela comunidade.</p></div>
+              <button type="button" onClick={() => void carregarPostsMoradores()} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white">Atualizar lista</button>
+            </div>
+            {erroPosts && <p role="alert" className="mt-3 text-sm text-red-700">{erroPosts}</p>}
+            {carregandoPosts ? <p className="mt-4">Carregando publicações...</p> : postsMoradores.length === 0 ? <p className="mt-4 text-slate-500">Nenhuma publicação encontrada.</p> : (
+              <div className="mt-5 space-y-3">
+                {postsMoradores.map(post => <article key={post.id} className="rounded-xl border border-slate-200 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-black">{post.titulo || "Publicação sem título"}</h3><span className={post.statusModeracao === "SUSPENSO" ? "rounded-full bg-red-100 px-2 py-1 text-xs font-bold text-red-800" : "rounded-full bg-green-100 px-2 py-1 text-xs font-bold text-green-800"}>{post.statusModeracao === "SUSPENSO" ? "Suspensa" : "Publicada"}</span></div>
+                  <p className="mt-1 text-xs text-slate-500">{post.autorNome || "Morador"} • {post.categoria || "Comunidade"}</p>
+                  <p className="mt-2 line-clamp-3 text-sm text-slate-700">{post.descricao || post.texto || ""}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {post.statusModeracao === "SUSPENSO" ? <button type="button" disabled={!!processandoPost} onClick={() => void moderarPost(post.id,"ATIVO")} className="rounded-lg bg-green-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Reativar</button> : <button type="button" disabled={!!processandoPost} onClick={() => void moderarPost(post.id,"SUSPENSO")} className="rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-black disabled:opacity-50">Suspender</button>}
+                    <button type="button" disabled={!!processandoPost} onClick={() => void moderarPost(post.id,"EXCLUIR")} className="rounded-lg bg-red-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Excluir definitivamente</button>
+                  </div>
+                </article>)}
+              </div>
+            )}
+          </section>
+        )}
         {menuAberto === "vagas" && (
           <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
             <h2 className="text-lg font-black text-slate-900">💼 Atualização de vagas</h2>
