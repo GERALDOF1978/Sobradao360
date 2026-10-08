@@ -17,7 +17,7 @@ export default function AvisoLancamento() {
     return () => window.clearInterval(intervalo);
   }, []);
 
-  if (!aberto || agora === null) return null;
+  if (!aberto || agora === null || agora >= LANCAMENTO) return null;
 
   const restante = Math.max(0, LANCAMENTO - agora);
   const lancado = restante === 0;
@@ -59,7 +59,6 @@ export default function AvisoLancamento() {
         )}
         <p className="mt-5 text-xs font-semibold text-slate-300">08 de outubro de 2026 • 18h • Horário de Brasília</p>
         <button type="button" onClick={compartilhar} className="mt-6 w-full rounded-xl bg-amber-400 px-4 py-3 font-black text-slate-950 hover:bg-amber-300">📲 Compartilhar com os vizinhos</button>
-        <button type="button" onClick={fechar} className="mt-3 w-full rounded-xl border border-white/25 px-4 py-3 text-sm font-bold text-white hover:bg-white/10">Continuar para o site</button>
       </div>
     </div>
   );
