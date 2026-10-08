@@ -460,11 +460,20 @@ export default function PainelAnunciantePage() {
       const solicitacaoId =
         parametros.get("solicitacao");
 
+      // Uma loja ja vinculada a esta conta nao deve ser recriada a cada
+      // abertura do link do WhatsApp: isso sobrescrevia tipoPresenca e siteUrl.
+      const lojasJaVinculadas = await getDocs(
+        query(referencia, where("uidDono", "==", usuario.uid))
+      );
+      const idsJaVinculados = new Set(
+        lojasJaVinculadas.docs.map((item) => item.id)
+      );
+
       // Quando o acesso vem pelo link enviado pelo Master,
       // a solicitação é a fonte de verdade da aprovação.
       // Mesmo que já exista uma loja PENDENTE, ela deve ser
       // liberada e vinculada à conta Google correta.
-      if (solicitacaoId && usuario.email) {
+      if (solicitacaoId && usuario.email && !idsJaVinculados.has(solicitacaoId)) {
         const solicitacaoRef = doc(
           db,
           "solicitacoes_divulgacao",
