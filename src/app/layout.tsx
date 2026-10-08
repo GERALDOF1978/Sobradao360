@@ -5,6 +5,7 @@ import Cabecalho from "@/components/Cabecalho";
 import Rodape from "@/components/Rodape";
 import PwaRegistrar from "@/components/PwaRegistrar";
 import MenuInferior from "@/components/MenuInferior";
+import MedidorVisitas from "@/components/MedidorVisitas";
 import "./globals.css";
 
 export const metadata = {
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-slate-100 text-slate-900 antialiased font-sans pb-[76px] md:pb-0">
         <AuthProvider>
           <PwaRegistrar />
+          <MedidorVisitas />
           <Cabecalho />
           {children}
           <Rodape />
