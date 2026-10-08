@@ -1325,7 +1325,7 @@ export default function AdminMasterPage() {
             </div>
           </section>
         )}
-        {menuAberto === "vagas"' && (
+        {menuAberto === "vagas" && (
           <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
             <h2 className="text-lg font-black text-slate-900">💼 Atualização de vagas</h2>
             <p className="mt-1 text-sm text-slate-500">Atualize manualmente as vagas do Trampolim / PAT.</p>
