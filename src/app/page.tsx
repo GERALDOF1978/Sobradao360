@@ -6,6 +6,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 import NegociosMarquee from "@/components/NegociosMarquee";
+import AvisoLancamento from "@/components/AvisoLancamento";
 
 type Exibicao = {
   marquee?: boolean;
@@ -209,6 +210,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-16 font-sans">
+      <AvisoLancamento />
 
       <main className="max-w-md mx-auto px-3 sm:px-4 py-4 space-y-6">
 
