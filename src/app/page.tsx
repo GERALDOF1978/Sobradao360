@@ -23,13 +23,26 @@ type AnuncioHome = {
   arteDestaquesUrl: string;
   arteParceirosUrl: string;
   exibicao: Exibicao;
+  destinoUrl: string;
 };
 
 type LojaHome = {
   id: string;
   nome: string;
   bannerUrl: string;
+  destinoUrl: string;
 };
+
+function destinoLoja(id: string, dados: Record<string, unknown>): string {
+  const tipo = dados.tipoPresenca;
+  const url = typeof dados.siteUrl === "string" ? dados.siteUrl.trim() : "";
+  if (tipo === "site_externo" && /^https?:\/\//i.test(url)) return url;
+  if (tipo === "whatsapp") {
+    const numero = String(dados.whatsapp || "").replace(/\D/g, "");
+    if (numero) return `https://wa.me/${numero.startsWith("55") ? numero : `55${numero}`}`;
+  }
+  return `/loja/${id}`;
+}
 
 function dataTimestamp(valor: unknown): Date | null {
   if (valor instanceof Date) return valor;
@@ -91,7 +104,7 @@ export default function Home() {
                     ? dados.bannerUrl
                     : typeof dados.imagemUrl === "string" ? dados.imagemUrl : "";
               const nome = typeof dados.nome === "string" ? dados.nome : "";
-              return { id: doc.id, nome, bannerUrl };
+              return { id: doc.id, nome, bannerUrl, destinoUrl: destinoLoja(doc.id, dados) };
             })
             .filter((loja: LojaHome) => loja.nome || loja.bannerUrl)
         );
@@ -142,6 +155,7 @@ export default function Home() {
             arteDestaquesUrl,
             arteParceirosUrl,
             exibicao,
+            destinoUrl: destinoLoja(lojaId, loja),
           });
         });
         // Em cada carregamento a ordem muda, evitando que os mesmos anunciantes
@@ -232,7 +246,7 @@ export default function Home() {
           {publicidade.length > 0 && publicidade[publicidadeAtual] && (
             <div className="aspect-[3/1] overflow-hidden rounded-2xl">
               <Link
-                href={`/loja/${publicidade[publicidadeAtual].lojaId}`}
+                href={publicidade[publicidadeAtual].destinoUrl}
                 className={`block h-full w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-opacity duration-300 ${publicidadeVisivel ? "opacity-100" : "opacity-0"}`}
               >
                 <img
@@ -256,7 +270,7 @@ export default function Home() {
           </div>
           <div ref={destaque1Ref} className="flex gap-2 overflow-x-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {destaques.map((item) => (
-              <Link key={`${item.id}-dest`} href={`/loja/${item.lojaId}`} className="relative w-[118px] shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <Link key={`${item.id}-dest`} href={item.destinoUrl} className="relative w-[118px] shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 <div className="aspect-[1/2] w-full overflow-hidden">
                   <img src={item.arteDestaquesUrl || item.bannerUrl} alt={item.nome || "Destaque"} className="h-full w-full object-cover" />
                 </div>
@@ -306,7 +320,7 @@ export default function Home() {
             {lojasFiltradas.map((loja) => (
               <Link
                 key={loja.id}
-                href={`/loja/${loja.id}`}
+                href={loja.destinoUrl}
                 className="aspect-square w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-amber-400 transition"
                 title={loja.nome || "Loja"}
               >
