@@ -10,6 +10,7 @@ type CardAnuncio = {
   lojaId: string;
   nome: string;
   imagemUrl: string;
+  destinoUrl: string;
 };
 
 export default function MiniCardsAnuncio() {
@@ -54,6 +55,12 @@ export default function MiniCardsAnuncio() {
             lojaId,
             nome: typeof loja.nome === "string" ? loja.nome : "Anunciante",
             imagemUrl,
+            destinoUrl:
+              loja.tipoPresenca === "site_externo" && typeof loja.siteUrl === "string" && /^https?:\/\//i.test(loja.siteUrl.trim())
+                ? loja.siteUrl.trim()
+                : loja.tipoPresenca === "whatsapp" && typeof loja.whatsapp === "string" && loja.whatsapp.replace(/\D/g, "")
+                  ? `https://wa.me/${loja.whatsapp.replace(/\D/g, "").startsWith("55") ? loja.whatsapp.replace(/\D/g, "") : `55${loja.whatsapp.replace(/\D/g, "")}`}`
+                  : `/loja/${lojaId}`,
           });
         }
         );
@@ -87,7 +94,7 @@ export default function MiniCardsAnuncio() {
         {visiveis.map((card) => (
           <Link
             key={card.id}
-            href={`/loja/${card.lojaId}`}
+            href={card.destinoUrl}
             className="aspect-[3/1] w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:border-amber-400"
             title={card.nome}
           >
