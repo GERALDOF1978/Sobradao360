@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const LANCAMENTO = new Date("2026-10-08T18:00:00-03:00").getTime();
+const LANCAMENTO = new Date("2026-10-08T20:00:00-03:00").getTime();
 
 export default function AvisoLancamento() {
   const [aberto, setAberto] = useState(false);
@@ -38,7 +38,7 @@ export default function AvisoLancamento() {
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-amber-400/40 bg-gradient-to-b from-slate-800 to-slate-950 px-5 py-8 text-center text-white shadow-2xl sm:px-8">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-400">🚀 Grande lançamento</p>
         <h2 className="mt-3 text-4xl font-black tracking-tight">SOBRADÃO <span className="text-amber-400">360</span></h2>
-        <p className="mt-3 text-sm text-slate-200">{lancado ? "🎉 O SOBRADÃO 360 ESTÁ NO AR!" : "Hoje, às 18h, nossa comunidade estará ainda mais conectada!"}</p>
+        <p className="mt-3 text-sm text-slate-200">{lancado ? "🎉 O SOBRADÃO 360 ESTÁ NO AR!" : "Hoje, às 20h, nossa comunidade estará ainda mais conectada!"}</p>
         {!lancado && (
           <div className="mt-6 flex justify-center gap-2" aria-label="Contagem regressiva">
             {[[horas, "HORAS"], [minutos, "MINUTOS"], [segundos, "SEGUNDOS"]].map(([valor, rotulo]) => (
@@ -49,7 +49,7 @@ export default function AvisoLancamento() {
             ))}
           </div>
         )}
-        <p className="mt-5 text-xs font-semibold text-slate-300">08 de outubro de 2026 • 18h • Horário de Brasília</p>
+        <p className="mt-5 text-xs font-semibold text-slate-300">08 de outubro de 2026 • 20h • Horário de Brasília</p>
         <button type="button" onClick={compartilhar} className="mt-6 w-full rounded-xl bg-amber-400 px-4 py-3 font-black text-slate-950 hover:bg-amber-300">📲 Compartilhar com os vizinhos</button>
       </div>
     </div>
