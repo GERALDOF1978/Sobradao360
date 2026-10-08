@@ -66,10 +66,32 @@ export default function DenguePage() {
         </section>
 
         <section className="rounded-2xl bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-black">Casos de dengue em Rio Claro</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Para evitar números incorretos, esta página não apresenta um total de casos sem confirmação de data e fonte. Consulte o painel oficial do Ministério da Saúde para os indicadores mais recentes disponíveis.</p>
-          <a href="https://www.gov.br/saude/pt-br/composicao/svsa/cnie/observatorio-de-arboviroses" target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-800 hover:bg-red-100">Consultar dados oficiais de arboviroses ↗</a>
-          <p className="mt-3 text-xs text-slate-500">Fonte: Ministério da Saúde. Os dados podem ser revisados e ter atraso de notificação.</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-red-700">Boletim oficial • 25/09/2026</p>
+          <h2 className="mt-1 text-xl font-black">Dengue em Rio Claro — 2026</h2>
+          <p className="mt-1 text-xs text-slate-500">Publicado pela Prefeitura em 28/09/2026. Retrato do boletim, não contagem em tempo real.</p>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-red-50 p-4"><p className="text-xs font-semibold text-red-800">Casos confirmados no ano</p><p className="mt-1 text-4xl font-black text-red-700">26</p></div>
+            <div className="rounded-xl bg-amber-50 p-4"><p className="text-xs font-semibold text-amber-900">Novos casos no boletim</p><p className="mt-1 text-4xl font-black text-amber-700">3</p></div>
+          </div>
+          <h3 className="mt-5 text-sm font-black">Casos confirmados por bairro</h3>
+          <p className="mt-1 text-xs text-slate-500">Distribuição informada no boletim de 25/09/2026.</p>
+          <div className="mt-4 space-y-3" role="img" aria-label="Gráfico: Cidade Jardim, Parque Mãe Preta, Vila Olinda e Jardim Progresso com dois casos cada; outros dezoito bairros com um caso cada.">
+            {[
+              { nome: "Cidade Jardim", casos: 2 },
+              { nome: "Parque Mãe Preta", casos: 2 },
+              { nome: "Vila Olinda", casos: 2 },
+              { nome: "Jardim Progresso", casos: 2 },
+              { nome: "Outros 18 bairros (1 cada)", casos: 18 },
+            ].map((item) => (
+              <div key={item.nome}>
+                <div className="mb-1 flex items-center justify-between gap-2 text-xs"><span className="font-semibold">{item.nome}</span><span className="font-bold tabular-nums">{item.casos}</span></div>
+                <div className="h-3 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-red-600" style={{ width: `${(item.casos / 18) * 100}%` }} /></div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-xs leading-5 text-slate-500">Os 18 bairros agrupados possuem um caso cada. Os valores são históricos e poderão mudar em novos boletins.</p>
+          <a href="https://rioclaro.sp.gov.br/fundacao-de-saude/rio-claro-registra-26-casos-de-dengue-neste-ano/" target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex rounded-xl bg-red-700 px-4 py-3 text-sm font-bold text-white hover:bg-red-800">Ver boletim original da Prefeitura ↗</a>
+          <div className="mt-3"><a href="https://www.gov.br/saude/pt-br/composicao/svsa/cnie/observatorio-de-arboviroses" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-red-700 underline">Consultar painel nacional atualizado ↗</a></div>
         </section>
 
         <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
