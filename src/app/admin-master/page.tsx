@@ -274,7 +274,7 @@ export default function AdminMasterPage() {
     setErroPosts("");
     try {
       const snap = await getDocs(collection(db, "anuncios"));
-      setPostsMoradores(snap.docs.map(d => ({id:d.id,...d.data()})).filter(p => {
+      setPostsMoradores(snap.docs.map((d: (typeof snap.docs)[number]) => ({id:d.id,...d.data()})).filter((p: {id:string;origem?:unknown;tipoPublicacao?:unknown;tipo?:unknown;categoria?:unknown}) => {
         const origem = String(p.origem || "").toLowerCase();
         const tipo = String(p.tipoPublicacao || p.tipo || "").toLowerCase();
         const categoria = String(p.categoria || "").toLowerCase();
