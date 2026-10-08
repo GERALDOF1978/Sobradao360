@@ -466,7 +466,7 @@ export default function PainelAnunciantePage() {
         query(referencia, where("uidDono", "==", usuario.uid))
       );
       const idsJaVinculados = new Set(
-        lojasJaVinculadas.docs.map((item) => item.id)
+        lojasJaVinculadas.docs.map((item: (typeof lojasJaVinculadas.docs)[number]) => item.id)
       );
 
       // Quando o acesso vem pelo link enviado pelo Master,
