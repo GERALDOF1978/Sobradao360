@@ -406,13 +406,6 @@ export default function AnunciePage() {
       return;
     }
 
-    if (isBloqueado) {
-      alert(
-        "Sua conta está bloqueada pela administração e você não pode publicar novos conteúdos."
-      );
-      return;
-    }
-
     if (
       !titulo.trim() ||
       !descricao.trim()
@@ -453,6 +446,7 @@ export default function AnunciePage() {
         return;
       }
 
+      setIsBloqueado(false);
       const categoriaPublicacao = subCategoria;
 
       const anuncioRef =
