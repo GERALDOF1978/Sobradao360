@@ -1,14 +1,17 @@
-import { signInWithPopup, type UserCredential } from "firebase/auth";
+import { signInWithRedirect } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 
-// Compartilha uma única tentativa de login entre componentes e evita que
-// chamadas simultâneas cancelem a janela do Google umas das outras.
-let tentativa: Promise<UserCredential> | null = null;
+// Login por redirecionamento evita pop-ups bloqueados e pedidos concorrentes.
+// A URL atual, inclusive ?solicitacao=..., é preservada pelo navegador.
+let iniciando = false;
 
-export function loginGoogleUmaVez(): Promise<UserCredential> {
-  if (tentativa) return tentativa;
-  tentativa = signInWithPopup(auth, googleProvider).finally(() => {
-    tentativa = null;
-  });
-  return tentativa;
+export async function loginGoogleUmaVez(): Promise<void> {
+  if (iniciando) return;
+  iniciando = true;
+  try {
+    await signInWithRedirect(auth, googleProvider);
+  } catch (erro) {
+    iniciando = false;
+    throw erro;
+  }
 }
