@@ -120,8 +120,9 @@ export default function QueroDivulgarPage() {
         atualizadoEm: serverTimestamp(),
       });
 
+      // O formulário deixa de existir quando a tela de sucesso é exibida.
+      // Não acesse evento.currentTarget depois de uma operação assíncrona.
       setEnviado(true);
-      evento.currentTarget.reset();
     } catch (error) {
       console.error("Erro ao enviar solicitação de divulgação:", error);
       setErro(
