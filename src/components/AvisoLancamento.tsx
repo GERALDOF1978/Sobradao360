@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 const LANCAMENTO = new Date("2026-10-08T18:00:00-03:00").getTime();
-const CHAVE = "sobradao360-lancamento-20261008";
 
 export default function AvisoLancamento() {
   const [aberto, setAberto] = useState(false);
@@ -11,8 +10,7 @@ export default function AvisoLancamento() {
 
   useEffect(() => {
     setAgora(Date.now());
-    try { setAberto(sessionStorage.getItem(CHAVE) !== "fechado"); }
-    catch { setAberto(true); }
+    setAberto(true);
     const intervalo = window.setInterval(() => setAgora(Date.now()), 1000);
     return () => window.clearInterval(intervalo);
   }, []);
@@ -24,11 +22,6 @@ export default function AvisoLancamento() {
   const horas = Math.floor(restante / 3600000);
   const minutos = Math.floor((restante % 3600000) / 60000);
   const segundos = Math.floor((restante % 60000) / 1000);
-
-  function fechar() {
-    setAberto(false);
-    try { sessionStorage.setItem(CHAVE, "fechado"); } catch {}
-  }
 
   async function compartilhar() {
     const url = "https://sobradao360.com.br";
