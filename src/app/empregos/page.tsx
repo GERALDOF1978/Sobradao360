@@ -863,6 +863,26 @@ export default function EmpregosPage() {
           </div>
         </section>
 
+        {/* CIEE: acesso oficial enquanto a integração de listagem não estiver autorizada */}
+        <section className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-black text-sky-950">CIEE — Estágio e Jovem Aprendiz</h3>
+              <p className="mt-1 text-xs leading-relaxed text-sky-900">
+                Consulte oportunidades no portal oficial do CIEE. No campo Cidade, informe Rio Claro e aplique o filtro. A listagem automática no Sobradão 360 ainda depende de integração oficial.
+              </p>
+            </div>
+            <a
+              href="https://portal.ciee.org.br/vem/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex shrink-0 items-center justify-center rounded-xl bg-sky-800 px-4 py-2.5 text-xs font-bold text-white hover:bg-sky-900"
+            >
+              Buscar no CIEE ↗
+            </a>
+          </div>
+        </section>
+
         {/* CURRÍCULOS */}
         {aba ===
           "curriculos" && (
