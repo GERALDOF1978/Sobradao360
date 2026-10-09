@@ -27,7 +27,7 @@ function salario(v:any):string|null {
 }
 function imagem(v:any):string {
   const s=texto(v);
-  return /^https?:\\/\\//i.test(s)?s:"";
+  return s.startsWith("https://") || s.startsWith("http://") ? s : "";
 }
 export async function GET() {
   try {
