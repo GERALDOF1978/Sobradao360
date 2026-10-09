@@ -33,6 +33,7 @@ interface Vaga {
   imagemUrl?: string | null;
   origem: "trampolim" | "rhbrasil" | "gupy" | "manual";
   createdAt?: any;
+  publicadaEm?: string | null;
   autorNome?: string;
   contato?: string | null;
   observacao?: string | null;
@@ -636,6 +637,7 @@ async function buscarVagas(): Promise<Vaga[]> {
         imagemUrl: textoSeguro(vaga.imagemUrl) || null,
         origem: "gupy",
         createdAt: null,
+        publicadaEm: textoSeguro(vaga.publicadaEm) || null,
       });
     });
   } catch (error) {
@@ -643,6 +645,28 @@ async function buscarVagas(): Promise<Vaga[]> {
   }
 
   return lista;
+}
+
+function traducaoContrato(valor: string | null | undefined) {
+  const mapa: Record<string, string> = {
+    vacancy_type_effective: "Efetivo (CLT)",
+    vacancy_type_apprentice: "Jovem Aprendiz",
+    vacancy_type_internship: "Estágio",
+    vacancy_type_temporary: "Temporário",
+    vacancy_type_trainee: "Trainee",
+    vacancy_type_freelance: "Autônomo",
+    vacancy_type_outsource: "Terceirizado",
+    vacancy_type_pj: "Pessoa jurídica (PJ)",
+  };
+  return valor ? mapa[valor] || valor.replace(/^vacancy_type_/, "").replaceAll("_", " ") : "";
+}
+
+function traducaoModalidade(valor: string | null | undefined) {
+  const mapa: Record<string, string> = {
+    "on-site": "Presencial", remote: "Remoto", hybrid: "Híbrido",
+    onsite: "Presencial", "home-office": "Remoto",
+  };
+  return valor ? mapa[valor.toLowerCase()] || valor : "";
 }
 
 type AbaEmpregos =
@@ -666,6 +690,8 @@ export default function EmpregosPage() {
     setVagas,
   ] =
     useState<Vaga[]>([]);
+
+  const [descricoesAbertas, setDescricoesAbertas] = useState<string[]>([]);
 
   const [
     busca,
@@ -1059,7 +1085,7 @@ export default function EmpregosPage() {
                         className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm mb-5"
                       >
                         {/* IMAGEM: logotipo compacto no cabeçalho para vagas do Trampolim */}
-                        {vaga.imagemUrl && vaga.origem !== "trampolim" && (
+                        {vaga.imagemUrl && vaga.origem !== "trampolim" && vaga.origem !== "gupy" && (
                           <div className="w-full h-40 bg-slate-100">
                             <img
                               src={
@@ -1082,7 +1108,7 @@ export default function EmpregosPage() {
                           {/* ORIGEM / DATA */}
                           <div className="flex justify-between items-start gap-2">
                             <span className="text-[9px] font-black bg-indigo-100 text-indigo-800 px-2 py-1 rounded-lg">
-                              {vaga.origem === "trampolim" ? "🏢 PAT" : vaga.origem === "rhbrasil" ? "💼 RHBrasil" : "👤 COMUNIDADE"}
+                              {vaga.origem === "trampolim" ? "🏢 PAT" : vaga.origem === "rhbrasil" ? "💼 RHBrasil" : vaga.origem === "gupy" ? "💼 Gupy" : "👤 COMUNIDADE"}
                             </span>
 
                             {formatarData(
@@ -1106,6 +1132,17 @@ export default function EmpregosPage() {
                             </div>
                           )}
 
+                          {vaga.origem === "gupy" && (
+                            <div className="mt-3 flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                              {vaga.imagemUrl && <img src={vaga.imagemUrl} alt={vaga.empresa || "Empresa"} className="h-12 w-12 shrink-0 rounded-lg border bg-white object-contain p-1" loading="lazy" />}
+                              <div className="min-w-0">
+                                <p className="text-xs font-black text-slate-900">{vaga.empresa || "Empresa não informada"}</p>
+                                <p className="mt-1 text-[11px] text-slate-600">📍 Rio Claro — SP</p>
+                                {vaga.publicadaEm && <p className="mt-1 text-[10px] text-slate-500">Publicada em {formatarData(vaga.publicadaEm)}</p>}
+                              </div>
+                            </div>
+                          )}
+
                           {/* TÍTULO */}
                           <h3 className="font-black text-base text-slate-900 mt-2">
                             {textoSeguro(
@@ -1114,7 +1151,7 @@ export default function EmpregosPage() {
                           </h3>
 
                           {/* EMPRESA */}
-                          {vaga.empresa && vaga.origem !== "trampolim" && (
+                          {vaga.empresa && vaga.origem !== "trampolim" && vaga.origem !== "gupy" && (
                             <p className="text-xs font-bold text-slate-700 mt-1">
                               🏢{" "}
                               {textoSeguro(
@@ -1124,7 +1161,7 @@ export default function EmpregosPage() {
                           )}
 
                           {/* LOCAL */}
-                          {vaga.origem !== "trampolim" && (vaga.cidade ||
+                          {vaga.origem !== "trampolim" && vaga.origem !== "gupy" && (vaga.cidade ||
                             vaga.bairro) && (
                             <p className="text-[11px] text-slate-500 mt-1">
                               📍{" "}
@@ -1182,9 +1219,7 @@ export default function EmpregosPage() {
                             {vaga.tipoContrato && (
                               <p>
                                 📋{" "}
-                                {textoSeguro(
-                                  vaga.tipoContrato
-                                )}
+                                {vaga.origem === "gupy" ? traducaoContrato(vaga.tipoContrato) : textoSeguro(vaga.tipoContrato)}
                               </p>
                             )}
 
@@ -1200,9 +1235,7 @@ export default function EmpregosPage() {
                             {vaga.formatoTrabalho && (
                               <p>
                                 🏠{" "}
-                                {textoSeguro(
-                                  vaga.formatoTrabalho
-                                )}
+                                {vaga.origem === "gupy" ? traducaoModalidade(vaga.formatoTrabalho) : textoSeguro(vaga.formatoTrabalho)}
                               </p>
                             )}
 
@@ -1245,11 +1278,21 @@ export default function EmpregosPage() {
 
                           {/* DESCRIÇÃO */}
                           {vaga.descricao && (
-                            <p className={`text-xs text-slate-600 leading-relaxed mt-4 whitespace-pre-line ${vaga.origem === "gupy" ? "" : "line-clamp-3"}`}>
-                              {textoSeguro(
-                                vaga.descricao
+                            <div className="mt-4">
+                              <p className={`text-xs text-slate-600 leading-relaxed whitespace-pre-line ${vaga.origem === "gupy" && descricoesAbertas.includes(vaga.id) ? "" : "line-clamp-3"}`}>
+                                {textoSeguro(vaga.descricao)}
+                              </p>
+                              {vaga.origem === "gupy" && (
+                                <button
+                                  type="button"
+                                  aria-expanded={descricoesAbertas.includes(vaga.id)}
+                                  onClick={() => setDescricoesAbertas((anteriores) => anteriores.includes(vaga.id) ? anteriores.filter((id) => id !== vaga.id) : [...anteriores, vaga.id])}
+                                  className="mt-2 text-xs font-black text-indigo-700 hover:underline"
+                                >
+                                  {descricoesAbertas.includes(vaga.id) ? "Ver menos ↑" : "Ver mais ↓"}
+                                </button>
                               )}
-                            </p>
+                            </div>
                           )}
 
                           {vaga.origem === "manual" && (vaga.autorNome || vaga.contato || vaga.observacao) && (
