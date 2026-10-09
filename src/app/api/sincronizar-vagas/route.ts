@@ -19,20 +19,46 @@ async function buscarTodasAsVagas() {
   } while(pagina<=totalPaginas);
   return {vagas:todas,paginas:totalPaginas};
 }
-async function apagarVagasTrampolim() {
-  const snapshot=await adminDb.collection(COLECAO).where("fonte","==","trampolim").get();
-  for(let i=0;i<snapshot.docs.length;i+=400){const batch=adminDb.batch();snapshot.docs.slice(i,i+400).forEach(item=>batch.delete(item.ref));await batch.commit();}
-  return snapshot.docs.length;
-}
 async function gravarVagas(vagas:any[]) {
+  if (!vagas.length) throw new Error("A API não retornou vagas. Os dados anteriores foram preservados.");
+  const ids = new Set<string>();
   let gravadas=0;
-  for(let i=0;i<vagas.length;i+=400){const batch=adminDb.batch();for(const vaga of vagas.slice(i,i+400)){if(!vaga?.id)continue;const idTrampolim=String(vaga.id);const ref=adminDb.collection(COLECAO).doc(`trampolim_${idTrampolim}`);batch.set(ref,{...vaga,idTrampolim,fonte:"trampolim",cidadeBusca:"Rio Claro",raioBusca:25,ativo:true,criadoEm:FieldValue.serverTimestamp(),atualizadoEm:FieldValue.serverTimestamp()});gravadas++;}await batch.commit();}
-  return gravadas;
+  // Atualização incremental: campos ausentes na API não apagam informações já salvas.
+  for(let i=0;i<vagas.length;i+=200) {
+    const lote=vagas.slice(i,i+200).filter(v=>v?.id!=null);
+    const refs=lote.map(v=>adminDb.collection(COLECAO).doc(`trampolim_${String(v.id)}`));
+    const anteriores=await adminDb.getAll(...refs);
+    const batch=adminDb.batch();
+    lote.forEach((vaga,index)=>{
+      const idTrampolim=String(vaga.id);
+      ids.add(idTrampolim);
+      const anterior=anteriores[index].data()||{};
+      const camposValidos=Object.fromEntries(Object.entries(vaga).filter(([,valor])=>valor!==null&&valor!==undefined&&valor!==""));
+      batch.set(refs[index],{...anterior,...camposValidos,idTrampolim,fonte:"trampolim",cidadeBusca:"Rio Claro",raioBusca:25,ativo:true,criadoEm:anterior.criadoEm||FieldValue.serverTimestamp(),atualizadoEm:FieldValue.serverTimestamp()});
+      gravadas++;
+    });
+    await batch.commit();
+  }
+  // Não excluir documentos: apenas ocultar vagas ausentes na consulta completa.
+  const existentes=await adminDb.collection(COLECAO).where("fonte","==","trampolim").get();
+  const ausentes=existentes.docs.filter(d=>!ids.has(String(d.data().idTrampolim??d.data().id??d.id.replace(/^trampolim_/,""))));
+  for(let i=0;i<ausentes.length;i+=400){
+    const batch=adminDb.batch();
+    ausentes.slice(i,i+400).forEach(d=>batch.update(d.ref,{ativo:false,atualizadoEm:FieldValue.serverTimestamp()}));
+    await batch.commit();
+  }
+  return {gravadas,inativadas:ausentes.length};
 }
 async function executarSincronizacao() {
   const inicio=Date.now();
-  try {const consulta=await buscarTodasAsVagas();const excluidas=await apagarVagasTrampolim();const importadas=await gravarVagas(consulta.vagas);return NextResponse.json({success:true,mensagem:"Vagas do Trampolim substituídas com sucesso.",fonte:"Trampolim",cidade:"Rio Claro",raioKm:25,paginasConsultadas:consulta.paginas,encontradas:consulta.vagas.length,excluidas,importadas,tempoMs:Date.now()-inicio,sincronizadoEm:new Date().toISOString()});}
-  catch(error){console.error("Erro na sincronização do Trampolim:",error);return NextResponse.json({success:false,mensagem:"Não foi possível sincronizar as vagas do Trampolim.",erro:error instanceof Error?error.message:"Erro desconhecido"},{status:500});}
+  try {
+    const consulta=await buscarTodasAsVagas();
+    const resultado=await gravarVagas(consulta.vagas);
+    return NextResponse.json({success:true,mensagem:"Vagas atualizadas sem apagar informações anteriores.",fonte:"Trampolim",cidade:"Rio Claro",raioKm:25,paginasConsultadas:consulta.paginas,encontradas:consulta.vagas.length,excluidas:0,importadas:resultado.gravadas,inativadas:resultado.inativadas,tempoMs:Date.now()-inicio,sincronizadoEm:new Date().toISOString()});
+  } catch(error) {
+    console.error("Erro na sincronização do Trampolim:",error);
+    return NextResponse.json({success:false,mensagem:"Não foi possível sincronizar as vagas do Trampolim.",erro:error instanceof Error?error.message:"Erro desconhecido"},{status:500});
+  }
 }
 export async function GET(){return executarSincronizacao();}
 export async function POST(request:Request){try{const autorizacao=request.headers.get("authorization")||"";if(!autorizacao.startsWith("Bearer "))return NextResponse.json({success:false,mensagem:"Autenticação necessária."},{status:401});const decoded=await adminAuth.verifyIdToken(autorizacao.slice(7).trim());const usuarioMaster=await adminDb.collection("usuarios").doc(decoded.uid).get();if(!usuarioMaster.exists||usuarioMaster.data()?.perfil!=="master")return NextResponse.json({success:false,mensagem:"Acesso permitido somente ao Master."},{status:403});return executarSincronizacao();}catch(error){console.error("Erro ao autorizar sincronização manual:",error);return NextResponse.json({success:false,mensagem:"Não foi possível autorizar a sincronização."},{status:401});}}
