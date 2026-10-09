@@ -5,6 +5,7 @@ export const revalidate = 600;
 const ENDPOINT = "https://portal.gupy.io/api/job-search/jobs";
 const PAGE_SIZE = 12;
 const MAX_PAGES = 15;
+const BUSCAS = ["Rio Claro SP", "Rio Claro", "Brascabos"];
 
 type GupyJob = {
   id?: number | string;
@@ -40,47 +41,53 @@ function textoSimples(value: unknown) {
 export async function GET() {
   try {
     const encontrados = new Map<string, GupyJob>();
-    let total = Infinity;
 
-    for (let pagina = 0; pagina < MAX_PAGES && pagina * PAGE_SIZE < total; pagina++) {
-      const url = new URL(ENDPOINT);
-      url.searchParams.set("jobName", "Rio Claro SP");
-      url.searchParams.set("limit", String(PAGE_SIZE));
-      url.searchParams.set("offset", String(pagina * PAGE_SIZE));
+    for (const termo of BUSCAS) {
+      let total = Infinity;
+      for (let pagina = 0; pagina < MAX_PAGES && pagina * PAGE_SIZE < total; pagina++) {
+        const url = new URL(ENDPOINT);
+        url.searchParams.set("jobName", termo);
+        url.searchParams.set("limit", String(PAGE_SIZE));
+        url.searchParams.set("offset", String(pagina * PAGE_SIZE));
 
-      const response = await fetch(url.toString(), {
-        headers: { Accept: "application/json" },
-        next: { revalidate: 600 },
-      });
-      if (!response.ok) throw new Error(`Gupy retornou HTTP ${response.status}`);
-
-      const resultado = await response.json();
-      if (!Array.isArray(resultado?.data)) throw new Error("Formato inesperado da Gupy");
-      if (Number.isFinite(Number(resultado?.pagination?.total))) {
-        total = Number(resultado.pagination.total);
-      }
-      if (resultado.data.length === 0) break;
-
-      for (const item of resultado.data as GupyJob[]) {
-        if (normalizar(item.city) !== "RIO CLARO") continue;
-        if (!["SAO PAULO", "SP"].includes(normalizar(item.state))) continue;
-        const id = String(item.id ?? "");
-        if (!/^\d+$/.test(id)) continue;
-        if (typeof item.jobUrl !== "string") continue;
-        try {
-          const link = new URL(item.jobUrl);
-          if (link.protocol !== "https:" || !link.hostname.endsWith(".gupy.io")) continue;
-        } catch {
-          continue;
+        const response = await fetch(url.toString(), {
+          headers: { Accept: "application/json" },
+          next: { revalidate: 600 },
+        });
+        // Uma busca adicional falhar não deve esconder os resultados das outras.
+        if (!response.ok) {
+          console.warn("Busca Gupy indisponível:", termo, response.status);
+          break;
         }
-        if (item.applicationDeadline) {
-          const vencimento = Date.parse(item.applicationDeadline);
-          if (!Number.isNaN(vencimento) && vencimento < Date.now()) continue;
-        }
-        encontrados.set(id, item);
-      }
 
-      if (resultado.data.length < PAGE_SIZE) break;
+        const resultado = await response.json();
+        if (!Array.isArray(resultado?.data)) break;
+        if (Number.isFinite(Number(resultado?.pagination?.total))) {
+          total = Number(resultado.pagination.total);
+        }
+        if (resultado.data.length === 0) break;
+
+        for (const item of resultado.data as GupyJob[]) {
+          if (normalizar(item.city) !== "RIO CLARO") continue;
+          if (!["SAO PAULO", "SP"].includes(normalizar(item.state))) continue;
+          const id = String(item.id ?? "");
+          if (!/^\\d+$/.test(id)) continue;
+          if (typeof item.jobUrl !== "string") continue;
+          try {
+            const link = new URL(item.jobUrl);
+            if (link.protocol !== "https:" || !link.hostname.endsWith(".gupy.io")) continue;
+          } catch {
+            continue;
+          }
+          if (item.applicationDeadline) {
+            const vencimento = Date.parse(item.applicationDeadline);
+            if (!Number.isNaN(vencimento) && vencimento < Date.now()) continue;
+          }
+          encontrados.set(id, item);
+        }
+
+        if (resultado.data.length < PAGE_SIZE) break;
+      }
     }
 
     const vagas = [...encontrados.values()].map((vaga) => ({
