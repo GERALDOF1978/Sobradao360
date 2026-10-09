@@ -1,5 +1,34 @@
 import { NextResponse } from "next/server";
 
+function campo(v:any,...chaves:string[]):any {
+  for(const chave of chaves) {
+    const valor=chave.split(".").reduce((obj,k)=>obj?.[k],v);
+    if(valor!==null&&valor!==undefined&&valor!=="") return valor;
+  }
+  return null;
+}
+function texto(v:any):string {
+  if(v==null) return "";
+  if(typeof v==="string"||typeof v==="number") return String(v);
+  if(typeof v==="object") return texto(v.name??v.trade_name??v.label??v.value??v.title);
+  return "";
+}
+function salario(v:any):string|null {
+  if(v==null||v==="") return null;
+  if(typeof v==="object") {
+    const min=v.min??v.minimum??v.from;
+    const max=v.max??v.maximum??v.to;
+    if(min!=null||max!=null) return [min,max].filter(x=>x!=null).map(salario).join(" a ");
+    return salario(v.value??v.amount??v.label);
+  }
+  const n=Number(v);
+  if(typeof v==="number"||(typeof v==="string"&&/^\\d+(?:\\.\\d+)?$/.test(v.trim()))) return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  return texto(v);
+}
+function imagem(v:any):string {
+  const s=texto(v);
+  return /^https?:\\/\\//i.test(s)?s:"";
+}
 export async function GET() {
   try {
     // API oficial do Trampolim
@@ -27,75 +56,31 @@ export async function GET() {
         const data = await response.json();
 
         if (data && Array.isArray(data.data)) {
-          vagas = data.data.map(
-            (vaga: any, index: number) => ({
-              id:
-                `trampolim-vaga-${vaga.id || index}`,
-
-              titulo:
-                vaga.name ||
-                vaga.title ||
-                "Vaga de Emprego",
-
-              descricao:
-                vaga.description ||
-                "Confira os requisitos e candidate-se através do portal oficial Trampolim.",
-
-              categoria: "Empregos",
-
-              salario:
-                vaga.salary
-                  ? String(vaga.salary)
-                  : "A combinar",
-
-              oficial: true,
-
-              autorUid: "trampolim-oficial",
-
-              autorNome: "Trampolim",
-
-              autorFoto:
-                vaga.logo ||
-                "https://www.trampolim.sp.gov.br/favicon.ico",
-
-              createdAt:
-                vaga.publication_date ||
-                new Date().toISOString(),
-
-              // Informações extras da vaga
-              empresa:
-                vaga.company ||
-                vaga.trade_name ||
-                "",
-
-              cidade:
-                vaga.city ||
-                "Rio Claro",
-
-              bairro:
-                vaga.neighborhood ||
-                "",
-
-              quantidadeVagas:
-                vaga.number_vacancies ||
-                "",
-
-              beneficios:
-                vaga.benefits ||
-                "",
-
-              prazo:
-                vaga.vacancy_viewing_deadline ||
-                "",
-
-              url:
-                vaga.url ||
-                "",
-
-              idTrampolim:
-                vaga.id || "",
-            })
-          );
+          vagas = data.data.map((vaga: any, index: number) => {
+            const empresa = texto(campo(vaga,"company.trade_name","company.name","company_name","company","trade_name","employer.name","employer","business.name"));
+            const foto = imagem(campo(vaga,"company.logo.url","company.logo","company.image","company.avatar","company_logo","logo_url","logo","image_url","image","employer.logo"));
+            return {
+              id:`trampolim-vaga-${vaga.id??index}`,
+              titulo:texto(campo(vaga,"name","title","job_title"))||"Vaga de Emprego",
+              descricao:texto(campo(vaga,"description","details"))||"Confira os requisitos e candidate-se através do portal oficial Trampolim.",
+              categoria:"Empregos",
+              salario:salario(campo(vaga,"salary","salary_value","salary_amount","remuneration","salary_range","salary_min")),
+              oficial:true,
+              autorUid:"trampolim-oficial",
+              autorNome:empresa||"Trampolim",
+              autorFoto:foto||"https://www.trampolim.sp.gov.br/favicon.ico",
+              imagemUrl:foto||null,
+              createdAt:campo(vaga,"publication_date","created_at")||new Date().toISOString(),
+              empresa:empresa||null,
+              cidade:texto(campo(vaga,"city.name","city","location.city"))||"Rio Claro",
+              bairro:texto(campo(vaga,"neighborhood","district")),
+              quantidadeVagas:campo(vaga,"number_vacancies","vacancies_count","quantity"),
+              beneficios:texto(campo(vaga,"benefits","benefits_description")),
+              prazo:campo(vaga,"vacancy_viewing_deadline","deadline"),
+              url:texto(campo(vaga,"url","link")),
+              idTrampolim:vaga.id??"",
+            };
+          });
         }
       }
     }
