@@ -726,7 +726,7 @@ export default function EmpregosPage() {
     ]);
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 pb-16 font-sans">
+    <div className="min-h-screen bg-slate-100 text-slate-900 pb-36 font-sans">
       {/* HEADER */}
       <header className="bg-gradient-to-r from-indigo-700 via-blue-700 to-indigo-700 text-white shadow-md">
         <div className="max-w-md mx-auto px-4 py-2.5">
@@ -982,7 +982,7 @@ export default function EmpregosPage() {
                     (vaga) => (
                       <article
                         key={`${vaga.origem}-${vaga.id}`}
-                        className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm"
+                        className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm mb-5"
                       >
                         {/* IMAGEM: logotipo compacto no cabeçalho para vagas do Trampolim */}
                         {vaga.imagemUrl && vaga.origem !== "trampolim" && (
@@ -1040,7 +1040,7 @@ export default function EmpregosPage() {
                           </h3>
 
                           {/* EMPRESA */}
-                          {vaga.empresa && (
+                          {vaga.empresa && vaga.origem !== "trampolim" && (
                             <p className="text-xs font-bold text-slate-700 mt-1">
                               🏢{" "}
                               {textoSeguro(
@@ -1050,7 +1050,7 @@ export default function EmpregosPage() {
                           )}
 
                           {/* LOCAL */}
-                          {(vaga.cidade ||
+                          {vaga.origem !== "trampolim" && (vaga.cidade ||
                             vaga.bairro) && (
                             <p className="text-[11px] text-slate-500 mt-1">
                               📍{" "}
@@ -1086,7 +1086,7 @@ export default function EmpregosPage() {
                           )}
 
                           {/* DETALHES */}
-                          <div className="mt-3 space-y-1.5 text-[11px] text-slate-600">
+                          <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate-600 [&>p]:rounded-lg [&>p]:bg-slate-50 [&>p]:px-2.5 [&>p]:py-1.5 [&>p]:max-w-full">
 
                             {vaga.quantidadeVagas !==
                               null &&
@@ -1171,7 +1171,7 @@ export default function EmpregosPage() {
 
                           {/* DESCRIÇÃO */}
                           {vaga.descricao && (
-                            <p className="text-xs text-slate-600 leading-relaxed mt-4 whitespace-pre-line line-clamp-4">
+                            <p className="text-xs text-slate-600 leading-relaxed mt-4 whitespace-pre-line line-clamp-3">
                               {textoSeguro(
                                 vaga.descricao
                               )}
