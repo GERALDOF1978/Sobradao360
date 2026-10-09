@@ -37,6 +37,7 @@ interface Vaga {
   contato?: string | null;
   observacao?: string | null;
   temArte?: boolean;
+  exclusividade?: string | null;
 }
 
 /**
@@ -338,11 +339,12 @@ async function buscarVagas(): Promise<Vaga[]> {
           bairro: textoSeguro(vaga.bairro) || null,
           salario: formatarSalario(vaga.salario),
           beneficios: textoSeguro(vaga.beneficios) || null,
-          escolaridade: null,
-          experiencia: null,
-          turno: null,
-          formatoTrabalho: null,
-          tipoContrato: null,
+          escolaridade: textoSeguro(vaga.escolaridade) || null,
+          experiencia: textoSeguro(vaga.experiencia) || null,
+          turno: textoSeguro(vaga.turno) || null,
+          formatoTrabalho: textoSeguro(vaga.formatoTrabalho) || null,
+          tipoContrato: textoSeguro(vaga.tipoContrato) || null,
+          exclusividade: textoSeguro(vaga.exclusividade) || null,
           quantidadeVagas: quantidadeSegura(vaga.quantidadeVagas),
           prazo: textoSeguro(vaga.prazo) || null,
           urlTrampolim:
@@ -1151,9 +1153,11 @@ export default function EmpregosPage() {
                             )}
                           </div>
 
+                          {vaga.exclusividade && !["false","0","não","nao"].includes(vaga.exclusividade.toLowerCase()) && <p className="mt-2 text-xs font-semibold text-indigo-700">♿ {vaga.exclusividade === "true" ? "Vaga exclusiva para pessoa com deficiência" : vaga.exclusividade}</p>}
+
                           {/* DESCRIÇÃO */}
                           {vaga.descricao && (
-                            <p className="text-xs text-slate-600 leading-relaxed mt-4 whitespace-pre-line">
+                            <p className="text-xs text-slate-600 leading-relaxed mt-4 whitespace-pre-line line-clamp-4">
                               {textoSeguro(
                                 vaga.descricao
                               )}
