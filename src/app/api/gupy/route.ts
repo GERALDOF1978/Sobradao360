@@ -5,7 +5,8 @@ export const revalidate = 600;
 const ENDPOINT = "https://portal.gupy.io/api/job-search/jobs";
 const PAGE_SIZE = 12;
 const MAX_PAGES = 15;
-const BUSCAS = ["Rio Claro SP", "Rio Claro", "Brascabos"];
+const BUSCAS = ["Rio Claro SP", "Rio Claro", "Brascabos", "Assaí", "Assai"];
+const DIAS_RECENTES = 15;
 
 type GupyJob = {
   id?: number | string;
@@ -41,6 +42,9 @@ function textoSimples(value: unknown) {
 export async function GET() {
   try {
     const encontrados = new Map<string, GupyJob>();
+    const agora = Date.now();
+    const limitePublicacao = agora - DIAS_RECENTES * 24 * 60 * 60 * 1000;
+    let consultasValidas = 0;
 
     for (const termo of BUSCAS) {
       let total = Infinity;
@@ -62,6 +66,7 @@ export async function GET() {
 
         const resultado = await response.json();
         if (!Array.isArray(resultado?.data)) break;
+        consultasValidas++;
         if (Number.isFinite(Number(resultado?.pagination?.total))) {
           total = Number(resultado.pagination.total);
         }
@@ -70,6 +75,9 @@ export async function GET() {
         for (const item of resultado.data as GupyJob[]) {
           if (normalizar(item.city) !== "RIO CLARO") continue;
           if (!["SAO PAULO", "SP"].includes(normalizar(item.state))) continue;
+          // Apenas vagas publicadas nos últimos 15 dias, sem inventar data.
+          const publicacao = Date.parse(String(item.publishedDate ?? ""));
+          if (!Number.isFinite(publicacao) || publicacao < limitePublicacao || publicacao > agora) continue;
           const id = String(item.id ?? "");
           if (!/^\d+$/.test(id)) continue;
           if (typeof item.jobUrl !== "string") continue;
@@ -90,7 +98,11 @@ export async function GET() {
       }
     }
 
-    const vagas = [...encontrados.values()].map((vaga) => ({
+    if (consultasValidas === 0) throw new Error("Nenhuma busca da Gupy respondeu corretamente");
+
+    const vagas = [...encontrados.values()]
+      .sort((a, b) => Date.parse(String(b.publishedDate)) - Date.parse(String(a.publishedDate)))
+      .map((vaga) => ({
       id: String(vaga.id),
       titulo: textoSimples(vaga.name) || "Vaga Gupy",
       descricao: textoSimples(vaga.description),
@@ -106,7 +118,7 @@ export async function GET() {
     }));
 
     return NextResponse.json(
-      { success: true, vagas, fonte: "Gupy", total: vagas.length },
+      { success: true, vagas, fonte: "Gupy", total: vagas.length, periodoDias: DIAS_RECENTES },
       { headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=600" } }
     );
   } catch (error) {
