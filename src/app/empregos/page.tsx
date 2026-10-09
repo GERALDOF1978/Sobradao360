@@ -171,6 +171,21 @@ function urlSeguro(valor: any): string | null {
   return null;
 }
 
+/** Normaliza links relativos recebidos do Trampolim para o domínio oficial. */
+function linkOficialTrampolim(valor: any, id: any): string | null {
+  const recebido = urlSeguro(valor);
+  if (recebido) {
+    try {
+      const destino = new URL(recebido, "https://www.trampolim.sp.gov.br");
+      if (destino.protocol === "https:" && (destino.hostname === "trampolim.sp.gov.br" || destino.hostname === "www.trampolim.sp.gov.br")) {
+        return destino.toString();
+      }
+    } catch { /* Link inválido: usar alternativa oficial. */ }
+  }
+  const codigo = textoSeguro(id).trim();
+  return /^[0-9]+$/.test(codigo) ? `https://www.trampolim.sp.gov.br/pt/vagas/${codigo}/` : "https://www.trampolim.sp.gov.br/";
+}
+
 /**
  * Formata datas vindas do Firestore,
  * API ou outros formatos.
@@ -361,11 +376,7 @@ async function buscarVagas(): Promise<Vaga[]> {
           exclusividade: textoSeguro(vaga.exclusividade) || null,
           quantidadeVagas: quantidadeSegura(vaga.quantidadeVagas),
           prazo: textoSeguro(vaga.prazo) || null,
-          urlTrampolim:
-            urlSeguro(vaga.url) ||
-            (vaga.idTrampolim
-              ? `https://www.trampolim.sp.gov.br/pt/vagas/${textoSeguro(vaga.idTrampolim)}/`
-              : null),
+          urlTrampolim: linkOficialTrampolim(vaga.url, vaga.idTrampolim),
           imagemUrl: urlSeguro(vaga.imagemUrl) || null,
           origem: "trampolim",
           createdAt: vaga.createdAt || null,
