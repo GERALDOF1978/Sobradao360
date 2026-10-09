@@ -607,6 +607,7 @@ async function buscarVagas(): Promise<Vaga[]> {
 type AbaEmpregos =
   | "trampolim"
   | "rhbrasil"
+  | "ciee"
   | "manual"
   | "curriculos";
 
@@ -792,7 +793,7 @@ export default function EmpregosPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-5 gap-2">
 
             {/* TRAMPOLIM */}
             <button
@@ -817,6 +818,11 @@ export default function EmpregosPage() {
 
             <button type="button" onClick={() => { setAba("rhbrasil"); setBusca(""); }} className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "rhbrasil" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
               💼<br />RHBrasil
+            </button>
+
+            {/* CIEE — acesso oficial */}
+            <button type="button" onClick={() => { setAba("ciee"); setBusca(""); }} className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "ciee" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
+              🎓<br />CIEE
             </button>
 
             {/* VAGAS MANUAIS */}
@@ -864,7 +870,7 @@ export default function EmpregosPage() {
         </section>
 
         {/* CIEE: acesso oficial enquanto a integração de listagem não estiver autorizada */}
-        <section className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
+        {aba === "ciee" && <section className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
               <h3 className="text-sm font-black text-sky-950">CIEE — Estágio e Jovem Aprendiz</h3>
@@ -881,7 +887,7 @@ export default function EmpregosPage() {
               Buscar no CIEE ↗
             </a>
           </div>
-        </section>
+        </section>}
 
         {/* CURRÍCULOS */}
         {aba ===
@@ -891,7 +897,7 @@ export default function EmpregosPage() {
 
         {/* VAGAS */}
         {aba !==
-          "curriculos" && (
+          "curriculos" && aba !== "ciee" && (
           <>
             {/* BUSCA */}
             <div className="relative">
