@@ -1146,9 +1146,7 @@ export default function EmpregosPage() {
                             {vaga.prazo && (
                               <p>
                                 ⏳{" "}
-                                {textoSeguro(
-                                  vaga.prazo
-                                )}
+                                Prazo: {formatarData(vaga.prazo) || textoSeguro(vaga.prazo)}
                               </p>
                             )}
                           </div>
