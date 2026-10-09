@@ -59,7 +59,7 @@ export async function GET(request: Request) {
           // Diagnóstico temporário: expõe somente os NOMES dos campos da API,
           // nunca valores, documentos ou dados pessoais.
           const diagnostico = new URL(request.url).searchParams.get("diagnostico");
-          if (diagnostico && /^\\d{1,12}$/.test(diagnostico)) {
+          if (diagnostico && /^[0-9]{1,12}$/.test(diagnostico)) {
             const item = data.data.find((v:any) => String(v?.id) === diagnostico);
             if (!item) return NextResponse.json({encontrada:false, id:diagnostico});
             const estrutura = (obj:any, prefixo="", nivel=0):string[] => {
