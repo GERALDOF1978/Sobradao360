@@ -110,7 +110,7 @@ export async function GET() {
     for (const vaga of ordenadas) {
       const chave = [
         normalizar(textoSimples(vaga.careerPageName)),
-        normalizar(textoSimples(vaga.name)).replace(/\\s+/g, " "),
+        normalizar(textoSimples(vaga.name)).replace(/\s+/g, " "),
         normalizar(vaga.city),
         normalizar(vaga.state),
         normalizar(vaga.workplaceType),
