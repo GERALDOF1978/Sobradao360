@@ -57,8 +57,8 @@ export async function GET() {
 
         if (data && Array.isArray(data.data)) {
           vagas = data.data.map((vaga: any, index: number) => {
-            const empresa = texto(campo(vaga,"company.trade_name","company.name","company_name","company","trade_name","employer.name","employer","business.name"));
-            const foto = imagem(campo(vaga,"company.logo.url","company.logo","company.image","company.avatar","company_logo","logo_url","logo","image_url","image","employer.logo"));
+            const empresa = texto(campo(vaga,"company.trade_name","company.name","company.corporate_name","company.business_name","company_name","company","trade_name","employer.name","employer","business.name","companyName","companyName.name","company_data.name","companyData.name","company_info.name","companyInfo.name"));
+            const foto = imagem(campo(vaga,"company.logo.url","company.logo","company.image.url","company.image","company.avatar","company_logo","logo_url","logo","image_url","image","employer.logo","companyLogo","company_logo_url","company_data.logo","companyData.logo","company_info.logo"));
             return {
               id:`trampolim-vaga-${vaga.id??index}`,
               titulo:texto(campo(vaga,"name","title","job_title"))||"Vaga de Emprego",
@@ -70,12 +70,18 @@ export async function GET() {
               autorNome:empresa||"Trampolim",
               autorFoto:foto||"",
               imagemUrl:foto||null,
-              createdAt:campo(vaga,"publication_date","published_at","publishedAt","date_published","created_at","createdAt","publicationDate","published_date")||null,
+              createdAt:campo(vaga,"publication_date","published_at","publishedAt","date_published","created_at","createdAt","publicationDate","published_date","published_on","date_publication","datePublished","date_created","date")||null,
               empresa:empresa||null,
               cidade:texto(campo(vaga,"city.name","city","location.city"))||"Rio Claro",
-              bairro:texto(campo(vaga,"neighborhood","district")),
+              bairro:texto(campo(vaga,"neighborhood","district","location.neighborhood","location.district","workplace.neighborhood")),
               quantidadeVagas:campo(vaga,"number_vacancies","vacancies_count","quantity"),
               beneficios:texto(campo(vaga,"benefits","benefits_description")),
+              escolaridade:texto(campo(vaga,"education.name","education_level.name","education_level","education","schooling.name","schooling","required_education.name","required_education")),
+              experiencia:texto(campo(vaga,"experience.name","experience_level.name","experience","required_experience","minimum_experience")),
+              turno:texto(campo(vaga,"work_schedule.name","work_schedule","working_hours.name","working_hours","shift.name","shift")),
+              formatoTrabalho:texto(campo(vaga,"work_model.name","work_model","work_mode.name","work_mode","modality.name","modality","job_type.name","job_type")),
+              exclusividade:texto(campo(vaga,"exclusivity.name","exclusivity","disability_exclusive","exclusive_pcd","pcd_only","is_pcd_exclusive")),
+              tipoContrato:texto(campo(vaga,"contract_type.name","contract_type","employment_type.name","employment_type")),
               prazo:campo(vaga,"vacancy_viewing_deadline","deadline"),
               url:texto(campo(vaga,"url","link")),
               idTrampolim:vaga.id??"",
