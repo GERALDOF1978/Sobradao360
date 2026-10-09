@@ -100,8 +100,26 @@ export async function GET() {
 
     if (consultasValidas === 0) throw new Error("Nenhuma busca da Gupy respondeu corretamente");
 
-    const vagas = [...encontrados.values()]
-      .sort((a, b) => Date.parse(String(b.publishedDate)) - Date.parse(String(a.publishedDate)))
+    // Anúncios distintos podem ter IDs diferentes para o mesmo cargo e unidade.
+    // Agrupar por empresa + título completo (inclusive bairro/unidade) + modalidade
+    // + tipo de contrato. Preservar sempre o anúncio mais recente.
+    const semRepeticoes = new Map<string, GupyJob>();
+    const ordenadas = [...encontrados.values()].sort(
+      (a, b) => Date.parse(String(b.publishedDate)) - Date.parse(String(a.publishedDate))
+    );
+    for (const vaga of ordenadas) {
+      const chave = [
+        normalizar(textoSimples(vaga.careerPageName)),
+        normalizar(textoSimples(vaga.name)).replace(/\\s+/g, " "),
+        normalizar(vaga.city),
+        normalizar(vaga.state),
+        normalizar(vaga.workplaceType),
+        normalizar(vaga.type),
+      ].join("|");
+      if (!semRepeticoes.has(chave)) semRepeticoes.set(chave, vaga);
+    }
+
+    const vagas = [...semRepeticoes.values()]
       .map((vaga) => ({
       id: String(vaga.id),
       titulo: textoSimples(vaga.name) || "Vaga Gupy",
