@@ -398,8 +398,11 @@ async function buscarVagas(): Promise<Vaga[]> {
       const dados = await response.json();
       const vagasRh = Array.isArray(dados?.vagas) ? dados.vagas : [];
       vagasRh.filter((vaga: any) =>
-        [vaga.NM_CIDADE_DIVULGA, vaga.NM_CIDADE, vaga.NM_CIDADE_UNIDADE]
-          .some((cidade) => String(cidade ?? "").trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase() === "RIO CLARO")
+        (() => {
+          const cidades = [vaga.NM_CIDADE_DIVULGA, vaga.NM_CIDADE, vaga.NM_CIDADE_UNIDADE]
+            .map((cidade) => String(cidade ?? "").trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase());
+          return cidades.includes("RIO CLARO") && cidades.every((cidade) => !cidade || cidade === "RIO CLARO");
+        })()
       ).forEach((vaga: any) => {
         const codigo = textoSeguro(vaga.NR_REQUISICAO);
         const tituloBruto = textoSeguro(vaga.NM_CARGO) || "Vaga RHBrasil";
