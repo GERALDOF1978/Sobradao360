@@ -998,7 +998,7 @@ export default function EmpregosPage() {
               <div className="bg-gradient-to-br from-slate-900 to-blue-900 text-white p-5 rounded-3xl shadow-lg">
                 <span className="inline-flex bg-white/15 px-2.5 py-1 rounded-lg text-[10px] font-black">Gupy</span>
                 <h3 className="font-black text-base mt-2">Oportunidades em Rio Claro</h3>
-                <p className="text-xs text-blue-100 mt-2">Oportunidades de diferentes empresas, consultadas automaticamente na Gupy e filtradas para Rio Claro/SP.</p>
+                <p className="text-xs text-blue-100 mt-2">Vagas de Rio Claro/SP publicadas nos últimos 15 dias, ordenadas da mais recente para a mais antiga. A disponibilidade depende dos anúncios encontrados na Gupy.</p>
               </div>
             )}
 
