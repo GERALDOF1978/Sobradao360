@@ -181,6 +181,20 @@ function formatarData(valor: any): string {
       return "";
     }
 
+    // A API do Trampolim já devolve datas no formato brasileiro.
+    // new Date("23/09/2026") não reconhece esse formato.
+    if (typeof valor === "string") {
+      const brasileira = valor.trim().match(/^(\\d{2})\\/(\\d{2})\\/(\\d{4})$/);
+      if (brasileira) {
+        const [, dia, mes, ano] = brasileira;
+        const dataBR = new Date(Number(ano), Number(mes) - 1, Number(dia));
+        if (dataBR.getFullYear() === Number(ano) && dataBR.getMonth() === Number(mes) - 1 && dataBR.getDate() === Number(dia)) {
+          return `${dia}/${mes}/${ano}`;
+        }
+        return "";
+      }
+    }
+
     let data: Date;
 
     if (
