@@ -72,14 +72,14 @@ export async function GET(request: Request) {
             return NextResponse.json({encontrada:true,id:diagnostico,campos:estrutura(item)});
           }
           vagas = data.data.map((vaga: any, index: number) => {
-            const empresa = texto(campo(vaga,"company.trade_name","company.name","company.corporate_name","company.business_name","company_name","company","trade_name","employer.name","employer","business.name","companyName","companyName.name","company_data.name","companyData.name","company_info.name","companyInfo.name"));
-            const foto = imagem(campo(vaga,"company.logo.url","company.logo","company.image.url","company.image","company.avatar","company_logo","logo_url","logo","image_url","image","employer.logo","companyLogo","company_logo_url","company_data.logo","companyData.logo","company_info.logo"));
+            const empresa = texto(campo(vaga,"enterprise.fantasy_name","enterprise.corporate_name","company.trade_name","company.name","company.corporate_name","company.business_name","company_name","company","trade_name","employer.name","employer","business.name","companyName","companyName.name","company_data.name","companyData.name","company_info.name","companyInfo.name"));
+            const foto = imagem(campo(vaga,"enterprise.logo","enterprise.logo.url","company.logo.url","company.logo","company.image.url","company.image","company.avatar","company_logo","logo_url","logo","image_url","image","employer.logo","companyLogo","company_logo_url","company_data.logo","companyData.logo","company_info.logo"));
             return {
               id:`trampolim-vaga-${vaga.id??index}`,
               titulo:texto(campo(vaga,"name","title","job_title"))||"Vaga de Emprego",
               descricao:texto(campo(vaga,"description","details"))||"Confira os requisitos e candidate-se através do portal oficial Trampolim.",
               categoria:"Empregos",
-              salario:salario(campo(vaga,"salary","salary_value","salary_amount","remuneration","salary_range","salary_min")),
+              salario:salario(campo(vaga,"salary_final_value","salary","salary_value","salary_amount","remuneration","salary_range","salary_min")),
               oficial:true,
               autorUid:"trampolim-oficial",
               autorNome:empresa||"Trampolim",
@@ -87,18 +87,18 @@ export async function GET(request: Request) {
               imagemUrl:foto||null,
               createdAt:campo(vaga,"publication_date","published_at","publishedAt","date_published","created_at","createdAt","publicationDate","published_date","published_on","date_publication","datePublished","date_created","date")||null,
               empresa:empresa||null,
-              cidade:texto(campo(vaga,"city.name","city","location.city"))||"Rio Claro",
-              bairro:texto(campo(vaga,"neighborhood","district","location.neighborhood","location.district","workplace.neighborhood")),
+              cidade:texto(campo(vaga,"address.city","city.name","city","location.city"))||"Rio Claro",
+              bairro:texto(campo(vaga,"address.neighborhood","neighborhood","district","location.neighborhood","location.district","workplace.neighborhood")),
               quantidadeVagas:campo(vaga,"number_vacancies","vacancies_count","quantity"),
-              beneficios:texto(campo(vaga,"benefits","benefits_description")),
-              escolaridade:texto(campo(vaga,"education.name","education_level.name","education_level","education","schooling.name","schooling","required_education.name","required_education")),
-              experiencia:texto(campo(vaga,"experience.name","experience_level.name","experience","required_experience","minimum_experience")),
-              turno:texto(campo(vaga,"work_schedule.name","work_schedule","working_hours.name","working_hours","shift.name","shift")),
-              formatoTrabalho:texto(campo(vaga,"work_model.name","work_model","work_mode.name","work_mode","modality.name","modality","job_type.name","job_type")),
-              exclusividade:texto(campo(vaga,"exclusivity.name","exclusivity","disability_exclusive","exclusive_pcd","pcd_only","is_pcd_exclusive")),
-              tipoContrato:texto(campo(vaga,"contract_type.name","contract_type","employment_type.name","employment_type")),
+              beneficios:(() => { const b=campo(vaga,"benefits","benefits_description"); return Array.isArray(b) ? b.map(texto).filter(Boolean).join("; ") : texto(b); })(),
+              escolaridade:texto(campo(vaga,"min_education.value","education.name","education_level.name","education_level","education","schooling.name","schooling","required_education.name","required_education")),
+              experiencia:texto(campo(vaga,"min_experience.value","experience.name","experience_level.name","experience","required_experience","minimum_experience")),
+              turno:texto(campo(vaga,"work_shift.value","work_schedule.name","work_schedule","working_hours.name","working_hours","shift.name","shift")),
+              formatoTrabalho:texto(campo(vaga,"work_format.value","work_model.name","work_model","work_mode.name","work_mode","modality.name","modality","job_type.name","job_type")),
+              exclusividade:texto(campo(vaga,"anonymous_publication","exclusivity.name","exclusivity","disability_exclusive","exclusive_pcd","pcd_only","is_pcd_exclusive")),
+              tipoContrato:texto(campo(vaga,"work_relationship.value","contract_type.name","contract_type","employment_type.name","employment_type")),
               prazo:campo(vaga,"vacancy_viewing_deadline","deadline"),
-              url:texto(campo(vaga,"url","link")),
+              url:texto(campo(vaga,"absolute_url","url","link")),
               idTrampolim:vaga.id??"",
             };
           });
