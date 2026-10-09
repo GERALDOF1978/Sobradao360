@@ -350,7 +350,7 @@ async function buscarVagas(): Promise<Vaga[]> {
             (vaga.idTrampolim
               ? `https://www.trampolim.sp.gov.br/pt/vagas/${textoSeguro(vaga.idTrampolim)}/`
               : null),
-          imagemUrl: urlSeguro(vaga.imagemUrl) || urlSeguro(vaga.autorFoto) || null,
+          imagemUrl: urlSeguro(vaga.imagemUrl) || null,
           origem: "trampolim",
           createdAt: vaga.createdAt || null,
         });
@@ -1008,7 +1008,7 @@ export default function EmpregosPage() {
 
                           {vaga.origem === "trampolim" && (
                             <div className="mt-3 flex items-center gap-3 rounded-xl bg-slate-50 p-3">
-                              {vaga.imagemUrl ? <img src={vaga.imagemUrl} alt={vaga.empresa || "Empresa"} className="h-14 w-14 shrink-0 rounded-lg border bg-white object-contain p-1" loading="lazy" /> : <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-2xl">🏢</div>}
+                              {vaga.imagemUrl ? <img src={vaga.imagemUrl} alt={vaga.empresa || "Empresa"} className="h-14 w-14 shrink-0 rounded-lg border bg-white object-contain p-1" loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; e.currentTarget.nextElementSibling?.classList.remove("hidden"); }} /> : null}<div className={`${vaga.imagemUrl ? "hidden" : ""} flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-2xl`}>🏢</div>
                               <div className="min-w-0">
                                 <p className="text-xs font-black text-slate-900">{vaga.empresa || "Empresa não informada"}</p>
                                 <p className="text-[11px] text-slate-500">{[vaga.bairro,vaga.cidade].filter(Boolean).join(" • ")}</p>
