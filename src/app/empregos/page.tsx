@@ -1318,7 +1318,7 @@ export default function EmpregosPage() {
                               rel="noopener noreferrer"
                               className="block mt-4 bg-indigo-600 hover:bg-indigo-700 text-white text-center py-2.5 rounded-xl text-xs font-black"
                             >
-                              {vaga.origem === "rhbrasil" ? "Ver / candidatar-se na RHBrasil" : "Ver vaga no PAT"}
+                              {vaga.origem === "rhbrasil" ? "Ver vaga na RHBrasil" : vaga.origem === "gupy" ? "Ver vaga e candidatar-se na Gupy" : vaga.origem === "trampolim" ? "Ver vaga no PAT" : "Ver detalhes da vaga"}
                             </a>
                           )}
                         </div>
