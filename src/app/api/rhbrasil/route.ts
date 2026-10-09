@@ -8,7 +8,7 @@ const RHBRASIL_API =
 const ehRioClaro = (vaga: any) => {
   const cidades = [vaga.NM_CIDADE_DIVULGA, vaga.NM_CIDADE, vaga.NM_CIDADE_UNIDADE]
     .map((valor) => String(valor ?? "").trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase());
-  return cidades.some((cidade) => cidade === "RIO CLARO");
+  return cidades.includes("RIO CLARO") && cidades.every((cidade) => !cidade || cidade === "RIO CLARO");
 };
 
 export async function GET() {
