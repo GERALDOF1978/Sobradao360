@@ -29,7 +29,7 @@ function imagem(v:any):string {
   const s=texto(v);
   return s.startsWith("https://") || s.startsWith("http://") ? s : "";
 }
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // API oficial do Trampolim
     const targetUrl =
@@ -56,6 +56,21 @@ export async function GET() {
         const data = await response.json();
 
         if (data && Array.isArray(data.data)) {
+          // Diagnóstico temporário: expõe somente os NOMES dos campos da API,
+          // nunca valores, documentos ou dados pessoais.
+          const diagnostico = new URL(request.url).searchParams.get("diagnostico");
+          if (diagnostico && /^\\d{1,12}$/.test(diagnostico)) {
+            const item = data.data.find((v:any) => String(v?.id) === diagnostico);
+            if (!item) return NextResponse.json({encontrada:false, id:diagnostico});
+            const estrutura = (obj:any, prefixo="", nivel=0):string[] => {
+              if (!obj || typeof obj !== "object" || nivel > 3) return [];
+              return Object.entries(obj).flatMap(([chave, valor]) => {
+                const nome = prefixo ? `${prefixo}.${chave}` : chave;
+                return [nome, ...(valor && typeof valor === "object" && !Array.isArray(valor) ? estrutura(valor, nome, nivel+1) : [])];
+              });
+            };
+            return NextResponse.json({encontrada:true,id:diagnostico,campos:estrutura(item)});
+          }
           vagas = data.data.map((vaga: any, index: number) => {
             const empresa = texto(campo(vaga,"company.trade_name","company.name","company.corporate_name","company.business_name","company_name","company","trade_name","employer.name","employer","business.name","companyName","companyName.name","company_data.name","companyData.name","company_info.name","companyInfo.name"));
             const foto = imagem(campo(vaga,"company.logo.url","company.logo","company.image.url","company.image","company.avatar","company_logo","logo_url","logo","image_url","image","employer.logo","companyLogo","company_logo_url","company_data.logo","companyData.logo","company_info.logo"));
