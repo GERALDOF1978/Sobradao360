@@ -71,7 +71,7 @@ export async function GET() {
           if (normalizar(item.city) !== "RIO CLARO") continue;
           if (!["SAO PAULO", "SP"].includes(normalizar(item.state))) continue;
           const id = String(item.id ?? "");
-          if (!/^\\d+$/.test(id)) continue;
+          if (!/^\d+$/.test(id)) continue;
           if (typeof item.jobUrl !== "string") continue;
           try {
             const link = new URL(item.jobUrl);
