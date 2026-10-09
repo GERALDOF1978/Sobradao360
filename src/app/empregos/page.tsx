@@ -31,7 +31,7 @@ interface Vaga {
   urlTrampolim?: string | null;
   codigoVaga?: string | null;
   imagemUrl?: string | null;
-  origem: "trampolim" | "rhbrasil" | "brascabos" | "manual";
+  origem: "trampolim" | "rhbrasil" | "gupy" | "manual";
   createdAt?: any;
   autorNome?: string;
   contato?: string | null;
@@ -601,26 +601,46 @@ async function buscarVagas(): Promise<Vaga[]> {
     );
   }
 
-  // Links individuais verificados na página oficial da Brascabos (Gupy).
-  // Relação inicial curada: não é sincronização automática e pode mudar.
-  const brascabos = [
-    ["12552711", "Abastecedor"],
-    ["12615202", "Analista Engenharia Processos Júnior"],
-    ["12678076", "Analista Engenharia Processos Pleno"],
-    ["12597992", "Assistente de Recursos Humanos"],
-    ["12685919", "Assistente Vendas"],
-    ["5332957", "Banco de Talentos - Programa de Estágio"],
-    ["4630970", "Banco de Talentos - Vagas Operacionais"],
-  ];
-  brascabos.forEach(([codigo, titulo]) => {
-    lista.push({
-      id: `brascabos-${codigo}`, titulo, empresa: "Brascabos", cidade: "Rio Claro",
-      descricao: "Consulte os requisitos e a disponibilidade atual no anúncio oficial da empresa.",
-      origem: "brascabos", codigoVaga: codigo,
-      urlTrampolim: `https://vemserbrascabos.gupy.io/jobs/${codigo}`,
-      quantidadeVagas: null, createdAt: null,
+  /*
+   * GUPY — vagas de Rio Claro/SP consultadas automaticamente.
+   * A rota do servidor filtra município/estado e pagina o resultado.
+   */
+  try {
+    const response = await fetch("/api/gupy", { cache: "no-store" });
+    if (!response.ok) throw new Error(`Consulta Gupy HTTP ${response.status}`);
+    const dados = await response.json();
+    const vagasGupy = Array.isArray(dados?.vagas) ? dados.vagas : [];
+    vagasGupy.forEach((vaga: any) => {
+      const cidade = textoSeguro(vaga.cidade).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+      if (cidade !== "RIO CLARO" || textoSeguro(vaga.estado).toUpperCase() !== "SP") return;
+      const codigo = textoSeguro(vaga.id);
+      if (!codigo || !textoSeguro(vaga.url)) return;
+      lista.push({
+        id: `gupy-${codigo}`,
+        titulo: textoSeguro(vaga.titulo) || "Vaga Gupy",
+        descricao: textoSeguro(vaga.descricao),
+        empresa: textoSeguro(vaga.empresa) || "Empresa não informada",
+        cidade: "Rio Claro",
+        bairro: null,
+        salario: null,
+        beneficios: null,
+        escolaridade: null,
+        experiencia: null,
+        turno: null,
+        formatoTrabalho: textoSeguro(vaga.formatoTrabalho) || null,
+        tipoContrato: textoSeguro(vaga.tipoContrato) || null,
+        quantidadeVagas: null,
+        prazo: textoSeguro(vaga.prazo) || null,
+        urlTrampolim: textoSeguro(vaga.url),
+        codigoVaga: codigo,
+        imagemUrl: textoSeguro(vaga.imagemUrl) || null,
+        origem: "gupy",
+        createdAt: null,
+      });
     });
-  });
+  } catch (error) {
+    console.warn("Não foi possível consultar a Gupy:", error);
+  }
 
   return lista;
 }
@@ -628,7 +648,7 @@ async function buscarVagas(): Promise<Vaga[]> {
 type AbaEmpregos =
   | "trampolim"
   | "rhbrasil"
-  | "brascabos"
+  | "gupy"
   | "manual"
   | "curriculos";
 
@@ -710,7 +730,7 @@ export default function EmpregosPage() {
             return false;
           }
 
-          if (aba === "brascabos" && vaga.origem !== "brascabos") return false;
+          if (aba === "gupy" && vaga.origem !== "gupy") return false;
 
           if (aba === "rhbrasil" && vaga.origem !== "rhbrasil") {
             return false;
@@ -843,9 +863,9 @@ export default function EmpregosPage() {
               💼<br />RHBrasil
             </button>
 
-            {/* BRASCABOS */}
-            <button type="button" onClick={() => { setAba("brascabos"); setBusca(""); }} className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "brascabos" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
-              🏭<br />Brascabos
+            {/* GUPY */}
+            <button type="button" onClick={() => { setAba("gupy"); setBusca(""); }} className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "gupy" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
+              💼<br />Gupy
             </button>
 
             {/* VAGAS MANUAIS */}
@@ -948,11 +968,11 @@ export default function EmpregosPage() {
               </div>
             )}
 
-            {aba === "brascabos" && (
+            {aba === "gupy" && (
               <div className="bg-gradient-to-br from-slate-900 to-blue-900 text-white p-5 rounded-3xl shadow-lg">
-                <span className="inline-flex bg-white/15 px-2.5 py-1 rounded-lg text-[10px] font-black">Brascabos</span>
+                <span className="inline-flex bg-white/15 px-2.5 py-1 rounded-lg text-[10px] font-black">Gupy</span>
                 <h3 className="font-black text-base mt-2">Oportunidades em Rio Claro</h3>
-                <p className="text-xs text-blue-100 mt-2">Vagas identificadas na página oficial da Brascabos. Consulte a situação atual no link individual antes de se candidatar.</p>
+                <p className="text-xs text-blue-100 mt-2">Oportunidades de diferentes empresas, consultadas automaticamente na Gupy e filtradas para Rio Claro/SP.</p>
               </div>
             )}
 
@@ -1225,7 +1245,7 @@ export default function EmpregosPage() {
 
                           {/* DESCRIÇÃO */}
                           {vaga.descricao && (
-                            <p className="text-xs text-slate-600 leading-relaxed mt-4 whitespace-pre-line line-clamp-3">
+                            <p className={`text-xs text-slate-600 leading-relaxed mt-4 whitespace-pre-line ${vaga.origem === "gupy" ? "" : "line-clamp-3"}`}>
                               {textoSeguro(
                                 vaga.descricao
                               )}
