@@ -31,7 +31,7 @@ interface Vaga {
   urlTrampolim?: string | null;
   codigoVaga?: string | null;
   imagemUrl?: string | null;
-  origem: "trampolim" | "rhbrasil" | "manual";
+  origem: "trampolim" | "rhbrasil" | "brascabos" | "manual";
   createdAt?: any;
   autorNome?: string;
   contato?: string | null;
@@ -601,12 +601,34 @@ async function buscarVagas(): Promise<Vaga[]> {
     );
   }
 
+  // Links individuais verificados na página oficial da Brascabos (Gupy).
+  // Relação inicial curada: não é sincronização automática e pode mudar.
+  const brascabos = [
+    ["12552711", "Abastecedor"],
+    ["12615202", "Analista Engenharia Processos Júnior"],
+    ["12678076", "Analista Engenharia Processos Pleno"],
+    ["12597992", "Assistente de Recursos Humanos"],
+    ["12685919", "Assistente Vendas"],
+    ["5332957", "Banco de Talentos - Programa de Estágio"],
+    ["4630970", "Banco de Talentos - Vagas Operacionais"],
+  ];
+  brascabos.forEach(([codigo, titulo]) => {
+    lista.push({
+      id: `brascabos-${codigo}`, titulo, empresa: "Brascabos", cidade: "Rio Claro",
+      descricao: "Consulte os requisitos e a disponibilidade atual no anúncio oficial da empresa.",
+      origem: "brascabos", codigoVaga: codigo,
+      urlTrampolim: `https://vemserbrascabos.gupy.io/jobs/${codigo}`,
+      quantidadeVagas: null, createdAt: null,
+    });
+  });
+
   return lista;
 }
 
 type AbaEmpregos =
   | "trampolim"
   | "rhbrasil"
+  | "brascabos"
   | "manual"
   | "curriculos";
 
@@ -687,6 +709,8 @@ export default function EmpregosPage() {
           ) {
             return false;
           }
+
+          if (aba === "brascabos" && vaga.origem !== "brascabos") return false;
 
           if (aba === "rhbrasil" && vaga.origem !== "rhbrasil") {
             return false;
@@ -792,7 +816,7 @@ export default function EmpregosPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-5 gap-2">
 
             {/* TRAMPOLIM */}
             <button
@@ -817,6 +841,11 @@ export default function EmpregosPage() {
 
             <button type="button" onClick={() => { setAba("rhbrasil"); setBusca(""); }} className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "rhbrasil" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
               💼<br />RHBrasil
+            </button>
+
+            {/* BRASCABOS */}
+            <button type="button" onClick={() => { setAba("brascabos"); setBusca(""); }} className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "brascabos" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
+              🏭<br />Brascabos
             </button>
 
             {/* VAGAS MANUAIS */}
@@ -916,6 +945,14 @@ export default function EmpregosPage() {
                 <span className="inline-flex bg-white/15 px-2.5 py-1 rounded-lg text-[10px] font-black">RHBrasil</span>
                 <h3 className="font-black text-base mt-2">Vagas RHBrasil</h3>
                 <p className="text-xs text-blue-100 mt-2 leading-relaxed">Oportunidades encontradas para Rio Claro, atualizadas diretamente da RHBrasil.</p>
+              </div>
+            )}
+
+            {aba === "brascabos" && (
+              <div className="bg-gradient-to-br from-slate-900 to-blue-900 text-white p-5 rounded-3xl shadow-lg">
+                <span className="inline-flex bg-white/15 px-2.5 py-1 rounded-lg text-[10px] font-black">Brascabos</span>
+                <h3 className="font-black text-base mt-2">Oportunidades em Rio Claro</h3>
+                <p className="text-xs text-blue-100 mt-2">Vagas identificadas na página oficial da Brascabos. Consulte a situação atual no link individual antes de se candidatar.</p>
               </div>
             )}
 
