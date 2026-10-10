@@ -896,7 +896,7 @@ export default function EmpregosPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
 
             <button
               type="button"
@@ -935,6 +935,18 @@ export default function EmpregosPage() {
             <button type="button" onClick={() => { setAba("gupy"); setBusca(""); }} className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "gupy" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
               💼<br />Gupy
             </button>
+
+            {/* EMPREGOS.COM.BR — consulta externa, sem integração automática ainda */}
+            <a
+              href="https://www.empregos.com.br/vagas/em-rio-claro-sp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center justify-center rounded-2xl bg-slate-100 p-3 text-center text-[11px] font-black text-slate-700 transition hover:bg-slate-200"
+              aria-label="Consultar vagas de Rio Claro no Empregos.com.br (abre outro site)"
+            >
+              <span>🔎</span>
+              <span>Empregos.com.br ↗</span>
+            </a>
 
             {/* VAGAS MANUAIS */}
             <button
