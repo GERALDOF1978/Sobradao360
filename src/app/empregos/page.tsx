@@ -670,6 +670,7 @@ function traducaoModalidade(valor: string | null | undefined) {
 }
 
 type AbaEmpregos =
+  | "todas"
   | "trampolim"
   | "rhbrasil"
   | "gupy"
@@ -682,7 +683,7 @@ export default function EmpregosPage() {
     setAba,
   ] =
     useState<AbaEmpregos>(
-      "trampolim"
+      "todas"
     );
 
   const [
@@ -745,7 +746,7 @@ export default function EmpregosPage() {
           .trim()
           .toLowerCase();
 
-      return vagas.filter(
+      const filtradas = vagas.filter(
         (vaga) => {
           if (
             aba ===
@@ -806,6 +807,39 @@ export default function EmpregosPage() {
           );
         }
       );
+
+      if (aba !== "todas") return filtradas;
+
+      const dataVaga = (vaga: Vaga) => {
+        const valor = vaga.publicadaEm || vaga.createdAt;
+        if (!valor) return 0;
+        if (typeof valor?.toDate === "function") return valor.toDate().getTime();
+        if (typeof valor?.seconds === "number") return valor.seconds * 1000;
+        const texto = String(valor);
+        const br = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(texto);
+        const data = br ? new Date(Number(br[3]), Number(br[2]) - 1, Number(br[1])).getTime() : Date.parse(texto);
+        return Number.isFinite(data) ? data : 0;
+      };
+      const normaliza = (valor: unknown) => textoSeguro(valor)
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase().replace(/\s+/g, " ").trim();
+
+      const ordenadas = [...filtradas].sort((a, b) => dataVaga(b) - dataVaga(a));
+      const vistas = new Set<string>();
+      return ordenadas.filter((vaga) => {
+        // Só agrupar entre fontes quando empresa, cargo e local forem inequívocos.
+        const empresa = normaliza(vaga.empresa);
+        const titulo = normaliza(vaga.titulo);
+        const cidade = normaliza(vaga.cidade);
+        const bairro = normaliza(vaga.bairro);
+        const empresaIdentificada = empresa && !["empresa nao informada", "pat / trampolim", "rhbrasil"].includes(empresa);
+        const chave = empresaIdentificada && titulo && cidade
+          ? `empresa|${empresa}|${titulo}|${cidade}|${bairro}`
+          : `origem|${vaga.origem}|${vaga.id}`;
+        if (vistas.has(chave)) return false;
+        vistas.add(chave);
+        return true;
+      });
     }, [
       vagas,
       aba,
@@ -862,7 +896,15 @@ export default function EmpregosPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+
+            <button
+              type="button"
+              onClick={() => { setAba("todas"); setBusca(""); }}
+              className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "todas" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
+            >
+              📋<br />Todas as vagas
+            </button>
 
             {/* TRAMPOLIM */}
             <button
@@ -966,6 +1008,16 @@ export default function EmpregosPage() {
                 className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 pl-10 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
+
+            {aba === "todas" && (
+              <div className="bg-gradient-to-br from-indigo-900 via-blue-800 to-sky-800 text-white p-5 rounded-3xl shadow-lg">
+                <span className="inline-flex bg-white/15 px-2.5 py-1 rounded-lg text-[10px] font-black">Rio Claro — SP</span>
+                <h3 className="font-black text-base mt-2">Todas as vagas</h3>
+                <p className="text-xs text-indigo-100 mt-2 leading-relaxed">
+                  Vagas do PAT, RHBrasil, Gupy e da comunidade em um só lugar. As que possuem data de publicação aparecem primeiro. Na Gupy, são exibidos apenas anúncios dos últimos 15 dias.
+                </p>
+              </div>
+            )}
 
             {/* BANNER TRAMPOLIM */}
             {aba ===
