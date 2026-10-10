@@ -31,7 +31,7 @@ interface Vaga {
   urlTrampolim?: string | null;
   codigoVaga?: string | null;
   imagemUrl?: string | null;
-  origem: "trampolim" | "rhbrasil" | "gupy" | "manual";
+  origem: "trampolim" | "rhbrasil" | "gupy" | "empregoscom" | "manual";
   createdAt?: any;
   publicadaEm?: string | null;
   autorNome?: string;
@@ -644,6 +644,36 @@ async function buscarVagas(): Promise<Vaga[]> {
     console.warn("Não foi possível consultar a Gupy:", error);
   }
 
+  try {
+    const resposta = await fetch("/api/empregos-com", { cache: "no-store" });
+    if (resposta.ok) {
+      const dados = await resposta.json();
+      const encontrados = Array.isArray(dados?.vagas) ? dados.vagas : [];
+      encontrados.forEach((vaga: any) => {
+        const id = textoSeguro(vaga.id);
+        if (!id || textoSeguro(vaga.cidade) !== "Rio Claro" || textoSeguro(vaga.estado) !== "SP") return;
+        lista.push({
+          id: `empregoscom-${id}`,
+          titulo: textoSeguro(vaga.titulo),
+          empresa: textoSeguro(vaga.empresa),
+          descricao: textoSeguro(vaga.descricao),
+          cidade: "Rio Claro",
+          salario: textoSeguro(vaga.salario) || null,
+          formatoTrabalho: textoSeguro(vaga.formatoTrabalho) || null,
+          quantidadeVagas: quantidadeSegura(vaga.quantidadeVagas),
+          prazo: null,
+          publicadaEm: textoSeguro(vaga.publicadaEm) || null,
+          urlTrampolim: textoSeguro(vaga.url),
+          codigoVaga: id,
+          origem: "empregoscom",
+          createdAt: null,
+        });
+      });
+    }
+  } catch (error) {
+    console.warn("Não foi possível consultar Empregos.com.br:", error);
+  }
+
   return lista;
 }
 
@@ -670,10 +700,10 @@ function traducaoModalidade(valor: string | null | undefined) {
 }
 
 type AbaEmpregos =
-  | "todas"
   | "trampolim"
   | "rhbrasil"
   | "gupy"
+  | "empregoscom"
   | "manual"
   | "curriculos";
 
@@ -683,7 +713,7 @@ export default function EmpregosPage() {
     setAba,
   ] =
     useState<AbaEmpregos>(
-      "todas"
+      "trampolim"
     );
 
   const [
@@ -746,99 +776,11 @@ export default function EmpregosPage() {
           .trim()
           .toLowerCase();
 
-      const filtradas = vagas.filter(
-        (vaga) => {
-          if (
-            aba ===
-              "trampolim" &&
-            vaga.origem !==
-              "trampolim"
-          ) {
-            return false;
-          }
-
-          if (aba === "gupy" && vaga.origem !== "gupy") return false;
-
-          if (aba === "rhbrasil" && vaga.origem !== "rhbrasil") {
-            return false;
-          }
-
-          if (
-            aba ===
-              "manual" &&
-            vaga.origem !==
-              "manual"
-          ) {
-            return false;
-          }
-
-          if (!termo) {
-            return true;
-          }
-
-          const texto =
-            [
-              vaga.titulo,
-              vaga.descricao,
-              vaga.empresa,
-              vaga.cidade,
-              vaga.bairro,
-              vaga.salario,
-              vaga.beneficios,
-              vaga.escolaridade,
-              vaga.experiencia,
-              vaga.turno,
-              vaga.formatoTrabalho,
-              vaga.tipoContrato,
-              vaga.prazo,
-              vaga.autorNome,
-              vaga.contato,
-              vaga.observacao,
-            ]
-              .filter(Boolean)
-              .map((item) =>
-                textoSeguro(item)
-              )
-              .join(" ")
-              .toLowerCase();
-
-          return texto.includes(
-            termo
-          );
-        }
-      );
-
-      if (aba !== "todas") return filtradas;
-
-      const dataVaga = (vaga: Vaga) => {
-        const valor = vaga.publicadaEm || vaga.createdAt;
-        if (!valor) return 0;
-        if (typeof valor?.toDate === "function") return valor.toDate().getTime();
-        if (typeof valor?.seconds === "number") return valor.seconds * 1000;
-        const texto = String(valor);
-        const br = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(texto);
-        const data = br ? new Date(Number(br[3]), Number(br[2]) - 1, Number(br[1])).getTime() : Date.parse(texto);
-        return Number.isFinite(data) ? data : 0;
-      };
-      const normaliza = (valor: unknown) => textoSeguro(valor)
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase().replace(/\s+/g, " ").trim();
-
-      const ordenadas = [...filtradas].sort((a, b) => dataVaga(b) - dataVaga(a));
-      const vistas = new Set<string>();
-      return ordenadas.filter((vaga) => {
-        // Só agrupar entre fontes quando empresa, cargo e local forem inequívocos.
-        const empresa = normaliza(vaga.empresa);
-        const titulo = normaliza(vaga.titulo);
-        const cidade = normaliza(vaga.cidade);
-        const bairro = normaliza(vaga.bairro);
-        const empresaIdentificada = empresa && !["empresa nao informada", "pat / trampolim", "rhbrasil"].includes(empresa);
-        const chave = empresaIdentificada && titulo && cidade
-          ? `empresa|${empresa}|${titulo}|${cidade}|${bairro}`
-          : `origem|${vaga.origem}|${vaga.id}`;
-        if (vistas.has(chave)) return false;
-        vistas.add(chave);
-        return true;
+      return vagas.filter((vaga) => {
+        if (aba !== "curriculos" && aba !== vaga.origem && !(aba === "trampolim" && vaga.origem === "trampolim")) return false;
+        if (!termo) return true;
+        const texto = [vaga.titulo, vaga.descricao, vaga.empresa, vaga.cidade, vaga.bairro, vaga.salario, vaga.beneficios, vaga.escolaridade, vaga.tipoContrato].map(textoSeguro).join(" ").toLowerCase();
+        return texto.includes(termo);
       });
     }, [
       vagas,
@@ -898,14 +840,6 @@ export default function EmpregosPage() {
 
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
 
-            <button
-              type="button"
-              onClick={() => { setAba("todas"); setBusca(""); }}
-              className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "todas" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
-            >
-              📋<br />Todas as vagas
-            </button>
-
             {/* TRAMPOLIM */}
             <button
               type="button"
@@ -936,17 +870,14 @@ export default function EmpregosPage() {
               💼<br />Gupy
             </button>
 
-            {/* EMPREGOS.COM.BR — consulta externa, sem integração automática ainda */}
-            <a
-              href="https://www.empregos.com.br/vagas/em-rio-claro-sp"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-col items-center justify-center rounded-2xl bg-slate-100 p-3 text-center text-[11px] font-black text-slate-700 transition hover:bg-slate-200"
-              aria-label="Consultar vagas de Rio Claro no Empregos.com.br (abre outro site)"
+            {/* EMPREGOS.COM.BR — lista no próprio portal */}
+            <button
+              type="button"
+              onClick={() => { setAba("empregoscom"); setBusca(""); }}
+              className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "empregoscom" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
             >
-              <span>🔎</span>
-              <span>Empregos.com.br ↗</span>
-            </a>
+              🔎<br />Empregos.com.br
+            </button>
 
             {/* VAGAS MANUAIS */}
             <button
@@ -1021,13 +952,11 @@ export default function EmpregosPage() {
               />
             </div>
 
-            {aba === "todas" && (
+            {aba === "empregoscom" && (
               <div className="bg-gradient-to-br from-indigo-900 via-blue-800 to-sky-800 text-white p-5 rounded-3xl shadow-lg">
-                <span className="inline-flex bg-white/15 px-2.5 py-1 rounded-lg text-[10px] font-black">Rio Claro — SP</span>
-                <h3 className="font-black text-base mt-2">Todas as vagas</h3>
-                <p className="text-xs text-indigo-100 mt-2 leading-relaxed">
-                  Vagas do PAT, RHBrasil, Gupy e da comunidade em um só lugar. As que possuem data de publicação aparecem primeiro. Na Gupy, são exibidos apenas anúncios dos últimos 15 dias.
-                </p>
+                <span className="inline-flex bg-white/15 px-2.5 py-1 rounded-lg text-[10px] font-black">Empregos.com.br</span>
+                <h3 className="font-black text-base mt-2">Vagas em Rio Claro</h3>
+                <p className="text-xs text-indigo-100 mt-2 leading-relaxed">Oportunidades publicadas nos últimos 15 dias, quando identificadas na listagem pública.</p>
               </div>
             )}
 
@@ -1172,7 +1101,7 @@ export default function EmpregosPage() {
                           {/* ORIGEM / DATA */}
                           <div className="flex justify-between items-start gap-2">
                             <span className="text-[9px] font-black bg-indigo-100 text-indigo-800 px-2 py-1 rounded-lg">
-                              {vaga.origem === "trampolim" ? "🏢 PAT" : vaga.origem === "rhbrasil" ? "💼 RHBrasil" : vaga.origem === "gupy" ? "💼 Gupy" : "👤 COMUNIDADE"}
+                              {vaga.origem === "trampolim" ? "🏢 PAT" : vaga.origem === "rhbrasil" ? "💼 RHBrasil" : vaga.origem === "gupy" ? "💼 Gupy" : vaga.origem === "empregoscom" ? "🔎 Empregos.com.br" : "👤 COMUNIDADE"}
                             </span>
 
                             {formatarData(
@@ -1343,10 +1272,10 @@ export default function EmpregosPage() {
                           {/* DESCRIÇÃO */}
                           {vaga.descricao && (
                             <div className="mt-4">
-                              <p className={`text-xs text-slate-600 leading-relaxed whitespace-pre-line ${vaga.origem === "gupy" && descricoesAbertas.includes(vaga.id) ? "" : "line-clamp-3"}`}>
+                              <p className={`text-xs text-slate-600 leading-relaxed whitespace-pre-line ${(vaga.origem === "gupy" || vaga.origem === "empregoscom") && descricoesAbertas.includes(vaga.id) ? "" : "line-clamp-3"}`}>
                                 {textoSeguro(vaga.descricao)}
                               </p>
-                              {vaga.origem === "gupy" && (
+                              {(vaga.origem === "gupy" || vaga.origem === "empregoscom") && (
                                 <button
                                   type="button"
                                   aria-expanded={descricoesAbertas.includes(vaga.id)}
@@ -1382,7 +1311,7 @@ export default function EmpregosPage() {
                               rel="noopener noreferrer"
                               className="block mt-4 bg-indigo-600 hover:bg-indigo-700 text-white text-center py-2.5 rounded-xl text-xs font-black"
                             >
-                              {vaga.origem === "rhbrasil" ? "Ver vaga na RHBrasil" : vaga.origem === "gupy" ? "Ver vaga e candidatar-se na Gupy" : vaga.origem === "trampolim" ? "Ver vaga no PAT" : "Ver detalhes da vaga"}
+                              {vaga.origem === "rhbrasil" ? "Ver vaga na RHBrasil" : vaga.origem === "gupy" ? "Ver vaga e candidatar-se na Gupy" : vaga.origem === "empregoscom" ? "Ver vaga e candidatar-se no Empregos.com.br" : vaga.origem === "trampolim" ? "Ver vaga no PAT" : "Ver detalhes da vaga"}
                             </a>
                           )}
                         </div>
