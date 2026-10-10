@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     images: [
       {
-        url: "/utilidades/upas/opengraph-image",
+        url: "https://sobradao360.com.br/utilidades/upas/opengraph-image",
         width: 1200,
         height: 630,
         alt: "UPAs Agora — Acompanhe as filas e os médicos de plantão no Sobradão 360",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "UPAs Agora | Sobradão 360",
     description: "Filas e médicos de plantão nas UPAs de Rio Claro.",
-    images: ["/utilidades/upas/opengraph-image"],
+    images: ["https://sobradao360.com.br/utilidades/upas/opengraph-image"],
   },
 };
 
