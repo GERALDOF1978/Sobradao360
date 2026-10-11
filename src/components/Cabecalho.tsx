@@ -702,7 +702,7 @@ export default function Cabecalho() {
             </span>
 
             <a
-              href={noticiaPlantao ? `/utilidades/daae/noticias/${noticiaPlantao.id}` : "/utilidades/daae/noticias"}
+              href={noticiaPlantao ? `/daae?noticia=${noticiaPlantao.id}` : "/daae?aba=noticias"}
               className="ml-2 shrink-0 text-[8px] font-black text-orange-700"
             >
               VER
