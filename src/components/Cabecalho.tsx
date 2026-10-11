@@ -31,7 +31,7 @@ interface AlertaMeteorologico {
 const LOGO =
   "https://i.ibb.co/357pp0LQ/logo-sobradao-webp.webp";
 
-type NoticiaDaae = { titulo: string; url: string; data: string };
+type NoticiaDaae = { id: number; titulo: string; url: string; data: string };
 
 function interpretarClima(codigo: number, isDay: boolean) {
   if (codigo === 0)
@@ -702,7 +702,7 @@ export default function Cabecalho() {
             </span>
 
             <a
-              href={noticiaPlantao ? `/daae?noticia=${encodeURIComponent(noticiaPlantao.url)}` : "/daae#noticias-daae"}
+              href={noticiaPlantao ? `/utilidades/daae/noticias/${noticiaPlantao.id}` : "/utilidades/daae/noticias"}
               className="ml-2 shrink-0 text-[8px] font-black text-orange-700"
             >
               VER
