@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import MiniCardsAnuncio from "@/components/MiniCardsAnuncio";
 
 const WHATSAPP = "https://wa.me/5508000190505";
@@ -23,9 +23,7 @@ const servicosWhatsApp = [
 ];
 
 export default function DaaePage() {
-  const params = useSearchParams();
   const [noticias, setNoticias] = useState<Noticia[]>([]);
-  const [aberta, setAberta] = useState<string | null>(null);
   const [status, setStatus] = useState("carregando");
   useEffect(() => {
     let ativo = true;
@@ -42,23 +40,6 @@ export default function DaaePage() {
     const intervalo = setInterval(carregar, 15 * 60 * 1000);
     return () => { ativo = false; clearInterval(intervalo); };
   }, []);
-  useEffect(() => {
-    const url = params.get("noticia");
-    if (url && noticias.some(n => n.url === url)) {
-      setAberta(url);
-      document.getElementById("noticias-daae")?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [params, noticias]);
-  function limparTexto(html: string) {
-    return html.replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi, "")
-      .replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi, "")
-      .replace(/<\\/(?:p|div|h[1-6]|li)>/gi, "\\n\\n")
-      .replace(/<br\\s*\\/?>/gi, "\\n")
-      .replace(/<[^>]*>/g, "")
-      .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&")
-      .replace(/&quot;/g, '"').replace(/&#039;|&#8217;/g, "'")
-      .trim();
-  }
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <section className="bg-gradient-to-br from-cyan-700 via-cyan-600 to-blue-700 text-white">
@@ -77,7 +58,7 @@ export default function DaaePage() {
       </section>
 
       <section className="mx-auto max-w-3xl px-4 py-3 space-y-4">
-        <a href="#noticias-daae" className="flex justify-between rounded-xl bg-cyan-700 px-4 py-2.5 text-sm font-bold text-white"><span>📰 Notícias e avisos do DAAE</span><span>Ver ↓</span></a>
+        <Link href="/utilidades/daae/noticias" className="flex justify-between rounded-xl bg-cyan-700 px-4 py-2.5 text-sm font-bold text-white"><span>📰 Notícias e avisos do DAAE</span><span>Ver todas →</span></Link>
         <MiniCardsAnuncio />
         <div className="grid grid-cols-2 gap-3">
           <a href="tel:08000190505" className="flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-3 py-2 shadow-sm hover:border-cyan-400 transition">
@@ -154,18 +135,12 @@ export default function DaaePage() {
           {status === "erro" && <p className="text-sm text-slate-500">Notícias temporariamente indisponíveis.</p>}
           {status === "ok" && noticias.length === 0 && <p className="text-sm">Nenhuma notícia disponível.</p>}
           <div className="divide-y divide-slate-100">
-            {noticias.map(n => <article key={n.url} className="py-3">
-              <button type="button" aria-expanded={aberta === n.url} onClick={() => setAberta(aberta === n.url ? null : n.url)} className="flex w-full items-start justify-between gap-2 text-left">
-                <span><strong className="block text-sm">{n.titulo}</strong><span className="text-[11px] text-slate-500">{n.data ? new Date(n.data).toLocaleDateString("pt-BR") : ""}</span></span>
-                <span className="shrink-0 text-xs font-bold text-cyan-700">{aberta === n.url ? "Fechar −" : "Ler +"}</span>
-              </button>
-              {aberta === n.url && <div className="mt-3 rounded-xl bg-slate-50 p-3">
-                <h3 className="mb-2 text-sm font-black">{n.titulo}</h3>
-                <p className="whitespace-pre-line text-sm leading-6 text-slate-700">{limparTexto(n.conteudo) || n.resumo || "Texto completo não disponibilizado pela fonte."}</p>
-                <p className="mt-3 text-[10px] text-slate-500">Fonte: DAAE Rio Claro</p>
-              </div>}
-            </article>)}
+            {noticias.slice(0, 6).map(n => <Link key={n.id} href={`/utilidades/daae/noticias/${n.id}`} className="flex items-start justify-between gap-3 py-3 text-left">
+              <span><strong className="block text-sm">{n.titulo}</strong><span className="text-[11px] text-slate-500">{n.data ? new Date(n.data).toLocaleDateString("pt-BR") : ""}</span></span>
+              <span className="shrink-0 text-xs font-bold text-cyan-700">Ler →</span>
+            </Link>)}
           </div>
+          <Link href="/utilidades/daae/noticias" className="mt-3 block rounded-xl bg-cyan-50 px-3 py-2 text-center text-xs font-bold text-cyan-800">Ver todas as notícias →</Link>
         </section>
 
         <p className="px-2 text-center text-[11px] leading-5 text-slate-400">
