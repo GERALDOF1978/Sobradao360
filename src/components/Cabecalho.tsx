@@ -31,11 +31,7 @@ interface AlertaMeteorologico {
 const LOGO =
   "https://i.ibb.co/357pp0LQ/logo-sobradao-webp.webp";
 
-const plantao = [
-  "📢 Bem-vindo ao Sobradão 360",
-  "🏘️ Informação e serviços para a comunidade",
-  "📣 Tem algo para anunciar? Publique no Sobradão 360",
-];
+type NoticiaDaae = { titulo: string; url: string; data: string };
 
 function interpretarClima(codigo: number, isDay: boolean) {
   if (codigo === 0)
@@ -141,6 +137,7 @@ export default function Cabecalho() {
   const [mensagemPerfil, setMensagemPerfil] = useState("");
 
   const [plantaoAtual, setPlantaoAtual] = useState(0);
+  const [noticiasDaae, setNoticiasDaae] = useState<NoticiaDaae[]>([]);
   const [mensagemCompartilhar, setMensagemCompartilhar] = useState("");
 
   /*
@@ -305,22 +302,36 @@ export default function Cabecalho() {
     carregarPerfil();
   }, [user]);
 
-  /*
-   * =========================================================
-   * PLANTÃO
-   * =========================================================
-   */
+  /* PLANTÃO: notícias oficiais do DAAE, atualizadas a cada 15 minutos */
+  useEffect(() => {
+    let ativo = true;
+    async function atualizarNoticias() {
+      try {
+        const resposta = await fetch("/api/noticias-daae");
+        if (!resposta.ok) throw new Error("Notícias indisponíveis");
+        const dados = await resposta.json();
+        if (ativo && Array.isArray(dados.noticias)) {
+          setNoticiasDaae(dados.noticias);
+          setPlantaoAtual(0);
+        }
+      } catch (erro) {
+        console.error("Erro ao carregar notícias do DAAE:", erro);
+      }
+    }
+    atualizarNoticias();
+    const intervalo = setInterval(atualizarNoticias, 15 * 60 * 1000);
+    return () => { ativo = false; clearInterval(intervalo); };
+  }, []);
 
   useEffect(() => {
+    if (noticiasDaae.length < 2) return;
     const intervalo = setInterval(() => {
-      setPlantaoAtual(
-        (anterior) =>
-          (anterior + 1) % plantao.length
-      );
+      setPlantaoAtual(anterior => (anterior + 1) % noticiasDaae.length);
     }, 6000);
-
     return () => clearInterval(intervalo);
-  }, []);
+  }, [noticiasDaae.length]);
+
+  const noticiaPlantao = noticiasDaae[plantaoAtual] || null;
 
   /*
    * =========================================================
@@ -687,20 +698,17 @@ export default function Cabecalho() {
             </span>
 
             <span className="min-w-0 flex-1 truncate text-[9px] text-slate-500 sm:text-[10px]">
-              {alertaPrincipal
-                ? `⚠️ ${textoAlertaCabecalho(alertaPrincipal).periodo} · ${textoAlertaCabecalho(alertaPrincipal).descricao}`
-                : plantao[plantaoAtual]}
+              {noticiaPlantao ? `💧 DAAE · ${noticiaPlantao.titulo}` : "💧 DAAE · Confira as notícias oficiais sobre o abastecimento de água"}
             </span>
 
-            {alertaPrincipal && (
-              <button
-                type="button"
-                onClick={() => setAlertaSelecionado(alertaPrincipal)}
-                className="ml-2 shrink-0 text-[8px] font-black text-orange-700"
-              >
-                VER
-              </button>
-            )}
+            <a
+              href={noticiaPlantao?.url || "https://daaerioclaro.sp.gov.br/noticias/"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-2 shrink-0 text-[8px] font-black text-orange-700"
+            >
+              VER
+            </a>
           </div>
 
         </div>
