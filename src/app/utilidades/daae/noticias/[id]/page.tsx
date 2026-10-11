@@ -15,6 +15,7 @@ function textoSeguro(html: string) {
     .replace(/<[^>]*>/g, "")
     .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"').replace(/&#039;|&#8217;/g, "'")
+      .replace(/(?:\s*\n\s*){2,}/g, "\n\n")
     .replace(/&#8211;|&#8212;/g, "–")
     .trim();
 }
