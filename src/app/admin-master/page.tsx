@@ -52,7 +52,8 @@ interface LojaParceira {
   tipoPresenca?:
     | "pagina_sobradao"
     | "site_externo"
-    | "whatsapp";
+    | "whatsapp"
+    | "banner_tela";
 
   destinoDescricao?: string;
   siteUrl?: string;
@@ -160,6 +161,7 @@ const DESTINOS: Record<string, string> = {
   pagina_sobradao: "Página dentro do Sobradão 360",
   site_externo: "Site / Loja externa",
   whatsapp: "WhatsApp",
+  banner_tela: "Banner vertical no Sobradão 360",
 };
 
 const FILTROS = [
