@@ -59,6 +59,7 @@ export default function DaaePage() {
       .replace(/<[^>]*>/g, "")
       .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&")
       .replace(/&quot;/g, '"').replace(/&#039;|&#8217;/g, "'")
+      .replace(/(?:\s*\n\s*){2,}/g, "\n\n")
       .trim();
   }
   const ordenadas = [...noticias].sort((a, b) => (b.data || "").localeCompare(a.data || ""));
