@@ -288,7 +288,7 @@ export default function Home() {
           </div>
           {publicidade.length > 0 && publicidade[publicidadeAtual] && (
             <div className="aspect-[3/1] overflow-hidden rounded-2xl">
-              {publicidade[publicidadeAtual].tipoPresenca === "banner_tela" ? (
+              {publicidade[publicidadeAtual].tipoPresenca === "banner_tela" && publicidade[publicidadeAtual].arteTelaCheiaUrl ? (
                 <button type="button" onClick={() => abrirPublicidade(publicidade[publicidadeAtual])}
                   aria-label={`Abrir banner de ${publicidade[publicidadeAtual].nome || "publicidade"}`}
                   className={`block h-full w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-opacity duration-300 ${publicidadeVisivel ? "opacity-100" : "opacity-0"}`}>
@@ -306,8 +306,8 @@ export default function Home() {
                   className="h-full w-full object-cover"
                 />
               </Link>
-            </div>
               )}
+            </div>
           )}
         </section>
 
