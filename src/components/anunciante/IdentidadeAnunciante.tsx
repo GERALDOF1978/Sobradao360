@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   doc,
+  getDoc,
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
@@ -44,6 +45,7 @@ export default function IdentidadeAnunciante({
   const [bannerUrl, setBannerUrl] =
     useState(bannerUrlInicial || "");
 
+  const [arteTelaCheiaUrl, setArteTelaCheiaUrl] = useState("");
   const [corMarca, setCorMarca] =
     useState(corMarcaInicial || "#0f172a");
 
@@ -63,6 +65,19 @@ export default function IdentidadeAnunciante({
 
   const [erro, setErro] =
     useState("");
+
+  async function carregarArteTela() {
+    try {
+      const snapshot = await getDoc(doc(db, "lojas_parceiras", lojaId));
+      setArteTelaCheiaUrl(String(snapshot.data()?.arteTelaCheiaUrl || ""));
+    } catch (error) {
+      console.error("Erro ao buscar banner para celular:", error);
+    }
+  }
+
+  useEffect(() => {
+    void carregarArteTela();
+  }, [lojaId]);
 
   async function enviarImagem(
     arquivo: File
@@ -381,6 +396,38 @@ export default function IdentidadeAnunciante({
         </div>
         </div>
 
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50 p-4">
+        <h4 className="text-sm font-black text-blue-950">📱 Banner para celular — tela cheia</h4>
+        <p className="mt-1 text-xs text-blue-900">Arte vertical recomendada: 1080 × 1920 px. Será aberta ao clicar em um banner da home quando o destino selecionado for “Banner em tela cheia”.</p>
+        {arteTelaCheiaUrl && (
+          <img src={arteTelaCheiaUrl} alt={`Banner vertical de ${nome}`} className="mx-auto mt-3 max-h-72 max-w-full rounded-xl object-contain" />
+        )}
+        <label className="mt-3 flex cursor-pointer items-center justify-center rounded-xl bg-blue-900 px-4 py-3 text-xs font-black text-white">
+          {arteTelaCheiaUrl ? "Trocar banner vertical" : "Enviar banner vertical"}
+          <input type="file" accept="image/*" className="hidden" disabled={salvando}
+            onChange={async (e) => {
+              const arquivo = e.target.files?.[0];
+              if (!arquivo) return;
+              try {
+                setSalvando(true);
+                setErro("");
+                const url = await enviarImagem(arquivo);
+                await updateDoc(doc(db, "lojas_parceiras", lojaId), { arteTelaCheiaUrl: url, atualizadoEm: serverTimestamp() });
+                setArteTelaCheiaUrl(url);
+                setMensagem("Banner vertical atualizado com sucesso.");
+                onAtualizado?.();
+              } catch (error) {
+                console.error("Erro ao enviar banner vertical:", error);
+                setErro("Não foi possível enviar o banner vertical.");
+              } finally {
+                setSalvando(false);
+                e.target.value = "";
+              }
+            }}
+          />
+        </label>
       </div>
 
       {/* FORMATOS DE DIVULGAÇÃO — apenas informativo */}
