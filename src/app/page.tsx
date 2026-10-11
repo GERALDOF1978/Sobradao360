@@ -23,6 +23,7 @@ type AnuncioHome = {
   artePublicidadeUrl: string;
   arteDestaquesUrl: string;
   arteParceirosUrl: string;
+  arteTelaCheiaUrl: string;
   exibicao: Exibicao;
   destinoUrl: string;
 };
@@ -132,6 +133,8 @@ export default function Home() {
             typeof loja.arteDestaquesUrl === "string" ? loja.arteDestaquesUrl : "";
           const arteParceirosUrl =
             typeof loja.arteParceirosUrl === "string" ? loja.arteParceirosUrl : "";
+          const arteTelaCheiaUrl =
+            typeof loja.arteTelaCheiaUrl === "string" ? loja.arteTelaCheiaUrl : "";
 
           const inicio = dataTimestamp(contrato.inicio);
           const vencimento = dataTimestamp(contrato.vencimento);
@@ -155,8 +158,11 @@ export default function Home() {
             artePublicidadeUrl,
             arteDestaquesUrl,
             arteParceirosUrl,
+            arteTelaCheiaUrl,
             exibicao,
-            destinoUrl: destinoLoja(lojaId, loja),
+            destinoUrl: loja.tipoPresenca === "banner_tela" && arteTelaCheiaUrl
+              ? `/publicidade/${doc.id}`
+              : destinoLoja(lojaId, loja),
           });
         });
         // Em cada carregamento a ordem muda, evitando que os mesmos anunciantes
