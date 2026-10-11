@@ -43,7 +43,9 @@ export default function DaaePage() {
     return () => { ativo = false; clearInterval(intervalo); };
   }, []);
   useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("noticia");
+    const query = new URLSearchParams(window.location.search);
+    const id = query.get("noticia");
+    if (query.get("aba") === "noticias") setAba("noticias");
     if (id && /^[1-9]\\d*$/.test(id)) {
       setAba("noticias");
       setAberta(Number(id));
