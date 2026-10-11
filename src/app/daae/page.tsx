@@ -46,16 +46,16 @@ export default function DaaePage() {
     const query = new URLSearchParams(window.location.search);
     const id = query.get("noticia");
     if (query.get("aba") === "noticias") setAba("noticias");
-    if (id && /^[1-9]\\d*$/.test(id)) {
+    if (id && /^[1-9]\d*$/.test(id)) {
       setAba("noticias");
       setAberta(Number(id));
     }
   }, []);
   function textoMateria(html: string) {
-    return html.replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi, "")
-      .replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi, "")
-      .replace(/<\\/(?:p|div|h[1-6]|li)>/gi, "\\n\\n")
-      .replace(/<br\\s*\\/?>/gi, "\\n")
+    return html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+      .replace(/<\/(?:p|div|h[1-6]|li)>/gi, "\n\n")
+      .replace(/<br\s*\/?>/gi, "\n")
       .replace(/<[^>]*>/g, "")
       .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&")
       .replace(/&quot;/g, '"').replace(/&#039;|&#8217;/g, "'")
