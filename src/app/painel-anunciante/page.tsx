@@ -39,7 +39,8 @@ type TipoNegocio =
 type TipoPresenca =
   | "pagina_sobradao"
   | "site_externo"
-  | "whatsapp";
+  | "whatsapp"
+  | "banner_tela";
 
 type StatusNegocio =
   | "PENDENTE"
@@ -203,6 +204,12 @@ const PRESENCAS: {
     icon: "💬",
     label: "WhatsApp",
     descricao: "O cliente será direcionado para seu WhatsApp.",
+  },
+  {
+    value: "banner_tela",
+    icon: "📱",
+    label: "Banner em tela cheia",
+    descricao: "Abre uma arte vertical no Sobradão 360, mantendo o cabeçalho e o menu inferior.",
   },
 ];
 
@@ -1335,7 +1342,7 @@ corMarca:
 
           </div>
 
-          <div className="grid gap-3 p-5 md:grid-cols-3">
+          <div className="grid gap-3 p-5 md:grid-cols-2">
 
             <div className="rounded-2xl bg-slate-50 p-4">
 
@@ -1648,6 +1655,13 @@ corMarca:
                   </div>
 
                 </div>
+
+                {tipoPresenca ===
+                  "banner_tela" && (
+                    <p className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs text-blue-900">
+                      Envie a arte vertical em Identidade do anunciante, na opção Banner para celular. O banner só abrirá após a imagem ser enviada.
+                    </p>
+                  )}
 
                 {tipoPresenca ===
                   "site_externo" && (
