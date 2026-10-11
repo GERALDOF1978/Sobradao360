@@ -307,6 +307,7 @@ function presencaValida(valor: unknown): TipoPresenca {
     "pagina_sobradao",
     "site_externo",
     "whatsapp",
+    "banner_tela",
   ];
 
   if (
