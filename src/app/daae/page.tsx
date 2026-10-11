@@ -63,7 +63,7 @@ export default function DaaePage() {
       .trim();
   }
   const ordenadas = [...noticias].sort((a, b) => (b.data || "").localeCompare(a.data || ""));
-  const urgentes = ordenadas.filter(n => /falta de [áa]gua|interrup[çc][ãa]o|abastecimento interrompido|rompimento|emergencial/i.test(n.titulo));
+  const urgentes = ordenadas.filter(n => /falta de [áa]gua|interrup[çc][ãa]o|abastecimento interrompido|rompimento|emergencial/i.test(n.titulo) && n.data && Date.now() - new Date(n.data).getTime() < 48 * 60 * 60 * 1000 && new Date(n.data).getTime() <= Date.now());
   const demais = ordenadas.filter(n => !urgentes.includes(n));
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
