@@ -702,9 +702,7 @@ export default function Cabecalho() {
             </span>
 
             <a
-              href={noticiaPlantao?.url || "https://daaerioclaro.sp.gov.br/noticias/"}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={noticiaPlantao ? `/daae?noticia=${encodeURIComponent(noticiaPlantao.url)}` : "/daae#noticias-daae"}
               className="ml-2 shrink-0 text-[8px] font-black text-orange-700"
             >
               VER
