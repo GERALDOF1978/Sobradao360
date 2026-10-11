@@ -24,6 +24,7 @@ type AnuncioHome = {
   arteDestaquesUrl: string;
   arteParceirosUrl: string;
   arteTelaCheiaUrl: string;
+  tipoPresenca: string;
   exibicao: Exibicao;
   destinoUrl: string;
 };
@@ -80,6 +81,7 @@ export default function Home() {
   const destaque1Ref = useRef<HTMLDivElement | null>(null);
   const [publicidadeAtual, setPublicidadeAtual] = useState(0);
   const [publicidadeVisivel, setPublicidadeVisivel] = useState(true);
+  const [splash, setSplash] = useState<{ nome: string; imagem: string } | null>(null);
 
   useEffect(() => {
     async function carregarAnunciosHome() {
@@ -159,10 +161,9 @@ export default function Home() {
             arteDestaquesUrl,
             arteParceirosUrl,
             arteTelaCheiaUrl,
+            tipoPresenca: typeof loja.tipoPresenca === "string" ? loja.tipoPresenca : "",
             exibicao,
-            destinoUrl: loja.tipoPresenca === "banner_tela" && arteTelaCheiaUrl
-              ? `/publicidade/${doc.id}`
-              : destinoLoja(lojaId, loja),
+            destinoUrl: destinoLoja(lojaId, loja),
           });
         });
         // Em cada carregamento a ordem muda, evitando que os mesmos anunciantes
@@ -210,6 +211,27 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, [publicidade.length]);
 
+  useEffect(() => {
+    if (!splash) return;
+    const fecharEscape = (evento: KeyboardEvent) => {
+      if (evento.key === "Escape") setSplash(null);
+    };
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", fecharEscape);
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      window.removeEventListener("keydown", fecharEscape);
+    };
+  }, [splash]);
+
+  function abrirPublicidade(item: AnuncioHome) {
+    if (item.tipoPresenca !== "banner_tela") return false;
+    if (!item.arteTelaCheiaUrl) return false;
+    setSplash({ nome: item.nome || "Publicidade", imagem: item.arteTelaCheiaUrl });
+    return true;
+  }
+
   const lojasFiltradas = lojasAtivas.filter((loja: LojaHome) =>
     loja.nome.toLocaleLowerCase("pt-BR").includes(buscaLoja.trim().toLocaleLowerCase("pt-BR"))
   );
@@ -217,6 +239,19 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-16 font-sans">
       <AvisoLancamento />
+
+      {splash && (
+        <div role="dialog" aria-modal="true" aria-label={splash.nome}
+          className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/85 px-2 pt-[130px] pb-[calc(84px+env(safe-area-inset-bottom))] md:pt-[110px] md:pb-6"
+          onClick={() => setSplash(null)}>
+          <button type="button" onClick={() => setSplash(null)}
+            className="absolute right-3 top-[140px] z-10 rounded-full bg-white/95 px-3 py-2 text-xs font-black text-slate-950 shadow-lg md:top-[120px]"
+            aria-label="Fechar anúncio e voltar à home">✕ Fechar</button>
+          <img src={splash.imagem} alt={splash.nome}
+            className="max-h-full max-w-full cursor-pointer object-contain"
+            onClick={() => setSplash(null)} />
+        </div>
+      )}
 
       <main className="max-w-md mx-auto px-3 sm:px-4 py-4 space-y-6">
 
@@ -253,6 +288,14 @@ export default function Home() {
           </div>
           {publicidade.length > 0 && publicidade[publicidadeAtual] && (
             <div className="aspect-[3/1] overflow-hidden rounded-2xl">
+              {publicidade[publicidadeAtual].tipoPresenca === "banner_tela" ? (
+                <button type="button" onClick={() => abrirPublicidade(publicidade[publicidadeAtual])}
+                  aria-label={`Abrir banner de ${publicidade[publicidadeAtual].nome || "publicidade"}`}
+                  className={`block h-full w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-opacity duration-300 ${publicidadeVisivel ? "opacity-100" : "opacity-0"}`}>
+                  <img src={publicidade[publicidadeAtual].artePublicidadeUrl || publicidade[publicidadeAtual].bannerUrl}
+                    alt={publicidade[publicidadeAtual].nome || "Publicidade"} className="h-full w-full object-cover" />
+                </button>
+              ) : (
               <Link
                 href={publicidade[publicidadeAtual].destinoUrl}
                 className={`block h-full w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-opacity duration-300 ${publicidadeVisivel ? "opacity-100" : "opacity-0"}`}
@@ -264,6 +307,7 @@ export default function Home() {
                 />
               </Link>
             </div>
+              )}
           )}
         </section>
 
@@ -278,7 +322,9 @@ export default function Home() {
           </div>
           <div ref={destaque1Ref} className="flex gap-2 overflow-x-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {destaques.map((item) => (
-              <Link key={`${item.id}-dest`} href={item.destinoUrl} className="relative w-[118px] shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <button key={`${item.id}-dest`} type="button" onClick={() => {
+                if (!abrirPublicidade(item)) window.location.assign(item.destinoUrl);
+              }} className="relative w-[118px] shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 <div className="aspect-[1/2] w-full overflow-hidden">
                   <img src={item.arteDestaquesUrl || item.bannerUrl} alt={item.nome || "Destaque"} className="h-full w-full object-cover" />
                 </div>
@@ -287,7 +333,7 @@ export default function Home() {
                     {item.nome || "Destaque"}
                   </p>
                 </div>
-              </Link>
+              </button>
             ))}
           </div>
         </section>
