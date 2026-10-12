@@ -38,6 +38,10 @@ export default function Memoria360() {
   const [ranking, setRanking] = useState<Placar[]>([]);
   const [usuario, setUsuario] = useState<{ uid: string; displayName: string | null } | null>(null);
   const [mensagem, setMensagem] = useState("");
+  const [cadastro, setCadastro] = useState<{ nome: string; celular: string } | null>(null);
+  const [nome, setNome] = useState("");
+  const [celular, setCelular] = useState("");
+  const [cadastrando, setCadastrando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const bloqueado = useRef(false);
   const timerVirada = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,6 +53,38 @@ export default function Memoria360() {
     const unsubscribe = onAuthStateChanged(auth, setUsuario);
     return () => { unsubscribe(); if (timerVirada.current) clearTimeout(timerVirada.current); };
   }, []);
+
+  useEffect(() => {
+    let cancelado = false;
+    if (!usuario) { setCadastro(null); return; }
+    (async () => {
+      try {
+        const token = await auth.currentUser?.getIdToken();
+        if (!token) return;
+        const resposta = await fetch("/api/jogos/memoria/cadastro", { headers: { Authorization: "Bearer " + token }, cache: "no-store" });
+        const dados = await resposta.json();
+        if (!cancelado && resposta.ok) setCadastro(dados.cadastro || null);
+      } catch { if (!cancelado) setMensagem("Não foi possível consultar seu cadastro."); }
+    })();
+    return () => { cancelado = true; };
+  }, [usuario]);
+
+  async function cadastrarJogador() {
+    if (!usuario || cadastrando) return;
+    setCadastrando(true); setMensagem("");
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const resposta = await fetch("/api/jogos/memoria/cadastro", {
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ nome, celular: "55" + celular.replace(/\D/g, "").replace(/^55/, "") }),
+      });
+      const dados = await resposta.json();
+      if (!resposta.ok) throw new Error(dados.erro || "Cadastro não realizado.");
+      setCadastro(dados.cadastro);
+      setMensagem("Cadastro vinculado à sua conta Google!");
+    } catch (e) { setMensagem(e instanceof Error ? e.message : "Falha ao cadastrar."); }
+    finally { setCadastrando(false); }
+  }
 
   async function carregarRanking() {
     try {
@@ -73,12 +109,12 @@ export default function Memoria360() {
   }, [concluido, finalizado]);
 
   async function salvarPontos() {
-    if (!usuario || !finalizado || salvo.current || salvando) return;
+    if (!usuario || !cadastro || !finalizado || salvo.current || salvando) return;
     setSalvando(true);
     setMensagem("");
     try {
       const referencia = doc(db, "ranking_memoria360", usuario.uid);
-      const apelido = (usuario.displayName || "Morador").trim().slice(0, 24);
+      const apelido = cadastro.nome.slice(0, 24);
       await runTransaction(db, async (tx: { get: (ref: ReturnType<typeof doc>) => Promise<{ exists: () => boolean; data: () => Record<string, unknown> }>; set: (ref: ReturnType<typeof doc>, data: Record<string, unknown>) => void }) => {
         const anterior = await tx.get(referencia);
         if (!anterior.exists() || Number(anterior.data().pontos || 0) < pontos) {
@@ -128,6 +164,14 @@ export default function Memoria360() {
       <Link href="/" className="text-xs font-bold text-cyan-700">← Voltar ao Sobradão 360</Link>
       <h1 className="mt-3 text-center text-2xl font-black">🧠 Memória 360</h1>
       <p className="mt-1 text-center text-xs text-slate-500">Encontre os 8 pares no menor tempo e com menos tentativas.</p>
+      {usuario && !cadastro && <section className="mt-4 space-y-2 rounded-2xl border border-cyan-200 bg-white p-4">
+        <h2 className="font-bold">Cadastro único do jogador</h2>
+        <p className="text-xs text-slate-500">Seu nome e celular serão vinculados à sua conta Google. Um número não pode ser usado por outra conta. O celular não será exibido no ranking. Não há confirmação por SMS.</p>
+        <input aria-label="Nome completo" placeholder="Nome completo" value={nome} onChange={e => setNome(e.target.value)} maxLength={100} className="w-full rounded-lg border p-3 text-sm" />
+        <input aria-label="Celular com DDD" type="tel" placeholder="Celular com DDD (19 99999-9999)" value={celular} onChange={e => setCelular(e.target.value)} maxLength={18} className="w-full rounded-lg border p-3 text-sm" />
+        <button type="button" onClick={() => void cadastrarJogador()} disabled={cadastrando} className="w-full rounded-lg bg-cyan-700 p-3 text-sm font-bold text-white disabled:opacity-50">{cadastrando ? "Cadastrando..." : "Vincular cadastro à conta Google"}</button>
+      </section>}
+      {cadastro && <p className="mt-3 text-center text-xs text-slate-600">Jogador: <strong>{cadastro.nome}</strong> · cadastro vinculado à conta Google</p>}
       <div className="mt-4 grid grid-cols-3 gap-2 rounded-2xl bg-white p-3 text-center shadow-sm">
         <div><p className="text-[10px] text-slate-500">Tempo</p><strong className="text-lg tabular-nums">{segundos}s</strong></div>
         <div><p className="text-[10px] text-slate-500">Tentativas</p><strong className="text-lg tabular-nums">{tentativas}</strong></div>
@@ -147,10 +191,10 @@ export default function Memoria360() {
       {finalizado && <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center">
         <h2 className="text-xl font-black">🎉 Parabéns!</h2>
         <p className="mt-1 text-sm">Você fez {pontos} pontos em {segundos} segundos e {tentativas} tentativas.</p>
-        {usuario ? <button type="button" onClick={salvarPontos} disabled={salvando || salvo.current}
+        {usuario && cadastro ? <button type="button" onClick={salvarPontos} disabled={salvando || salvo.current}
           className="mt-3 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-60">
           {salvo.current ? "Pontuação registrada" : salvando ? "Salvando..." : "Registrar no ranking"}
-        </button> : <p className="mt-3 text-sm">Entre com sua conta do Sobradão 360 para participar do ranking.</p>}
+        </button> : <p className="mt-3 text-sm">{usuario ? "Complete o cadastro acima para participar do ranking." : "Entre com sua conta Google para participar do ranking."}</p>}
       </div>}
       {mensagem && <p role="status" className="mt-3 text-center text-xs text-slate-600">{mensagem}</p>}
       <button type="button" onClick={reiniciar} className="mt-4 w-full rounded-xl bg-cyan-700 px-4 py-3 text-sm font-black text-white">↻ Novo jogo</button>
