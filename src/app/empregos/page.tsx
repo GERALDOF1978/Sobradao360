@@ -31,7 +31,7 @@ interface Vaga {
   urlTrampolim?: string | null;
   codigoVaga?: string | null;
   imagemUrl?: string | null;
-  origem: "trampolim" | "rhbrasil" | "gupy" | "empregoscom" | "manual";
+  origem: "trampolim" | "rhbrasil" | "gupy" | "empregoscom" | "jooble" | "manual";
   createdAt?: any;
   publicadaEm?: string | null;
   autorNome?: string;
@@ -674,6 +674,36 @@ async function buscarVagas(): Promise<Vaga[]> {
     console.warn("Não foi possível consultar Empregos.com.br:", error);
   }
 
+  // Jooble: mesma apresentação das demais vagas, consultada pelo servidor.
+  try {
+    const response = await fetch("/api/jooble", { cache: "no-store" });
+    if (response.ok) {
+      const dados = await response.json();
+      const vagasJooble = Array.isArray(dados?.vagas) ? dados.vagas : [];
+      const ids = new Set<string>();
+      vagasJooble.forEach((vaga: any) => {
+        const id = textoSeguro(vaga.id);
+        const url = textoSeguro(vaga.url);
+        if (!id || !url || ids.has(id)) return;
+        ids.add(id);
+        lista.push({
+          id: "jooble-" + id,
+          titulo: textoSeguro(vaga.titulo) || "Vaga de emprego",
+          empresa: textoSeguro(vaga.empresa) || "Empresa não informada",
+          descricao: textoSeguro(vaga.descricao),
+          cidade: textoSeguro(vaga.cidade) || "Rio Claro e região",
+          salario: formatarSalario(vaga.salario),
+          tipoContrato: textoSeguro(vaga.tipoContrato) || null,
+          urlTrampolim: url,
+          publicadaEm: textoSeguro(vaga.publicadaEm) || null,
+          origem: "jooble",
+        });
+      });
+    }
+  } catch (error) {
+    console.warn("Não foi possível consultar Jooble:", error);
+  }
+
   return lista;
 }
 
@@ -704,6 +734,7 @@ type AbaEmpregos =
   | "rhbrasil"
   | "gupy"
   | "empregoscom"
+  | "jooble"
   | "manual"
   | "curriculos";
 
@@ -877,6 +908,10 @@ export default function EmpregosPage() {
               className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "empregoscom" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
             >
               🔎<br />Empregos.com.br
+            </button>
+
+            <button type="button" onClick={() => { setAba("jooble"); setBusca(""); }} className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "jooble" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
+              💼<br />Jooble
             </button>
 
             {/* VAGAS MANUAIS */}
@@ -1101,7 +1136,7 @@ export default function EmpregosPage() {
                           {/* ORIGEM / DATA */}
                           <div className="flex justify-between items-start gap-2">
                             <span className="text-[9px] font-black bg-indigo-100 text-indigo-800 px-2 py-1 rounded-lg">
-                              {vaga.origem === "trampolim" ? "🏢 PAT" : vaga.origem === "rhbrasil" ? "💼 RHBrasil" : vaga.origem === "gupy" ? "💼 Gupy" : vaga.origem === "empregoscom" ? "🔎 Empregos.com.br" : "👤 COMUNIDADE"}
+                              {vaga.origem === "trampolim" ? "🏢 PAT" : vaga.origem === "rhbrasil" ? "💼 RHBrasil" : vaga.origem === "gupy" ? "💼 Gupy" : vaga.origem === "empregoscom" ? "🔎 Empregos.com.br" : vaga.origem === "jooble" ? "💼 Jooble" : "👤 COMUNIDADE"}
                             </span>
 
                             {formatarData(
