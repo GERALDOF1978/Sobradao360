@@ -53,7 +53,7 @@ export default function Memoria360() {
   async function carregarRanking() {
     try {
       const snap = await getDocs(query(collection(db, "ranking_memoria360"), orderBy("pontos", "desc"), limit(10)));
-      setRanking(snap.docs.map(d => ({ uid: d.id, ...(d.data() as Omit<Placar, "uid">) })));
+      setRanking(snap.docs.map((d: { id: string; data: () => Record<string, unknown> }) => ({ uid: d.id, ...(d.data() as Omit<Placar, "uid">) })));
     } catch { setMensagem("Ranking indisponível. O jogo continua funcionando normalmente."); }
   }
   useEffect(() => { void carregarRanking(); }, []);
@@ -79,7 +79,7 @@ export default function Memoria360() {
     try {
       const referencia = doc(db, "ranking_memoria360", usuario.uid);
       const apelido = (usuario.displayName || "Morador").trim().slice(0, 24);
-      await runTransaction(db, async tx => {
+      await runTransaction(db, async (tx: { get: (ref: ReturnType<typeof doc>) => Promise<{ exists: () => boolean; data: () => Record<string, unknown> }>; set: (ref: ReturnType<typeof doc>, data: Record<string, unknown>) => void }) => {
         const anterior = await tx.get(referencia);
         if (!anterior.exists() || Number(anterior.data().pontos || 0) < pontos) {
           tx.set(referencia, { apelido, pontos, tempo: segundos, tentativas, atualizadoEm: serverTimestamp() });
