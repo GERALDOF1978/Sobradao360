@@ -475,6 +475,17 @@ service cloud.firestore {
     }
 
     // Ranking do Jogo da Memória 360: cada usuário altera somente sua pontuação.
+    match /campeonatos_memoria360/{campeonatoId} {
+      allow read: if true;
+      allow create, update, delete: if isMaster();
+      match /ranking/{jogadorId} {
+        allow read: if true;
+        // Premiações exigem validação de resultados em ambiente confiável.
+        // Até essa etapa, somente o Master pode registrar resultados oficiais.
+        allow create, update, delete: if isMaster();
+      }
+    }
+
     match /ranking_memoria360/{jogadorId} {
       allow read: if true;
       allow create, update: if request.auth != null
