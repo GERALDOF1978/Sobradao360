@@ -275,6 +275,10 @@ export default function Home() {
             MARQUEE
         ========================================== */}
 
+        <Link href="/desafio-360" className="block rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-800 to-blue-900 p-4 text-white shadow-md">
+          <div className="flex items-center gap-3"><span className="text-4xl">🏆</span><div className="min-w-0 flex-1"><h2 className="text-lg font-black">Desafio 360</h2><p className="text-xs text-cyan-50">Jogue Memória 360, veja o ranking e tente chegar ao 1º lugar!</p></div><span className="shrink-0 rounded-lg bg-white px-3 py-2 text-xs font-black text-cyan-900">Jogar →</span></div>
+        </Link>
+
         <NegociosMarquee />
 
         {/* PUBLICIDADE — formato 3:1, um anunciante por vez com transição suave */}
