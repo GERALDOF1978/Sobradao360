@@ -1336,13 +1336,14 @@ export default function AdminMasterPage() {
           </div>
           <div className="space-y-2">
             {[
-              ["estatisticas","📊","Visitas do portal"],["anunciantes","🏪","Anunciantes"],["solicitacoes","📨","Solicitações"],["planos","💳","Planos e contratos"],["noticias","📰","Giro de Notícias"],["moderacao","🛡️","Central de Moderação"],["vagas","💼","Atualizar vagas"],["contatos","📞","Contatos e Serviços"],["painel","👤","Painel anunciante"]
+              ["estatisticas","📊","Visitas do portal"],["anunciantes","🏪","Anunciantes"],["solicitacoes","📨","Solicitações"],["planos","💳","Planos e contratos"],["noticias","📰","Giro de Notícias"],["moderacao","🛡️","Central de Moderação"],["vagas","💼","Atualizar vagas"],["contatos","📞","Contatos e Serviços"],["painel","👤","Painel anunciante"],["jogos","🏆","Desafio 360"]
             ].map(([id,icone,titulo]) => <button key={id} type="button" onClick={() => { setMenuAberto(id); setMenuLateralAberto(false); if (id === "moderacao") {void carregarPostsMoradores();void carregarMoradoresBloqueados();void carregarCentralModeracao();} }} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-black ${menuAberto === id ? "bg-amber-400 text-slate-950" : "bg-white/5 text-white hover:bg-white/10"}`}><span>{icone}</span><span>{titulo}</span>{id === "solicitacoes" && solicitacoes.length > 0 && <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px]">{solicitacoes.length}</span>}</button>)}
           </div>
           <p className="mt-6 border-t border-white/10 pt-4 text-[10px] text-slate-400">{user?.email || "Master"}</p>
         </aside>
 
 
+        {menuAberto === "jogos" && <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm"><h2 className="text-xl font-black">🏆 Desafio 360</h2><p className="mt-2 text-sm text-slate-600">Crie e encerre campeonatos, configure o prêmio e acompanhe a classificação de cada edição.</p><a href="/admin-master/jogos" className="mt-4 inline-flex rounded-xl bg-cyan-700 px-5 py-3 text-sm font-black text-white">Gerenciar campeonatos →</a><a href="/desafio-360" className="ml-2 mt-4 inline-flex rounded-xl border px-4 py-3 text-sm font-bold">Ver área do morador</a></section>}
         {menuAberto === "estatisticas" && <EstatisticasVisitas />}
 
         {menuAberto === "moderacao" && (
