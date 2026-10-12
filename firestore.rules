@@ -474,6 +474,29 @@ service cloud.firestore {
         );
     }
 
+    // Ranking do Jogo da Memória 360: cada usuário altera somente sua pontuação.
+    match /ranking_memoria360/{jogadorId} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && request.auth.uid == jogadorId
+        && request.resource.data.keys().hasOnly(["apelido", "pontos", "tempo", "tentativas", "atualizadoEm"])
+        && request.resource.data.apelido is string
+        && request.resource.data.apelido.size() > 0
+        && request.resource.data.apelido.size() <= 24
+        && request.resource.data.pontos is int
+        && request.resource.data.pontos >= 100
+        && request.resource.data.pontos <= 3000
+        && request.resource.data.tempo is int
+        && request.resource.data.tempo >= 0
+        && request.resource.data.tentativas is int
+        && request.resource.data.tentativas >= 8
+        && request.resource.data.pontos == (3000 - (request.resource.data.tentativas - 8) * 110 - request.resource.data.tempo * 12 > 100
+          ? 3000 - (request.resource.data.tentativas - 8) * 110 - request.resource.data.tempo * 12 : 100)
+        && (!exists(/databases/$(database)/documents/ranking_memoria360/$(jogadorId))
+          || request.resource.data.pontos > resource.data.pontos);
+      allow delete: if isMaster();
+    }
+
     match /logs_admin/{logId} {
       allow read, create: if isMaster();
       allow update, delete: if false;
