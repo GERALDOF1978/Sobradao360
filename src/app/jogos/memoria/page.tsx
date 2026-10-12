@@ -162,6 +162,7 @@ export default function Memoria360() {
   return <main className="min-h-screen bg-slate-50 px-3 py-5 text-slate-900">
     <div className="mx-auto max-w-xl">
       <Link href="/" className="text-xs font-bold text-cyan-700">← Voltar ao Sobradão 360</Link>
+      <Link href="/desafio-360" className="mt-2 inline-block text-xs font-bold text-cyan-700">🏆 Ver Desafio 360 e ranking</Link>
       <h1 className="mt-3 text-center text-2xl font-black">🧠 Memória 360</h1>
       <p className="mt-1 text-center text-xs text-slate-500">Encontre os 8 pares no menor tempo e com menos tentativas.</p>
       {usuario && !cadastro && <section className="mt-4 space-y-2 rounded-2xl border border-cyan-200 bg-white p-4">
@@ -197,14 +198,15 @@ export default function Memoria360() {
         </button> : <p className="mt-3 text-sm">{usuario ? "Complete o cadastro acima para participar do ranking." : "Entre com sua conta Google para participar do ranking."}</p>}
       </div>}
       {mensagem && <p role="status" className="mt-3 text-center text-xs text-slate-600">{mensagem}</p>}
-      <button type="button" onClick={reiniciar} className="mt-4 w-full rounded-xl bg-cyan-700 px-4 py-3 text-sm font-black text-white">↻ Novo jogo</button>
+      <button type="button" onClick={reiniciar} className="mt-4 w-full rounded-xl bg-cyan-700 px-4 py-3 text-sm font-black text-white">↻ Jogar novamente e melhorar minha pontuação</button>
       <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
         <div className="flex items-center justify-between"><h2 className="font-black">🏆 Ranking geral</h2><button type="button" onClick={() => void carregarRanking()} className="text-xs font-bold text-cyan-700">Atualizar</button></div>
-        <p className="mb-3 text-[11px] text-slate-500">Melhor pontuação de cada jogador</p>
+        <p className="mb-3 text-[11px] text-slate-500">Veja quem está na frente e tente superar sua marca! Melhor pontuação de cada jogador.</p>
+        {usuario && <p className="mb-2 text-xs font-semibold text-cyan-800">{ranking.some(j => j.uid === usuario.uid) ? `Sua posição: ${ranking.findIndex(j => j.uid === usuario.uid) + 1}º entre os 10 melhores` : "Você ainda não está entre os 10 melhores. Jogue novamente!"}</p>}
         {ranking.length === 0 ? <p className="text-sm text-slate-500">Nenhuma pontuação disponível ainda.</p> :
           <ol className="divide-y divide-slate-100">{ranking.map((j, i) =>
-            <li key={j.uid} className="flex items-center gap-2 py-2 text-sm">
-              <span className="w-7 font-bold">{i + 1}º</span>
+            <li key={j.uid} className={"flex items-center gap-2 py-2 text-sm " + (usuario?.uid === j.uid ? "rounded-lg bg-cyan-50 px-2 font-bold text-cyan-900" : "")}>
+              <span className="w-7 font-bold">{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}º`}</span>
               <span className="min-w-0 flex-1 truncate">{j.apelido}</span>
               <strong>{j.pontos} pts</strong>
             </li>)}</ol>}
