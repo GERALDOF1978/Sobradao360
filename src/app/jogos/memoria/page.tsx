@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import type { User } from "firebase/auth";
 import { collection, doc, getDocs, limit, orderBy, query, runTransaction, serverTimestamp } from "firebase/firestore";
+import type { DocumentData, QueryDocumentSnapshot, Transaction } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 
 const ICONES = ["💧", "⚽", "🌳", "🏠", "🚲", "🐶", "☀️", "🚗", "🌻", "📚", "🎨", "🍉"];
@@ -53,7 +55,7 @@ export default function Memoria360() {
   async function carregarRanking() {
     try {
       const snap = await getDocs(query(collection(db, "ranking_memoria360"), orderBy("pontos", "desc"), limit(10)));
-      setRanking(snap.docs.map(d => ({ uid: d.id, ...(d.data() as Omit<Placar, "uid">) })));
+      setRanking(snap.docs.map((d: QueryDocumentSnapshot<DocumentData>) => ({ uid: d.id, ...(d.data() as Omit<Placar, "uid">) })));
     } catch { setMensagem("Ranking indisponível. O jogo continua funcionando normalmente."); }
   }
   useEffect(() => { void carregarRanking(); }, []);
@@ -79,7 +81,7 @@ export default function Memoria360() {
     try {
       const referencia = doc(db, "ranking_memoria360", usuario.uid);
       const apelido = (usuario.displayName || "Morador").trim().slice(0, 24);
-      await runTransaction(db, async tx => {
+      await runTransaction(db, async (tx: Transaction) => {
         const anterior = await tx.get(referencia);
         if (!anterior.exists() || Number(anterior.data().pontos || 0) < pontos) {
           tx.set(referencia, { apelido, pontos, tempo: segundos, tentativas, atualizadoEm: serverTimestamp() });
