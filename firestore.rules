@@ -475,6 +475,14 @@ service cloud.firestore {
     }
 
     // Ranking do Jogo da Memória 360: cada usuário altera somente sua pontuação.
+    // Dados pessoais dos jogadores e reserva de celular: acesso somente pelo servidor Admin SDK.
+    match /jogadores_memoria360/{jogadorId} {
+      allow read, write: if false;
+    }
+    match /celulares_memoria360/{numeroHash} {
+      allow read, write: if false;
+    }
+
     match /campeonatos_memoria360/{campeonatoId} {
       allow read: if true;
       allow create, update, delete: if isMaster();
