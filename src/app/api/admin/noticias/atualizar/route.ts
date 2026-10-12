@@ -10,6 +10,7 @@ const FONTES = [
   { id: "diario-rio-claro", nome: "Diário do Rio Claro", url: "https://www.j1diario.com.br/", feed: "https://www.j1diario.com.br/feed/" },
   { id: "cidade-azul", nome: "Cidade Azul Notícias", url: "https://cidadeazulnoticias.com.br/", feed: "https://cidadeazulnoticias.com.br/feed/" },
   { id: "prefeitura-rio-claro", nome: "Prefeitura de Rio Claro", url: "https://rioclaro.sp.gov.br/", feed: "https://rioclaro.sp.gov.br/feed/" },
+  { id: "grupo-rio-claro", nome: "Grupo Rio Claro SP", url: "https://www.gruporioclarosp.com.br/", feed: "https://www.gruporioclarosp.com.br/feed/" },
 ] as const;
 
 const LIMITE_NOVAS_POR_FONTE = 5;
