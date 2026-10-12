@@ -1428,12 +1428,13 @@ export default function AdminMasterPage() {
                 </button>
               </div>
 
-              <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
                 {[
                   ["jornal-cidade", "Jornal Cidade"],
                   ["diario-rio-claro", "Diário do Rio Claro"],
                   ["cidade-azul", "Cidade Azul Notícias"],
                   ["prefeitura-rio-claro", "Prefeitura de Rio Claro"],
+                  ["grupo-rio-claro", "Grupo Rio Claro SP"],
                 ].map(([id, nome]) => {
                   const daFonte = noticiasImportadas.filter((n) => n.fonte === nome);
                   const publicadas = daFonte.filter((n) => n.publicadoNoPortal && !n.arquivada).length;
@@ -1500,6 +1501,7 @@ export default function AdminMasterPage() {
                       <option value="Diário do Rio Claro">Diário do Rio Claro</option>
                       <option value="Cidade Azul Notícias">Cidade Azul Notícias</option>
                       <option value="Prefeitura de Rio Claro">Prefeitura de Rio Claro</option>
+                      <option value="Grupo Rio Claro SP">Grupo Rio Claro SP</option>
                     </select>
                     <select
                       value={ordemNoticias}
