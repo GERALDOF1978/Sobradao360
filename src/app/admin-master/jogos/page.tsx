@@ -22,17 +22,17 @@ export default function AdminJogos() {
 
   async function carregar() {
     const lista = await getDocs(query(collection(db, "campeonatos_memoria360"), orderBy("criadoEm", "desc")));
-    const dados = lista.docs.map(d => ({ id: d.id, ...d.data() } as Torneio));
+    const dados = lista.docs.map((d: { id: string; data: () => Record<string, unknown> }) => ({ id: d.id, ...d.data() } as Torneio));
     setTorneios(dados);
     const tabelas: Record<string, Jogador[]> = {};
-    await Promise.all(dados.map(async t => {
+    await Promise.all(dados.map(async (t: Torneio) => {
       const snap = await getDocs(query(collection(db, "campeonatos_memoria360", t.id, "ranking"), orderBy("pontos", "desc")));
-      tabelas[t.id] = snap.docs.map(d => ({ id: d.id, ...d.data() } as Jogador));
+      tabelas[t.id] = snap.docs.map((d: { id: string; data: () => Record<string, unknown> }) => ({ id: d.id, ...d.data() } as Jogador));
     }));
     setRanking(tabelas);
   }
 
-  useEffect(() => onAuthStateChanged(auth, async usuario => {
+  useEffect(() => onAuthStateChanged(auth, async (usuario: { uid: string } | null) => {
     if (!usuario) { setAutorizado(false); setCarregando(false); return; }
     try {
       const perfil = await getDoc(doc(db, "usuarios", usuario.uid));
