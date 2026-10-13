@@ -23,7 +23,19 @@ export async function GET() {
     }
     const data: JoobleResponse = await response.json();
     if (!Array.isArray(data.jobs)) throw new Error("A Jooble retornou uma resposta sem lista de vagas.");
+    // Excluir solicitações avulsas de serviços (corridas, orçamentos e eventos)
+    // sem bloquear vagas legítimas de motorista, entregador ou trabalho temporário.
+    const parecePedidoDeServico = (job: JoobleJob) => {
+      const texto = [job.title, job.snippet].filter(Boolean).join(" ")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const titulo = String(job.title || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const origemServico = /cronoshare|habitissimo|fixando|zaask/.test(String(job.link || "").toLowerCase());
+      const tituloServico = /(?:orcamento|solicitacao|preciso de|procurando|contratar|servico de|servicos de|para evento|para festa|para casamento|sem veiculo proprio)/.test(titulo);
+      const pedidoPontual = /(?:voce esta disponivel|hoje\\s*(?:as|\\d)|uma corrida|uma viagem|qual o tipo de veiculo|qual veiculo voce precisa|atendimento em ate 24 horas|servico unico|servico pontual|orcamento para)/.test(texto);
+      return origemServico || (tituloServico && pedidoPontual);
+    };
     const vagas = data.jobs.filter(job => {
+      if (parecePedidoDeServico(job)) return false;
       if (!job.title || !job.link) return false;
       try { const u = new URL(job.link); return u.protocol === "https:" || u.protocol === "http:"; } catch { return false; }
     }).map(job => ({
