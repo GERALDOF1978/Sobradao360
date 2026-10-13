@@ -15,7 +15,7 @@ export default function Desafio360() {
     try {
       const snap = await getDocs(query(collection(db, "ranking_memoria360"), orderBy("pontos", "desc"), limit(10)));
       setRanking(snap.docs.map((d: { id: string; data: () => Record<string, unknown> }) => ({ id: d.id, ...(d.data() as Omit<Placar, "id">) })));
-    } catch { setErro("Ranking indisponível no momento. Confira as regras do Firebase."); }
+    } catch (e) { const codigo = typeof e === "object" && e !== null && "code" in e ? String((e as { code?: string }).code) : ""; console.error("Falha ao consultar ranking_memoria360:", e); setErro(codigo === "permission-denied" ? "Acesso negado ao ranking. Publique as regras atualizadas no Firebase Firestore." : codigo === "failed-precondition" ? "Consulta do ranking requer configuração de índice no Firestore." : "Não foi possível carregar o ranking. Tente novamente mais tarde."); }
     finally { setCarregando(false); }
   }
   useEffect(() => { void atualizar(); }, []);
