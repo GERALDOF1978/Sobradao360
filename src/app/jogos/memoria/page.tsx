@@ -90,7 +90,7 @@ export default function Memoria360() {
     try {
       const snap = await getDocs(query(collection(db, "ranking_memoria360"), orderBy("pontos", "desc"), limit(10)));
       setRanking(snap.docs.map((d: { id: string; data: () => Record<string, unknown> }) => ({ uid: d.id, ...(d.data() as Omit<Placar, "uid">) })));
-    } catch { setMensagem("Ranking indisponível. O jogo continua funcionando normalmente."); }
+    } catch (e) { const codigo = typeof e === "object" && e !== null && "code" in e ? String((e as { code?: string }).code) : ""; console.error("Falha ao consultar ranking_memoria360:", e); setMensagem(codigo === "permission-denied" ? "Ranking bloqueado pelas regras do Firebase. Publique as regras atualizadas do Firestore." : "Ranking temporariamente indisponível. O jogo continua funcionando."); }
   }
   useEffect(() => { void carregarRanking(); }, []);
 
