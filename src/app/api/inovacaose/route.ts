@@ -6,6 +6,9 @@ export const revalidate = 0;
 
 const ORIGEM = "https://inovacaose.tweezer.jobs";
 const PAGINA = ORIGEM + "/candidato/vaga/buscar_vaga/";
+const LINKS_CONFIRMADOS: Record<string, string> = {
+  "402": ORIGEM + "/candidato/vaga/ver_vaga/495b36b2-05e4-4ddc-b9f0-098143b5c2ef/",
+};
 
 type Vaga = { id: string; titulo: string; empresa: string; descricao: string; cidade: string; salario: string | null; url: string; origem: "inovacaose" };
 
@@ -49,9 +52,13 @@ export async function GET() {
         const candidato = atributos.match(/candidato\/vaga\/ver_vaga\/[a-f0-9-]{36}\/?/i);
         if (candidato) link = candidato[0];
       });
-      let url = PAGINA;
+      // Verificar primeiro links específicos, sem atribuir um link de outra vaga.
+      let url = LINKS_CONFIRMADOS[m[2]] || PAGINA;
       if (link) {
-        try { const resolvida = new URL(link, ORIGEM); if (resolvida.hostname === "inovacaose.tweezer.jobs") url = resolvida.toString(); } catch {}
+        try {
+          const resolvida = new URL("/" + link.replace(/^\\/+/, ""), ORIGEM);
+          if (resolvida.hostname === "inovacaose.tweezer.jobs") url = resolvida.toString();
+        } catch {}
       }
       vagas.set(m[2], {
         id: m[2], titulo: m[1].trim(), empresa: "Inovação SE (recrutamento)",
@@ -73,12 +80,13 @@ export async function GET() {
             const codigoPagina = detalhe("body").text().match(/#([0-9]{2,8})/);
             if (codigoPagina && codigoPagina[1] !== vaga.id) return;
           }
-          const secao = detalhe("body").text().replaceAll(String.fromCharCode(13), "").replace(/[ \t]+/g, " ").trim();
-          const inicio = secao.search(/Especifica[cç][aã]o da Vaga/i);
-          const fim = secao.search(/Informa[cç][oõ]es adicionais/i);
+          detalhe("script,style,nav,footer,header").remove();
+          const textoPagina = detalhe("main, article, .container").filter((_, el) => detalhe(el).text().length > 100).first().text() || detalhe("body").text();
+          const secao = textoPagina.replaceAll(String.fromCharCode(13), "").replace(/[ \\t]+/g, " ").trim();
+          const inicio = secao.search(/(?:Especifica[cç][aã]o da Vaga|Descri[cç][aã]o da Vaga|Atividades|Responsabilidades|Requisitos)/i);
           if (inicio >= 0) {
-            const descricao = secao.slice(inicio, fim > inicio ? fim : inicio + 4500).trim().slice(0, 4500);
-            if (descricao.length > 45) vaga.descricao = descricao;
+            const descricao = secao.slice(inicio, inicio + 4500).trim();
+            if (descricao.length > 65) vaga.descricao = descricao;
           }
         } catch (erro) { console.warn("Detalhes indisponíveis para vaga Inovação SE", vaga.id, erro); }
       }));
