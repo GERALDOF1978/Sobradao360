@@ -261,7 +261,7 @@ export default function NovaOcorrenciaIluminacaoPage() {
             <label htmlFor="codigo-plaqueta" className="mt-4 block text-xs font-bold text-slate-700">Número da plaqueta do poste</label>
             <form onSubmit={e => { e.preventDefault(); void buscarPlaca(); }} className="mt-2 flex w-full min-w-0 gap-2">
               <input id="codigo-plaqueta" inputMode="numeric" pattern="[0-9]*" value={codigoPlaca}
-                onChange={e => setCodigoPlaca(e.target.value.replace(/\\D/g, ""))}
+                onChange={e => setCodigoPlaca(e.target.value.replace(/\D/g, ""))}
                 placeholder="Ex.: 7163" aria-label="Código da plaqueta"
                 className="w-0 min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-3 text-base font-bold outline-none focus:border-amber-500" />
               <button type="submit" disabled={buscandoPlaca} className="shrink-0 rounded-xl bg-slate-900 px-4 py-3 text-sm font-black text-white disabled:opacity-50">{buscandoPlaca ? "Buscando…" : "Buscar"}</button>
