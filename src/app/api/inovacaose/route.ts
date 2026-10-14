@@ -6,7 +6,7 @@ export const revalidate = 0;
 
 const ORIGEM = "https://inovacaose.tweezer.jobs";
 const PAGINA = ORIGEM + "/candidato/vaga/buscar_vaga/";
-const VERSAO_INTEGRACAO = "inovacaose-20261014-2";
+const VERSAO_INTEGRACAO = "inovacaose-20261014-3";
 const LINKS_CONFIRMADOS: Record<string, string> = {
   "402": ORIGEM + "/candidato/vaga/ver_vaga/495b36b2-05e4-4ddc-b9f0-098143b5c2ef/",
 };
@@ -76,19 +76,17 @@ export async function GET() {
           const resp = await fetch(vaga.url, { headers: { Accept: "text/html" }, signal: AbortSignal.timeout(7000), cache: "no-store" });
           if (!resp.ok) return;
           const detalhe = cheerio.load(await resp.text());
-          const cabecalho = detalhe("h1,h2,h3,h4,h5").first().text();
-          if (cabecalho && !cabecalho.includes("#" + vaga.id)) {
-            const codigoPagina = detalhe("body").text().match(/#([0-9]{2,8})/);
-            if (codigoPagina && codigoPagina[1] !== vaga.id) return;
-          }
-          detalhe("script,style,nav,footer,header").remove();
-          const textoPagina = detalhe("main, article, .container").filter((_, el) => detalhe(el).text().length > 100).first().text() || detalhe("body").text();
-          const secao = textoPagina.replaceAll(String.fromCharCode(13), "").replace(/[ \t]+/g, " ").trim();
-          const inicio = secao.search(/(?:Especifica[cç][aã]o da Vaga|Descri[cç][aã]o da Vaga|Atividades|Responsabilidades|Requisitos)/i);
-          if (inicio >= 0) {
-            const descricao = secao.slice(inicio, inicio + 4500).trim();
-            if (descricao.length > 65) vaga.descricao = descricao;
-          }
+          detalhe("script,style,nav,footer,header,form").remove();
+          const corpo = detalhe("main").first().length ? detalhe("main").first() : detalhe("body");
+          const linhas = corpo.text().split(/\\n+/).map(linha => linha.replace(/\\s+/g, " ").trim()).filter(Boolean);
+          const texto = linhas.join("\n");
+          // Os títulos variam conforme o modelo de cadastro da empresa.
+          const inicio = linhas.findIndex(linha => /^(?:descri[cç][aã]o(?:\\s+da\\s+vaga)?|atividades|responsabilidades|atribui[cç][oõ]es|requisitos|sobre\\s+a\\s+vaga|detalhes\\s+da\\s+vaga)\\s*:?$/i.test(linha));
+          const textoCandidato = inicio >= 0 ? linhas.slice(inicio).join("\n") : "";
+          const descricao = textoCandidato.length > 70 ? textoCandidato : "";
+          if (descricao) vaga.descricao = descricao.slice(0, 4500);
+          else console.warn("Inovação SE: página individual sem seção reconhecida", vaga.id, { status: resp.status, linhas: linhas.length, caracteres: texto.length });
+
         } catch (erro) { console.warn("Detalhes indisponíveis para vaga Inovação SE", vaga.id, erro); }
       }));
     }
