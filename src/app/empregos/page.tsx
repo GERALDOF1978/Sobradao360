@@ -1350,10 +1350,10 @@ export default function EmpregosPage() {
                           {/* DESCRIÇÃO */}
                           {vaga.descricao && (
                             <div className="mt-4">
-                              <p className={`text-xs text-slate-600 leading-relaxed whitespace-pre-line ${(vaga.origem === "gupy" || vaga.origem === "empregoscom") && descricoesAbertas.includes(vaga.id) ? "" : "line-clamp-3"}`}>
+                              <p className={`text-xs text-slate-600 leading-relaxed whitespace-pre-line ${(vaga.origem === "gupy" || vaga.origem === "empregoscom" || vaga.origem === "inovacaose") && descricoesAbertas.includes(vaga.id) ? "" : "line-clamp-3"}`}>
                                 {textoSeguro(vaga.descricao)}
                               </p>
-                              {(vaga.origem === "gupy" || vaga.origem === "empregoscom") && (
+                              {(vaga.origem === "gupy" || vaga.origem === "empregoscom" || vaga.origem === "inovacaose") && (
                                 <button
                                   type="button"
                                   aria-expanded={descricoesAbertas.includes(vaga.id)}
