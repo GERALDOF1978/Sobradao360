@@ -735,6 +735,7 @@ type AbaEmpregos =
   | "gupy"
   | "empregoscom"
   | "jooble"
+  | "inovacaose"
   | "manual"
   | "curriculos";
 
@@ -914,6 +915,10 @@ export default function EmpregosPage() {
               💼<br />Jooble
             </button>
 
+            <button type="button" onClick={() => { setAba("inovacaose"); setBusca(""); }} className={`rounded-2xl p-3 text-center text-[11px] font-black transition ${aba === "inovacaose" ? "bg-indigo-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
+              💼<br />Inovação SE
+            </button>
+
             {/* VAGAS MANUAIS */}
             <button
               type="button"
@@ -965,8 +970,20 @@ export default function EmpregosPage() {
         )}
 
         {/* VAGAS */}
+        {aba === "inovacaose" && (
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-black text-slate-900">Vagas Inovação SE</h2>
+            <p className="mt-2 text-sm text-slate-600">Consulte as vagas da Inovação SE na plataforma Tweezer.jobs. As candidaturas e o cadastro de currículo são realizados no site oficial da empresa.</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <a href="https://inovacaose.tweezer.jobs/candidato/vaga/buscar_vaga/" target="_blank" rel="noopener noreferrer" className="rounded-xl bg-indigo-700 px-4 py-3 text-sm font-bold text-white">Consultar vagas disponíveis ↗</a>
+              <a href="https://inovacaose.tweezer.jobs/candidato/cadastrar/" target="_blank" rel="noopener noreferrer" className="rounded-xl bg-slate-100 px-4 py-3 text-sm font-bold text-slate-800">Cadastrar currículo ↗</a>
+            </div>
+            <p className="mt-3 text-xs text-slate-500">Fonte externa: a importação automática de cards depende de uma integração de dados autorizada e validada.</p>
+          </section>
+        )}
+
         {aba !==
-          "curriculos" && ( 
+          "curriculos" && aba !== "inovacaose" && ( 
           <>
             {/* BUSCA */}
             <div className="relative">
