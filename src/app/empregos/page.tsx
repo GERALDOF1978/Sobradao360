@@ -704,6 +704,32 @@ async function buscarVagas(): Promise<Vaga[]> {
     console.warn("Não foi possível consultar Jooble:", error);
   }
 
+  try {
+    const response = await fetch("/api/inovacaose", { cache: "no-store" });
+    if (response.ok) {
+      const dados = await response.json();
+      if (Array.isArray(dados?.vagas)) {
+        dados.vagas.forEach((vaga: { id?: string; titulo?: string; empresa?: string; descricao?: string; cidade?: string; salario?: string | null; url?: string }) => {
+          const id = textoSeguro(vaga.id);
+          if (!id || !textoSeguro(vaga.titulo) || !/^Rio Claro$/i.test(textoSeguro(vaga.cidade))) return;
+          lista.push({
+            id: "inovacaose-" + id,
+            titulo: textoSeguro(vaga.titulo),
+            empresa: textoSeguro(vaga.empresa) || "Inovação SE",
+            descricao: textoSeguro(vaga.descricao),
+            cidade: "Rio Claro",
+            salario: formatarSalario(vaga.salario),
+            tipoContrato: null,
+            urlTrampolim: textoSeguro(vaga.url) || "https://inovacaose.tweezer.jobs/candidato/vaga/buscar_vaga/",
+            origem: "inovacaose",
+          });
+        });
+      }
+    }
+  } catch (error) {
+    console.warn("Não foi possível consultar Inovação SE:", error);
+  }
+
   return lista;
 }
 
@@ -983,7 +1009,7 @@ export default function EmpregosPage() {
         )}
 
         {aba !==
-          "curriculos" && aba !== "inovacaose" && ( 
+          "curriculos" && ( 
           <>
             {/* BUSCA */}
             <div className="relative">
@@ -1153,7 +1179,7 @@ export default function EmpregosPage() {
                           {/* ORIGEM / DATA */}
                           <div className="flex justify-between items-start gap-2">
                             <span className="text-[9px] font-black bg-indigo-100 text-indigo-800 px-2 py-1 rounded-lg">
-                              {vaga.origem === "trampolim" ? "🏢 PAT" : vaga.origem === "rhbrasil" ? "💼 RHBrasil" : vaga.origem === "gupy" ? "💼 Gupy" : vaga.origem === "empregoscom" ? "🔎 Empregos.com.br" : vaga.origem === "jooble" ? "💼 Jooble" : "👤 COMUNIDADE"}
+                              {vaga.origem === "trampolim" ? "🏢 PAT" : vaga.origem === "rhbrasil" ? "💼 RHBrasil" : vaga.origem === "gupy" ? "💼 Gupy" : vaga.origem === "empregoscom" ? "🔎 Empregos.com.br" : vaga.origem === "jooble" ? "💼 Jooble" : vaga.origem === "inovacaose" ? "💼 Inovação SE" : "👤 COMUNIDADE"}
                             </span>
 
                             {formatarData(
@@ -1363,7 +1389,7 @@ export default function EmpregosPage() {
                               rel="noopener noreferrer"
                               className="block mt-4 bg-indigo-600 hover:bg-indigo-700 text-white text-center py-2.5 rounded-xl text-xs font-black"
                             >
-                              {vaga.origem === "rhbrasil" ? "Ver vaga na RHBrasil" : vaga.origem === "gupy" ? "Ver vaga e candidatar-se na Gupy" : vaga.origem === "empregoscom" ? "Ver vaga e candidatar-se no Empregos.com.br" : vaga.origem === "trampolim" ? "Ver vaga no PAT" : "Ver detalhes da vaga"}
+                              {vaga.origem === "rhbrasil" ? "Ver vaga na RHBrasil" : vaga.origem === "gupy" ? "Ver vaga e candidatar-se na Gupy" : vaga.origem === "empregoscom" ? "Ver vaga e candidatar-se no Empregos.com.br" : vaga.origem === "trampolim" ? "Ver vaga no PAT" : vaga.origem === "inovacaose" ? "Candidatar-se na Inovação SE" : "Ver detalhes da vaga"}
                             </a>
                           )}
                         </div>
