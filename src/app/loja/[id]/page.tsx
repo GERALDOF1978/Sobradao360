@@ -189,6 +189,7 @@ export default function LojaPage({
     useState(false);
 
   const [carrinho, setCarrinho] = useState<Record<string, number>>({});
+  const [carrinhoAberto, setCarrinhoAberto] = useState(false);
 
   useEffect(() => {
     async function carregar() {
@@ -525,7 +526,7 @@ export default function LojaPage({
   }
 
   function enviarCarrinho() {
-    if (!negocio || !negocio.carrinhoCompras) return;
+    if (!carrinhoAberto || !negocio || !negocio.carrinhoCompras) return;
     const itens = produtos.filter((p) => (carrinho[p.id] || 0) > 0);
     if (itens.length === 0) return;
 
@@ -916,22 +917,6 @@ export default function LojaPage({
 
         </section>
 
-        {negocio.carrinhoCompras && whatsappNumero && Object.values(carrinho).some((qtd) => qtd > 0) && (
-          <section className="sticky bottom-3 z-30 rounded-2xl border border-emerald-200 bg-white p-4 shadow-xl">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-black text-slate-900">🛒 Seu carrinho</p>
-                <p className="text-xs text-slate-500">
-                  {Object.values(carrinho).reduce((a, b) => a + b, 0)} item(ns) · {formatarPreco(produtos.reduce((total, p) => total + p.preco * (carrinho[p.id] || 0), 0))}
-                </p>
-              </div>
-              <button type="button" onClick={enviarCarrinho} className="rounded-xl bg-emerald-600 px-4 py-3 text-xs font-black text-white">
-                📱 Enviar pedido
-              </button>
-            </div>
-          </section>
-        )}
-
         {/* SOBRE */}
 
         <section className="rounded-3xl bg-white p-5 shadow-sm">
@@ -1060,6 +1045,54 @@ export default function LojaPage({
         </div>
 
       </div>
+
+        {/* Carrinho flutuante: conferir os itens antes de enviar pelo WhatsApp. */}
+        {negocio.carrinhoCompras && whatsappNumero && Object.values(carrinho).some((qtd) => qtd > 0) && (
+          <>
+            <button
+              type="button"
+              onClick={() => setCarrinhoAberto(true)}
+              aria-label="Abrir carrinho para conferir pedido"
+              className="fixed bottom-[104px] right-4 z-40 flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-3 text-sm font-black text-white shadow-2xl ring-4 ring-white/90 sm:bottom-6 sm:right-6"
+            >
+              <span className="text-xl">🛒</span>
+              <span>{Object.values(carrinho).reduce((total, qtd) => total + qtd, 0)} itens</span>
+              <span className="rounded-full bg-white/20 px-2 py-1 text-xs">{formatarPreco(produtos.reduce((total, produto) => total + produto.preco * (carrinho[produto.id] || 0), 0))}</span>
+            </button>
+            {carrinhoAberto && (
+              <div className="fixed inset-0 z-[110] flex items-end justify-center bg-slate-950/60 p-0 sm:items-center sm:p-4" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) setCarrinhoAberto(false); }}>
+                <section role="dialog" aria-modal="true" aria-labelledby="titulo-carrinho" className="flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
+                  <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                    <div><h2 id="titulo-carrinho" className="text-lg font-black text-slate-900">🛒 Conferir pedido</h2><p className="text-xs text-slate-500">Revise os produtos antes de enviar à loja.</p></div>
+                    <button type="button" onClick={() => setCarrinhoAberto(false)} aria-label="Fechar carrinho" className="rounded-full bg-slate-100 px-3 py-2 text-lg font-bold text-slate-700">✕</button>
+                  </div>
+                  <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-4">
+                    {produtos.filter(produto => (carrinho[produto.id] || 0) > 0).map(produto => (
+                      <div key={produto.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3">
+                        {produto.imagemUrl ? <img src={produto.imagemUrl} alt={produto.nome} className="h-14 w-14 shrink-0 rounded-xl object-cover" /> : <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-2xl">🛍️</div>}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-black text-slate-900">{produto.nome}</p>
+                          <p className="text-xs text-slate-500">{formatarPreco(produto.preco)} cada</p>
+                          <strong className="text-sm text-emerald-700">{formatarPreco(produto.preco * (carrinho[produto.id] || 0))}</strong>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <button type="button" onClick={() => alterarCarrinho(produto.id, -1)} aria-label={"Diminuir " + produto.nome} className="h-9 w-9 rounded-lg bg-slate-100 font-black">−</button>
+                          <span className="min-w-4 text-center text-sm font-black">{carrinho[produto.id] || 0}</span>
+                          <button type="button" onClick={() => alterarCarrinho(produto.id, 1)} aria-label={"Aumentar " + produto.nome} className="h-9 w-9 rounded-lg bg-slate-100 font-black">+</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-slate-200 bg-white px-5 py-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+                    <div className="mb-4 flex items-center justify-between"><span className="text-sm font-bold text-slate-600">Total do pedido</span><strong className="text-xl font-black text-slate-900">{formatarPreco(produtos.reduce((total, produto) => total + produto.preco * (carrinho[produto.id] || 0), 0))}</strong></div>
+                    <button type="button" onClick={enviarCarrinho} disabled={!Object.values(carrinho).some(qtd => qtd > 0)} className="w-full rounded-xl bg-emerald-600 px-4 py-3.5 text-sm font-black text-white disabled:opacity-50">📱 Confirmar e enviar pelo WhatsApp</button>
+                    <button type="button" onClick={() => setCarrinhoAberto(false)} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700">Continuar comprando</button>
+                  </div>
+                </section>
+              </div>
+            )}
+          </>
+        )}
 
     </main>
   );
