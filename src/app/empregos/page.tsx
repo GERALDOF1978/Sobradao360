@@ -31,7 +31,7 @@ interface Vaga {
   urlTrampolim?: string | null;
   codigoVaga?: string | null;
   imagemUrl?: string | null;
-  origem: "trampolim" | "rhbrasil" | "gupy" | "empregoscom" | "jooble" | "manual";
+  origem: "trampolim" | "rhbrasil" | "gupy" | "empregoscom" | "jooble" | "inovacaose" | "manual";
   createdAt?: any;
   publicadaEm?: string | null;
   autorNome?: string;
