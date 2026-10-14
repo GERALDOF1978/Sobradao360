@@ -46,7 +46,7 @@ export async function GET() {
       elementos.each((_, node) => {
         if (link) return;
         const atributos = Object.values(node.attribs || {}).join(" ");
-        const candidato = atributos.match(/(?:https?:\\/\\/[^"'\\s]+)?\\/?candidato\\/vaga\\/ver_vaga\\/[a-f0-9-]{36}\\/?/i);
+        const candidato = atributos.match(new RegExp("(?:https?://[^\\\"\\s]+)?/?candidato/vaga/ver_vaga/[a-f0-9-]{36}/?", "i"));
         if (candidato) link = candidato[0];
       });
       let url = PAGINA;
