@@ -516,6 +516,41 @@ service cloud.firestore {
       allow delete: if isMaster();
     }
 
+    // Rankings públicos dos dois passatempos. Cada conta registra somente sua melhor marca.
+    match /ranking_velha360/{jogadorId} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && request.auth.uid == jogadorId
+        && request.resource.data.keys().hasOnly(["apelido", "pontos", "atualizadoEm"])
+        && request.resource.data.keys().hasAll(["apelido", "pontos", "atualizadoEm"])
+        && request.resource.data.apelido is string
+        && request.resource.data.apelido.size() > 0
+        && request.resource.data.apelido.size() <= 24
+        && request.resource.data.pontos is int
+        && request.resource.data.pontos >= 100
+        && request.resource.data.pontos <= 500
+        && request.resource.data.pontos % 100 == 0
+        && (!exists(/databases/$(database)/documents/ranking_velha360/$(jogadorId))
+          || request.resource.data.pontos > resource.data.pontos);
+      allow delete: if isMaster();
+    }
+    match /ranking_matematica360/{jogadorId} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && request.auth.uid == jogadorId
+        && request.resource.data.keys().hasOnly(["apelido", "pontos", "atualizadoEm"])
+        && request.resource.data.keys().hasAll(["apelido", "pontos", "atualizadoEm"])
+        && request.resource.data.apelido is string
+        && request.resource.data.apelido.size() > 0
+        && request.resource.data.apelido.size() <= 24
+        && request.resource.data.pontos is int
+        && request.resource.data.pontos > 0
+        && request.resource.data.pontos <= 1000
+        && (!exists(/databases/$(database)/documents/ranking_matematica360/$(jogadorId))
+          || request.resource.data.pontos > resource.data.pontos);
+      allow delete: if isMaster();
+    }
+
     match /logs_admin/{logId} {
       allow read, create: if isMaster();
       allow update, delete: if false;
