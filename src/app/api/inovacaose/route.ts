@@ -46,7 +46,7 @@ export async function GET() {
       elementos.each((_, node) => {
         if (link) return;
         const atributos = Object.values(node.attribs || {}).join(" ");
-        const candidato = atributos.match(new RegExp("(?:https?://[^\\\"\\s]+)?/?candidato/vaga/ver_vaga/[a-f0-9-]{36}/?", "i"));
+        const candidato = atributos.match(/candidato\/vaga\/ver_vaga\/[a-f0-9-]{36}\/?/i);
         if (candidato) link = candidato[0];
       });
       let url = PAGINA;
@@ -70,10 +70,10 @@ export async function GET() {
           const detalhe = cheerio.load(await resp.text());
           const cabecalho = detalhe("h1,h2,h3,h4,h5").first().text();
           if (cabecalho && !cabecalho.includes("#" + vaga.id)) {
-            const codigoPagina = detalhe("body").text().match(/#(\\d{2,8})/);
+            const codigoPagina = detalhe("body").text().match(/#([0-9]{2,8})/);
             if (codigoPagina && codigoPagina[1] !== vaga.id) return;
           }
-          const secao = detalhe("body").text().replace(/\\r/g, "").replace(/[ \\t]+/g, " ").trim();
+          const secao = detalhe("body").text().replaceAll(String.fromCharCode(13), "").replace(/[ \t]+/g, " ").trim();
           const inicio = secao.search(/Especifica[cç][aã]o da Vaga/i);
           const fim = secao.search(/Informa[cç][oõ]es adicionais/i);
           if (inicio >= 0) {
