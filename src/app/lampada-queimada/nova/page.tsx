@@ -66,8 +66,6 @@ export default function NovaOcorrenciaIluminacaoPage() {
   const [erroEnvio, setErroEnvio] = useState("");
   const [protocolo, setProtocolo] = useState("");
   const [codigoPlaca, setCodigoPlaca] = useState("");
-  const [fotoPoste, setFotoPoste] = useState<string | null>(null);
-  const fotoRef = useRef<HTMLInputElement | null>(null);
   const [buscandoPlaca, setBuscandoPlaca] = useState(false);
   const [erroPlaca, setErroPlaca] = useState("");
   const [mostrarMapa, setMostrarMapa] = useState(false);
@@ -110,16 +108,6 @@ export default function NovaOcorrenciaIluminacaoPage() {
       window.setTimeout(()=>document.getElementById("ponto-selecionado")?.scrollIntoView({behavior:"smooth",block:"center"}),50);
     }catch(e){ setErroPlaca(e instanceof Error?e.message:"Não foi possível buscar a plaqueta."); }
     finally{ setBuscandoPlaca(false); }
-  }
-
-  function selecionarFotoPoste(arquivo?: File) {
-    if (!arquivo) return;
-    if (!arquivo.type.startsWith("image/")) { setErroPlaca("Selecione uma imagem do poste."); return; }
-    if (arquivo.size > 10 * 1024 * 1024) { setErroPlaca("A foto deve ter até 10 MB."); return; }
-    setErroPlaca("");
-    const leitor = new FileReader();
-    leitor.onload = () => { if (typeof leitor.result === "string") setFotoPoste(leitor.result); };
-    leitor.readAsDataURL(arquivo);
   }
 
   function usarMinhaLocalizacao(){
@@ -254,7 +242,7 @@ export default function NovaOcorrenciaIluminacaoPage() {
           <p className="mt-1 text-xs leading-5 text-slate-500">Procure no poste a plaqueta metálica de identificação. Digite somente o número.</p>
           <div className="mt-3 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-3 sm:p-4">
             <div className="flex items-center gap-3">
-              <div className="h-24 w-10 shrink-0 rounded-lg bg-slate-600 shadow-inner"><div className="mx-auto mt-5 h-10 w-8 rounded bg-white p-1 text-center text-[7px] font-black text-slate-900"><div>IPRC</div><div className="mt-1 text-[10px]">7163</div><div className="mt-1 h-2 bg-[repeating-linear-gradient(90deg,#111_0,#111_1px,transparent_1px,transparent_3px)]" /></div></div>
+              <img src="/images/placa-iprc-poste.svg" alt="Foto real de um poste de Rio Claro com plaqueta de identificação IPRC" className="h-32 w-20 shrink-0 rounded-xl border border-slate-200 bg-white object-contain" />
               <div className="min-w-0"><p className="text-sm font-black">Onde encontrar?</p><p className="mt-1 text-[11px] leading-4 text-slate-500">A plaqueta fica presa ao poste. O número abaixo de <b>IPRC</b> identifica aquele ponto.</p></div>
             </div>
 
@@ -266,17 +254,6 @@ export default function NovaOcorrenciaIluminacaoPage() {
                 className="w-0 min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-3 text-base font-bold outline-none focus:border-amber-500" />
               <button type="submit" disabled={buscandoPlaca} className="shrink-0 rounded-xl bg-slate-900 px-4 py-3 text-sm font-black text-white disabled:opacity-50">{buscandoPlaca ? "Buscando…" : "Buscar"}</button>
             </form>
-            <input ref={fotoRef} type="file" accept="image/*" capture="environment" className="hidden"
-              aria-label="Fotografar o poste" onChange={e => selecionarFotoPoste(e.target.files?.[0])} />
-            <button type="button" onClick={() => fotoRef.current?.click()}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-amber-300 bg-white px-3 py-2.5 text-xs font-bold text-amber-800">
-              📷 {fotoPoste ? "Trocar foto do poste" : "Fotografar o poste real"}
-            </button>
-            {fotoPoste && <div className="mt-3">
-              <img src={fotoPoste} alt="Foto do poste selecionada pelo morador" className="max-h-64 w-full rounded-xl border border-slate-200 object-contain" />
-              <button type="button" onClick={() => { setFotoPoste(null); if (fotoRef.current) fotoRef.current.value = ""; }} className="mt-2 text-xs font-bold text-red-700">Remover foto</button>
-              <p className="mt-1 text-[11px] leading-4 text-slate-500">Foto apenas para sua conferência nesta tela. Não é enviada ao sistema oficial com a ocorrência.</p>
-            </div>}
             {erroPlaca && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-xs font-bold text-red-700">{erroPlaca}</p>}
           </div>
 
