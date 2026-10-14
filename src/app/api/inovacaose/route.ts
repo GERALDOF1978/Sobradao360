@@ -6,6 +6,7 @@ export const revalidate = 0;
 
 const ORIGEM = "https://inovacaose.tweezer.jobs";
 const PAGINA = ORIGEM + "/candidato/vaga/buscar_vaga/";
+const VERSAO_INTEGRACAO = "inovacaose-20261014-2";
 const LINKS_CONFIRMADOS: Record<string, string> = {
   "402": ORIGEM + "/candidato/vaga/ver_vaga/495b36b2-05e4-4ddc-b9f0-098143b5c2ef/",
 };
@@ -82,7 +83,7 @@ export async function GET() {
           }
           detalhe("script,style,nav,footer,header").remove();
           const textoPagina = detalhe("main, article, .container").filter((_, el) => detalhe(el).text().length > 100).first().text() || detalhe("body").text();
-          const secao = textoPagina.replaceAll(String.fromCharCode(13), "").replace(/[ \\t]+/g, " ").trim();
+          const secao = textoPagina.replaceAll(String.fromCharCode(13), "").replace(/[ \t]+/g, " ").trim();
           const inicio = secao.search(/(?:Especifica[cç][aã]o da Vaga|Descri[cç][aã]o da Vaga|Atividades|Responsabilidades|Requisitos)/i);
           if (inicio >= 0) {
             const descricao = secao.slice(inicio, inicio + 4500).trim();
@@ -91,7 +92,7 @@ export async function GET() {
         } catch (erro) { console.warn("Detalhes indisponíveis para vaga Inovação SE", vaga.id, erro); }
       }));
     }
-    return NextResponse.json({ success: true, vagas: lista, total: vagas.size }, { headers: { "Cache-Control": "public, s-maxage=900, stale-while-revalidate=1800" } });
+    return NextResponse.json({ success: true, versao: VERSAO_INTEGRACAO, vagas: lista, total: vagas.size }, { headers: { "Cache-Control": "no-store, max-age=0" } });
   } catch (e) {
     console.error("Falha ao consultar vagas públicas Inovação SE:", e);
     return NextResponse.json({ success: false, vagas: [], erro: "Não foi possível consultar a fonte no momento." }, { status: 502 });
