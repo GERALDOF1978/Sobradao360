@@ -49,7 +49,8 @@ export async function GET() {
       let link: string | undefined;
       elementos.each((_, node) => {
         if (link) return;
-        const atributos = Object.values(node.attribs || {}).join(" ");
+        if (node.type !== "tag" && node.type !== "script" && node.type !== "style") return;
+        const atributos = Object.values($(node).attr() || {}).join(" ");
         const candidato = atributos.match(/candidato\/vaga\/ver_vaga\/[a-f0-9-]{36}\/?/i);
         if (candidato) link = candidato[0];
       });
