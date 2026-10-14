@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { onAuthStateChanged, type User } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { collection, doc, getDocs, limit, orderBy, query, runTransaction, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 
+type JogadorAutenticado = { uid: string; getIdToken: () => Promise<string> };
 type Modo = "velha" | "matematica";
 type Placar = { uid: string; apelido: string; pontos: number };
 type Pergunta = { texto: string; resposta: number };
@@ -36,7 +37,7 @@ function jogadaComputador(tab: string[]): number {
   return vazias[Math.floor(Math.random() * vazias.length)];
 }
 export default function JogoPassatempo({ modo }: { modo: Modo }) {
-  const [usuario, setUsuario] = useState<User | null>(null);
+  const [usuario, setUsuario] = useState<JogadorAutenticado | null>(null);
   const [cadastro, setCadastro] = useState<{ nome: string } | null>(null);
   const [ranking, setRanking] = useState<Placar[]>([]);
   const [nome, setNome] = useState("");
@@ -58,7 +59,7 @@ export default function JogoPassatempo({ modo }: { modo: Modo }) {
   const travado = useRef(false);
   const salvo = useRef(false);
   const pontos = modo === "velha" ? vitorias * 100 : Math.max(0, acertos * 100 - segundos * 2);
-  useEffect(() => onAuthStateChanged(auth, setUsuario), []);
+  useEffect(() => onAuthStateChanged(auth, (u: JogadorAutenticado | null) => setUsuario(u)), []);
   useEffect(() => {
     let ativo = true;
     if (!usuario) { setCadastro(null); return; }
@@ -75,7 +76,7 @@ export default function JogoPassatempo({ modo }: { modo: Modo }) {
   async function buscarRanking() {
     try {
       const snap = await getDocs(query(collection(db, colecoes[modo]), orderBy("pontos", "desc"), limit(10)));
-      setRanking(snap.docs.map(d => ({ uid: d.id, apelido: String(d.data().apelido || "Morador"), pontos: Number(d.data().pontos || 0) })));
+      setRanking(snap.docs.map((d: { id: string; data: () => Record<string, unknown> }) => ({ uid: d.id, apelido: String(d.data().apelido || "Morador"), pontos: Number(d.data().pontos || 0) })));
     } catch { setMensagem("Ranking ainda indisponível. Confira se as regras do Firebase foram publicadas."); }
   }
   useEffect(() => { void buscarRanking(); }, [modo]);
@@ -136,7 +137,7 @@ export default function JogoPassatempo({ modo }: { modo: Modo }) {
     setSalvando(true); setMensagem("");
     try {
       const ref = doc(db, colecoes[modo], usuario.uid);
-      await runTransaction(db, async tx => {
+      await runTransaction(db, async (tx: { get: (ref: ReturnType<typeof doc>) => Promise<{ exists: () => boolean; data: () => Record<string, unknown> }>; set: (ref: ReturnType<typeof doc>, data: Record<string, unknown>) => void }) => {
         const anterior = await tx.get(ref);
         if (!anterior.exists() || Number(anterior.data().pontos || 0) < pontos) {
           tx.set(ref, { apelido: cadastro.nome.slice(0, 24), pontos, atualizadoEm: serverTimestamp() });
