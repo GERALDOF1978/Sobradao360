@@ -57,7 +57,7 @@ export async function GET() {
       let url = LINKS_CONFIRMADOS[m[2]] || PAGINA;
       if (link) {
         try {
-          const resolvida = new URL("/" + link.replace(/^\\/+/, ""), ORIGEM);
+          const resolvida = new URL("/" + link.split("/").filter(Boolean).join("/"), ORIGEM);
           if (resolvida.hostname === "inovacaose.tweezer.jobs") url = resolvida.toString();
         } catch {}
       }
