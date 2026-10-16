@@ -43,6 +43,14 @@ export default function AdminJogos() {
     finally { setCarregando(false); }
   }), []);
 
+  function descreverErro(erro: unknown): string {
+    const codigo = typeof erro === "object" && erro !== null && "code" in erro ? String((erro as { code?: unknown }).code) : "";
+    if (codigo === "permission-denied") return "Permissão negada pelo Firestore. Confira se seu usuário possui perfil master e se as regras da coleção campeonatos_memoria360 estão publicadas no Firebase.";
+    if (codigo === "failed-precondition") return "A consulta exige uma configuração do Firestore. Confira os detalhes no console do navegador.";
+    if (codigo === "unavailable") return "O Firestore está temporariamente indisponível. Tente novamente.";
+    return codigo ? `Erro do Firebase: ${codigo}. Confira o console do navegador.` : "Não foi possível concluir a operação. Confira o console do navegador.";
+  }
+
   async function criar() {
     if (!titulo.trim() || !premio.trim() || !inicio || !fim) { setMensagem("Preencha título, prêmio e período."); return; }
     const a = new Date(inicio).getTime(), b = new Date(fim).getTime();
@@ -50,15 +58,22 @@ export default function AdminJogos() {
     if (torneios.some(t => t.status === "ativo" && new Date(t.fim).getTime() > Date.now())) { setMensagem("Encerre o campeonato atual antes de iniciar outro."); return; }
     setOcupado(true); setMensagem("");
     try {
-      await addDoc(collection(db, "campeonatos_memoria360"), {
+      const criado = await addDoc(collection(db, "campeonatos_memoria360"), {
         titulo: titulo.trim().slice(0, 80), premio: premio.trim().slice(0, 300),
         inicio: new Date(a).toISOString(), fim: new Date(b).toISOString(),
         status: "ativo", criadoEm: serverTimestamp(),
       });
-      await carregar();
-      setMensagem("Campeonato criado. Cada edição terá seu ranking independente.");
-    } catch { setMensagem("Falha ao criar campeonato. Confira as permissões do Firestore."); }
-    finally { setOcupado(false); }
+      try {
+        await carregar();
+        setMensagem("Campeonato criado com sucesso. Cada edição terá seu ranking independente.");
+      } catch (erroLista) {
+        console.error("Campeonato criado, mas falha ao recarregar lista e ranking:", { campeonatoId: criado.id, erro: erroLista });
+        setMensagem("Campeonato criado com sucesso, mas não foi possível atualizar a lista. " + descreverErro(erroLista));
+      }
+    } catch (erroCriacao) {
+      console.error("Erro ao criar campeonato Memória 360:", erroCriacao);
+      setMensagem("Falha ao criar campeonato. " + descreverErro(erroCriacao));
+    } finally { setOcupado(false); }
   }
   async function encerrar(id: string) {
     if (!confirm("Encerrar este campeonato? O ranking será preservado.")) return;
