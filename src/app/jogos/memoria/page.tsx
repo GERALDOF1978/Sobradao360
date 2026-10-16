@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AvisoCampeonatoMemoria from "@/components/jogos/AvisoCampeonatoMemoria";
 import { useEffect, useRef, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, doc, getDocs, limit, orderBy, query, runTransaction, serverTimestamp } from "firebase/firestore";
@@ -165,6 +166,7 @@ export default function Memoria360() {
       <Link href="/desafio-360" className="mt-2 inline-block text-xs font-bold text-cyan-700">🏆 Ver Desafio 360 e ranking</Link>
       <h1 className="mt-3 text-center text-2xl font-black">🧠 Memória 360</h1>
       <p className="mt-1 text-center text-xs text-slate-500">Encontre os 8 pares no menor tempo e com menos tentativas.</p>
+      <div className="mt-4"><AvisoCampeonatoMemoria noJogo /></div>
       {usuario && !cadastro && <section className="mt-4 space-y-2 rounded-2xl border border-cyan-200 bg-white p-4">
         <h2 className="font-bold">Cadastro único do jogador</h2>
         <p className="text-xs text-slate-500">Seu nome e celular serão vinculados à sua conta Google. Um número não pode ser usado por outra conta. O celular não será exibido no ranking. Não há confirmação por SMS.</p>
