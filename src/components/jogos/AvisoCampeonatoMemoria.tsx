@@ -25,10 +25,10 @@ export default function AvisoCampeonatoMemoria({ noJogo = false }: { noJogo?: bo
       try {
         const snap = await getDocs(collection(db, "campeonatos_memoria360"));
         if (!ativo) return;
-        const lista = snap.docs.map(d => ({ id: d.id, ...d.data() } as Campeonato))
-          .filter(c => c.status === "ativo" && Number.isFinite(Date.parse(c.inicio)) && Number.isFinite(Date.parse(c.fim)))
-          .filter(c => Date.parse(c.fim) > Date.now())
-          .sort((a, b) => Date.parse(a.inicio) - Date.parse(b.inicio));
+        const lista = snap.docs.map((d: { id: string; data: () => Record<string, unknown> }): Campeonato => ({ id: d.id, ...d.data() } as Campeonato))
+          .filter((c: Campeonato) => c.status === "ativo" && Number.isFinite(Date.parse(c.inicio)) && Number.isFinite(Date.parse(c.fim)))
+          .filter((c: Campeonato) => Date.parse(c.fim) > Date.now())
+          .sort((a: Campeonato, b: Campeonato) => Date.parse(a.inicio) - Date.parse(b.inicio));
         setCampeonato(lista[0] || null);
       } catch (erro) {
         console.error("Falha ao consultar campeonato público Memória 360:", erro);
