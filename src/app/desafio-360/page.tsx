@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import AvisoCampeonatoMemoria from "@/components/jogos/AvisoCampeonatoMemoria";
 import { useEffect, useState } from "react";
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -27,6 +28,7 @@ export default function Desafio360() {
         <h1 className="mt-2 text-3xl font-black">🏆 Desafio 360</h1>
         <p className="mt-2 text-sm text-cyan-50">Jogue, melhore sua pontuação e conquiste seu lugar no ranking!</p>
       </header>
+      <AvisoCampeonatoMemoria />
       <Link href="/jogos/memoria" className="block rounded-2xl border border-cyan-200 bg-white p-5 shadow-sm">
         <div className="flex items-center gap-4"><span className="text-5xl">🧠</span><div className="flex-1"><h2 className="text-xl font-black">Memória 360</h2><p className="mt-1 text-sm text-slate-600">Encontre os pares, faça pontos e dispute as primeiras posições.</p><span className="mt-2 inline-block text-sm font-bold text-cyan-700">Jogar agora →</span></div></div>
       </Link>
